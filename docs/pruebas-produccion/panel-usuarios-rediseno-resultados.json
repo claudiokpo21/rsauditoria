@@ -1,0 +1,97 @@
+[
+ {
+  "prueba": "1.1 Panel: lista de usuarios con correo, rol y último ingreso",
+  "ok": true,
+  "detalle": "[\"AA Auditor A (usted) a@test.local Administrador (propietario) — Hoy 1 aud. · 0 acc. Activo\", \"AB Auditor B b@test.local Auditor — Nunca ingresó 1 aud. · 0 acc. Activo\"]"
+ },
+ {
+  "prueba": "1.2 Indicadores: activos, invitaciones, nunca ingresaron",
+  "ok": true,
+  "detalle": "[\"Usuarios activos 2\", \"Invitaciones pendientes 0\", \"Nunca ingresaron 1\", \"Sin acceso (inactivos) 0\"]"
+ },
+ {
+  "prueba": "1.3 Búsqueda por correo",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "2.1 Invitación múltiple con rol elegido",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "2.2 Mensaje listo para WhatsApp/correo con enlace de invitación",
+  "ok": true,
+  "detalle": "Hola. Te invité a la aplicación de auditorías HSE de RS Consultora (Operadora Neuquina (prueba)) como Coordinador HSE.\n\n1. Entrá a http://localhost:4177/?invita"
+ },
+ {
+  "prueba": "2.3 Revocar invitación",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "3.1 Ficha del usuario: auditorías asignadas",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "3.2 Cambio de rol guardado en el servidor",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "3.3 Desactivar acceso",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "4.1 Matriz de permisos por rol",
+  "ok": true,
+  "detalle": "[\"Acción\", \"Administrador (propietario)\", \"Administrador\", \"Coordinador HSE\", \"Auditor\", \"Responsable de acciones correctivas\", \"Responsable de contratista\", \"Usuario de consulta\"]"
+ },
+ {
+  "prueba": "5.1 Dashboard nuevo: indicador, tarjeta \"Continuar auditoría\" y menú con íconos",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "6.1 Celular: barra inferior de accesos",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "6.2 Celular: dashboard sin desplazamiento horizontal",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "6.3 Celular: barra de avance fija con respondidas",
+  "ok": true,
+  "detalle": "33% 1/3 respondidas 100,0 % parcial Siguiente ›"
+ },
+ {
+  "prueba": "6.4 \"Siguiente sin responder\" lleva al próximo requisito",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "6.5 Celular: auditoría sin desplazamiento horizontal",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "6.6 Celular: panel de usuarios sin desplazamiento horizontal",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "7.1 Enlace de invitación: crear cuenta con el correo cargado",
+  "ok": true,
+  "detalle": "ana.perez@contratista.com"
+ },
+ {
+  "prueba": "8.1 Un auditor no accede al panel ni lo ve en el menú",
+  "ok": true,
+  "detalle": ""
+ }
+]

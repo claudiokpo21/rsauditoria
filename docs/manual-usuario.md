@@ -240,3 +240,32 @@ causa raíz, avance de acciones, acta de cierre…) tienen un botón de **micró
   en muchos equipos funciona sin conexión si está descargado el idioma español.
 - Firefox no tiene reconocimiento de voz: el botón no aparece y el campo se usa escribiendo.
 - Revise siempre el texto antes de guardar: el reconocimiento puede confundir nombres propios y siglas.
+
+## 18. Usuarios y permisos (panel de administración)
+
+*Configuración › Usuarios y permisos* (sólo propietarios y administradores, con conexión):
+
+- **Usuarios:** lista con correo, rol, empresa (contratistas), último ingreso, auditorías y acciones asignadas y estado.
+  Se puede buscar por nombre o correo y filtrar por rol. Tocando un usuario se abre su ficha para:
+  cambiar el **rol** (cada opción explica qué permite), elegir la empresa si es contratista, **habilitar o quitar el
+  acceso** (se conserva su historial y sus firmas), **asignarle auditorías** planificadas o en curso, o **quitarlo de la
+  organización**.
+- **Invitar usuarios:** uno o varios correos a la vez con el rol elegido. Como todavía no hay envío automático de
+  correos, la aplicación arma el **mensaje para el invitado** con el enlace: se copia o se manda por **WhatsApp** o
+  **correo** con un toque. El enlace abre *Crear cuenta* con el correo ya cargado; al confirmar el correo e ingresar,
+  queda en la organización. Si la persona ya tenía cuenta, queda agregada en el momento.
+- **Invitaciones:** pendientes con su vencimiento (14 días), **Renovar** y **Revocar**.
+- **Permisos por rol:** tabla de qué puede hacer cada rol. Los permisos los aplica el servidor; para cambiar lo que
+  alguien puede hacer, se le cambia el rol. Siempre debe quedar al menos un propietario.
+
+## 19. Pantallas renovadas
+
+- **Dashboard:** saludo, tarjeta *Continuar auditoría* con el avance de la que tiene en curso, indicador tipo
+  velocímetro con el resultado promedio y los colores de la metodología, indicadores clave, **mapa de requisitos por
+  empresa** (última auditoría de cada empresa, cada requisito con su color), próximas auditorías y acciones que
+  requieren atención. Debajo siguen todos los indicadores anteriores.
+- **Celular:** barra inferior con Inicio, Auditorías, Hallazgos, Acciones y Más (menú completo).
+- **Lista de verificación:** barra fija con el avance, el resultado parcial y el botón **Siguiente sin responder**;
+  requisitos en pestañas con su avance; botones de respuesta grandes.
+- **Al completar:** franja del color de la calificación con el resultado oficial, la variación contra la auditoría
+  anterior y accesos a *Reunión de cierre y firmas* y *Descargar informe*.

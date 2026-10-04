@@ -199,3 +199,14 @@ PGHOST=/tmp PGPORT=55432 PGUSER=postgres scripts/backup/test-backup-restore.sh
   sincronización al servidor, campo de formulario, permiso denegado, sin red y navegador sin soporte.
 - **Pendiente de prueba en un celular real** (micrófono, permiso y calidad del reconocimiento en campo).
 - Resto de las pruebas: visual 24/24, hallazgos/informes/móvil 32/32, offline 27/27, migración faltante 2/2.
+
+## 12. Actualización 2026-10-04: panel de usuarios y permisos, rediseño
+
+- Migración **0026** (`hse_admin_members`): aplicada en el proyecto. `supabase/tests/admin_panel.sql`: **18/18** en el
+  proyecto real y local (sólo propietario/administrador de la misma organización; coordinador, auditor y otra
+  organización reciben 42501; el administrador no modifica al propietario; siempre queda un propietario).
+- `admin_redesign_e2e.py`: **19/19** (lista, búsqueda, invitación múltiple con mensaje y enlace, revocar, cambio de rol,
+  desactivar, matriz de permisos, dashboard nuevo, barra inferior y barra de avance en el celular sin desplazamiento
+  horizontal, enlace de invitación, auditor sin acceso al panel).
+- Resto: visual 24/24, hallazgos/informes/móvil 32/32, offline 27/27, dictado 11/11, migración faltante 2/2.
+- El envío automático del correo de invitación queda para la tanda de avisos por mail (Resend).

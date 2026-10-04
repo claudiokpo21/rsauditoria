@@ -38,7 +38,7 @@ class FakeSupabase:
         self.tables = {t: {} for t in ['hse_companies','hse_locations','hse_processes','hse_templates','hse_template_versions','hse_template_sections',
                                         'hse_template_items','hse_template_import_issues','hse_template_validation_cases','hse_audits','hse_audit_responses',
                                         'hse_findings','hse_actions','hse_evidences','hse_memberships','hse_profiles',
-                                        'hse_audit_participants','hse_notifications','hse_audit_signatures']}
+                                        'hse_audit_participants','hse_notifications','hse_audit_signatures','hse_invitations']}
         self.receipts = {}            # op_id -> row_version
         self.objects = {}             # path -> bytes length
         self.files = {}               # path -> (bytes, mime) sembrados por las pruebas para descargar
@@ -171,6 +171,26 @@ class FakeSupabase:
                         self.lose_next_push_response -= 1
                         return route.abort('connectionreset')     # aplicado en el servidor, respuesta perdida
                     return self.json(res)
+                if fn == 'hse_admin_members':
+                    if uid != self.users['A']:
+                        return self.json({'code': '42501', 'message': 'Sólo propietarios y administradores ven el panel de usuarios'}, 403)
+                    out = []
+                    for mm in self.tables['hse_memberships'].values():
+                        pr = self.tables['hse_profiles'].get(mm['user_id'], {})
+                        out.append({'membership_id': mm['id'], 'user_id': mm['user_id'], 'email': pr.get('email'), 'full_name': pr.get('full_name'), 'job_title': pr.get('job_title'), 'phone': None,
+                                    'role': mm['role'], 'company_id': mm.get('company_id'), 'active': mm.get('active', True), 'member_since': mm.get('created_at') or now_iso(),
+                                    'last_sign_in_at': now_iso() if mm['user_id'] == self.users['A'] else None, 'email_confirmed': True,
+                                    'audits_assigned': sum(1 for p in self.tables['hse_audit_participants'].values() if p['user_id'] == mm['user_id'] and not p.get('deleted_at')), 'actions_open': 0})
+                    return self.json(out)
+                if fn == 'hse_invite_member':
+                    if uid != self.users['A']:
+                        return self.json({'code': '42501', 'message': 'Sólo administradores invitan miembros'}, 403)
+                    em = body['p_email'].strip().lower()
+                    old = next((i for i in self.tables['hse_invitations'].values() if i['email'] == em and not i.get('accepted_at')), None)
+                    iid = old['id'] if old else str(uuid.uuid4())
+                    self.tables['hse_invitations'][iid] = {'id': iid, 'organization_id': self.org, 'email': em, 'role': body['p_role'], 'company_id': body.get('p_company'),
+                        'expires_at': (datetime.now(timezone.utc) + timedelta(days=14)).isoformat(), 'created_at': now_iso(), 'accepted_at': None, 'updated_at': now_iso()}
+                    return self.json({'status': 'invitado', 'email': em})
                 if fn == 'hse_refresh_notifications':
                     return self.json(0)
                 if fn == 'hse_audit_readiness':
@@ -184,6 +204,17 @@ class FakeSupabase:
                 t = m.group(1)
                 if req.method == 'POST' and t == 'hse_sync_events':
                     return route.fulfill(status=201, headers=CORS, body='')
+                if req.method in ('PATCH', 'DELETE') and t in ('hse_memberships', 'hse_invitations'):
+                    rows = [r for r in self.tables[t].values() if all(str(r.get(k)) == v[0].partition('.')[2] for k, v in q.items() if v[0].startswith('eq.'))]
+                    if t == 'hse_memberships' and uid != self.users['A']: rows = []
+                    if req.method == 'DELETE':
+                        for r in rows: self.tables[t].pop(r['id'], None)
+                    else:
+                        patch = json.loads(req.post_data or '{}')
+                        for r in rows: r.update(patch); r['updated_at'] = now_iso(); r['row_version'] = r.get('row_version', 1) + 1
+                    if 'vnd.pgrst.object' in h.get('accept', ''):
+                        return self.json(rows[0]) if rows else self.json({'code': 'PGRST116', 'message': 'no rows'}, 406)
+                    return self.json(rows)
                 if req.method != 'GET' or t not in self.tables:
                     return self.json({'message': 'no simulado'}, 404)
                 rows = list(self.tables[t].values())

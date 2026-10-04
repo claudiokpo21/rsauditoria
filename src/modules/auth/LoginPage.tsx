@@ -5,8 +5,10 @@ import { Button, Card, Field, Input } from '../../components/ui';
 type Mode = 'login' | 'signup' | 'reset';
 
 export function LoginPage() {
-  const [mode, setMode] = useState<Mode>('login');
-  const [email, setEmail] = useState('');
+  // enlace de invitación: /?invitacion=correo → abre "Crear cuenta" con el correo cargado
+  const invited = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('invitacion') : null;
+  const [mode, setMode] = useState<Mode>(invited ? 'signup' : 'login');
+  const [email, setEmail] = useState(invited ?? '');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -38,6 +40,7 @@ export function LoginPage() {
     <div className="auth-wrap">
       <Card className="auth-card auth-banded">
         <form className="stack" onSubmit={submit}>
+          {invited && mode === 'signup' ? <div className="alert alert-info">Lo invitaron a Auditorías HSE. Cree su cuenta con <strong>{invited}</strong> y confirme el correo que le llega; al ingresar quedará en la organización.</div> : null}
           <div className="row gap"><span className="brand-mark" aria-hidden><i /><i /><i /><i /></span><div><h1>Auditorías HSE</h1><p className="muted small" style={{ margin: 0 }}>Seguridad e Higiene, Salud Ocupacional, Medio Ambiente y CSMS</p></div></div>
           <h2>{mode === 'login' ? 'Iniciar sesión' : mode === 'signup' ? 'Crear cuenta' : 'Restablecer contraseña'}</h2>
           {mode === 'signup' ? <Field label="Nombre y apellido" required><Input value={name} onChange={e => setName(e.target.value)} required autoComplete="name" /></Field> : null}

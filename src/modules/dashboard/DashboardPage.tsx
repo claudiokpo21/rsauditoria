@@ -5,9 +5,11 @@ import { db } from '../../db/db';
 import { useOrgRows } from '../../db/hooks';
 import { useAuth } from '../auth/AuthProvider';
 import { useSyncState } from '../../sync/scheduler';
-import { Badge, Card, Empty, Input, PageHeader, Select, Stat, fmtDateTime, fmtNum } from '../../components/ui';
+import { Badge, Card, Empty, Input, Select, Stat, fmtDate, fmtDateTime, fmtNum } from '../../components/ui';
+import { Gauge } from '../../components/Gauge';
+import { useProfiles } from '../../db/hooks';
 import { loadSummary, type SummaryResult } from '../reports/summary';
-import { LABELS, type Audit, type Company, type TemplateCategory, type TemplateVersion } from '../../types';
+import { LABELS, type Action, type Audit, type Company, type Finding, type TemplateCategory, type TemplateVersion } from '../../types';
 import { BandChip } from '../../components/ResultSheet';
 import { bandFor, bandStyle } from '../../scoring/bands';
 import { isSituacionConfig } from '../../scoring/engine';
@@ -30,16 +32,16 @@ function Bars({ data, max, fmt = (v: number) => String(v), color }: { data: { la
 const BAND_ORDER = ['Muy Bueno', 'Bueno', 'Regular', 'Crítico'];
 
 /** Distribución de calificaciones como barra apilada con los colores de la planilla. */
-function BandStrip({ bands }: { bands: Record<string, number> }) {
+function BandStrip({ bands, compact }: { bands: Record<string, number>; compact?: boolean }) {
   const rows = Object.entries(bands).sort((a, b) => (BAND_ORDER.indexOf(a[0]) + 99 * +(BAND_ORDER.indexOf(a[0]) < 0)) - (BAND_ORDER.indexOf(b[0]) + 99 * +(BAND_ORDER.indexOf(b[0]) < 0)));
   const total = rows.reduce((t, [, v]) => t + v, 0);
   if (!total) return <p className="muted small">Sin auditorías calificadas en el período.</p>;
   return (
     <div className="stack">
-      <div className="row" style={{ height: 28, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--line-2)' }} role="img" aria-label={rows.map(([k, v]) => `${k}: ${v}`).join(', ')}>
+      <div className="row" style={{ height: compact ? 10 : 28, borderRadius: compact ? 99 : 6, overflow: 'hidden', border: compact ? 0 : '1px solid var(--line-2)' }} role="img" aria-label={rows.map(([k, v]) => `${k}: ${v}`).join(', ')}>
         {rows.map(([k, v]) => { const st = bandStyle(k); return <span key={k} title={`${k}: ${v}`} style={{ width: `${(100 * v) / total}%`, height: '100%', background: st?.bg ?? 'var(--line-2)' }} />; })}
       </div>
-      <div className="row gap wrap">{rows.map(([k, v]) => <span key={k} className="row gap small"><BandChip label={k} /> <strong>{v}</strong></span>)}</div>
+      <div className={`row gap wrap ${compact ? 'band-legend' : ''}`}>{rows.map(([k, v]) => <span key={k} className="row gap small"><BandChip label={k} /> <strong>{v}</strong></span>)}</div>
     </div>
   );
 }
@@ -74,6 +76,22 @@ export function DashboardPage() {
   const { role } = useAuth();
   const versions = useOrgRows<TemplateVersion>('hse_template_versions') ?? [];
   const audits = useOrgRows<Audit>('hse_audits') ?? [];
+  const actions = useOrgRows<Action>('hse_actions') ?? [];
+  const findings = useOrgRows<Finding>('hse_findings') ?? [];
+  const people = useProfiles();
+  const { current, userId } = useAuth();
+  const profileName = userId ? people.get(userId) : null;
+  const inProgress = useLiveQuery(async () => {
+    if (!orgId || !userId) return null;
+    const mine = new Set((await db.hse_audit_participants.where('user_id').equals(userId).toArray()).filter(p => !p.deleted_at).map(p => p.audit_id));
+    const a = (await db.hse_audits.where('organization_id').equals(orgId).toArray())
+      .filter(x => !x.deleted_at && x.status === 'en_curso' && (x.lead_auditor_id === userId || mine.has(x.id)))
+      .sort((x, y) => (y.started_at ?? y.scheduled_date ?? '').localeCompare(x.started_at ?? x.scheduled_date ?? ''))[0] as Audit | undefined;
+    if (!a) return null;
+    const total = await db.hse_template_items.where('version_id').equals(a.template_version_id).count();
+    const answered = (await db.hse_audit_responses.where('audit_id').equals(a.id).toArray()).filter(r => !r.deleted_at && (r.answer || r.text_value || r.numeric_value !== null || r.rating !== null)).length;
+    return { audit: a, total, answered: Math.min(answered, total) };
+  }, [orgId, userId]);
   const cName = new Map(companies.map(c => [c.id, c.name]));
   const vById = new Map(versions.map(v => [v.id, v]));
   const bandsOfTemplate = (templateId: string) => {
@@ -86,15 +104,54 @@ export function DashboardPage() {
   const lastBand = new Map<string, Audit>();
   for (const a of audits.filter(x => !x.deleted_at && x.result_band && x.company_id && ['completada', 'cerrada'].includes(x.status))
     .sort((x, y) => (x.completed_at ?? '').localeCompare(y.completed_at ?? ''))) lastBand.set(a.company_id!, a);
+  const firstName = (profileName ?? '').split(' ')[0];
+  const hour = new Date().getHours();
+  const hello = hour < 13 ? 'Buen día' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
+  // indicador: promedio de los resultados oficiales con bandas (escala de la metodología) o cumplimiento %
+  const situ = latest.filter(a => vById.get(a.template_version_id)?.scoring_method === 'situacion_promedio_secciones' && a.score !== null);
+  const cfg0 = situ.length ? vById.get(situ[0].template_version_id)?.scoring_config : null;
+  const cfg = cfg0 && isSituacionConfig(cfg0) ? cfg0 : null;
+  const gaugeMax = cfg ? cfg.scale_max : 100;
+  const gaugeVal = cfg ? (situ.length ? situ.reduce((t, a) => t + Number(a.score), 0) / situ.length : null) : (S?.results.avg_compliance ?? null);
+  const gaugeBand = cfg ? bandFor(gaugeVal, cfg.bands) : null;
+  // sin bandas (lista ponderada): los mismos umbrales de color que el indicador de cumplimiento (60 % / 80 %)
+  const segments = cfg ? [...cfg.bands].sort((a, b) => (a.min ?? 0) - (b.min ?? 0)).map(b => ({ from: b.min ?? 0, to: b.max ?? cfg.scale_max, color: bandStyle(b.label)?.bg ?? '#7d8b92' }))
+    : [{ from: 0, to: 60, color: '#E26B0A' }, { from: 60, to: 80, color: '#FFFF00' }, { from: 80, to: 100, color: '#92D050' }];
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = audits.filter(a => !a.deleted_at && a.status === 'planificada' && (!company || a.company_id === company))
+    .sort((a, b) => (a.scheduled_date ?? '9999').localeCompare(b.scheduled_date ?? '9999')).slice(0, 5);
+  const attention = actions.filter(x => !x.deleted_at && ['pendiente', 'en_curso'].includes(x.status))
+    .sort((a, b) => a.due_date.localeCompare(b.due_date)).slice(0, 5);
+  const findingById = new Map(findings.map(f => [f.id, f]));
+  const heat = heatmap(audits, vById, company);
+
   return (
     <div className="stack-lg">
-      <PageHeader title="Dashboard" subtitle={res ? (res.source === 'servidor' ? `Datos del servidor · ${fmtDateTime(res.data.generated_at)}` : `Sin conexión: datos del dispositivo${res.lastSync ? ` (sincronizado ${fmtDateTime(res.lastSync)})` : ''}`) : 'Cargando…'}
-        actions={<>
-          <label className="small muted">Desde</label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ width: 150 }} />
-          <label className="small muted">Hasta</label><Input type="date" value={to} onChange={e => setTo(e.target.value)} style={{ width: 150 }} />
-          <Select placeholder="Todas las empresas" value={company} onChange={e => setCompany(e.target.value)} options={companies.map(c => ({ value: c.id, label: c.name }))} style={{ maxWidth: 220 }} />
-        </>} />
+      <header className="dash-head">
+        <div className="dash-hello">
+          <span className="small muted">{current?.organization_name} · {res ? (res.source === 'servidor' ? `Datos del servidor · ${fmtDateTime(res.data.generated_at)}` : `Sin conexión: datos del dispositivo${res.lastSync ? ` (sincronizado ${fmtDateTime(res.lastSync)})` : ''}`) : 'Cargando…'}</span>
+          <h1>{hello}{firstName ? `, ${firstName}` : ''}</h1>
+        </div>
+        {can(role, 'audit') ? <Link className="btn btn-accent" to="/auditorias">+ Nueva auditoría</Link> : null}
+      </header>
+      <details className="dash-filters" open={!!company}>
+        <summary>Período y empresa · {fmtDate(from)} a {fmtDate(to)}{company ? ` · ${cName.get(company) ?? ''}` : ''}</summary>
+        <div className="row gap wrap">
+          <label className="small muted">Desde</label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ width: 160 }} />
+          <label className="small muted">Hasta</label><Input type="date" value={to} onChange={e => setTo(e.target.value)} style={{ width: 160 }} />
+          <Select placeholder="Todas las empresas" value={company} onChange={e => setCompany(e.target.value)} options={companies.map(c => ({ value: c.id, label: c.name }))} style={{ maxWidth: 260 }} />
+        </div>
+      </details>
       {error ? <div className="alert alert-bad">{error}</div> : null}
+      {inProgress ? (
+        <Link to={`/auditorias/${inProgress.audit.id}`} className="continue-card">
+          <span className="continue-tag">EN CURSO</span>
+          <strong>{inProgress.audit.code ? `${inProgress.audit.code} · ` : ''}{inProgress.audit.title}</strong>
+          <span className="small">{inProgress.audit.company_id ? cName.get(inProgress.audit.company_id) : ''}</span>
+          <span className="continue-progress"><span><span style={{ width: `${inProgress.total ? (100 * inProgress.answered) / inProgress.total : 0}%` }} /></span><span className="num-font">{inProgress.answered}/{inProgress.total}</span></span>
+          <span className="btn btn-accent">Continuar auditoría</span>
+        </Link>
+      ) : null}
       {anyAudit === false ? <Empty>
           <div className="stack" style={{ alignItems: 'center' }}>
             <strong>Todavía no hay auditorías en esta organización.</strong>
@@ -102,40 +159,93 @@ export function DashboardPage() {
             {can(role, 'admin') ? <DemoButton /> : null}
           </div>
         </Empty> : !S ? null : <>
-        <div className="grid grid-4">
-          <Stat label="Auditorías" value={S.audits.total} sub={`${(S.audits.by_status.completada ?? 0) + (S.audits.by_status.cerrada ?? 0)} completadas · ${S.audits.overdue_planned} atrasadas`} tone={S.audits.overdue_planned ? 'warn' : undefined} />
-          <Stat label="Cumplimiento promedio" value={S.results.avg_compliance === null ? '—' : `${fmtNum(S.results.avg_compliance, 1)} %`} sub="resultados oficiales" tone={S.results.avg_compliance === null ? undefined : S.results.avg_compliance >= 80 ? 'ok' : S.results.avg_compliance >= 60 ? 'warn' : 'bad'} />
-          <Stat label="Hallazgos abiertos" value={S.findings.open} sub={`${S.findings.overdue} vencidos · ${S.findings.recurrent} recurrentes`} tone={S.findings.overdue ? 'bad' : S.findings.open ? 'warn' : 'ok'} />
-          <Stat label="Acciones vencidas" value={S.actions.overdue} sub={`${S.actions.due_7_days} vencen en 7 días · ${S.actions.completed ? fmtNum((100 * S.actions.completed_on_time) / S.actions.completed, 0) : '—'} % en plazo`} tone={S.actions.overdue ? 'bad' : 'ok'} />
-        </div>
-        <section className="sheet">
-          <div className="sheet-top" style={{ gridTemplateColumns: '1fr' }}>
-            <div className="row between wrap gap"><h3>Últimos resultados</h3><Link className="btn btn-ghost btn-sm" to="/auditorias">Ver auditorías</Link></div>
-            {latest.length === 0 ? <p className="muted small">Todavía no hay auditorías completadas.</p> : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="sheet-table">
-                  <thead><tr><th>Auditoría</th><th className="hide-xs">Empresa</th><th>Resultado</th><th>Calificación</th></tr></thead>
-                  <tbody>{latest.map(a => {
-                    const v = vById.get(a.template_version_id);
-                    const situ = v?.scoring_method === 'situacion_promedio_secciones';
-                    const st = bandStyle(a.result_band);
-                    return (
-                      <tr key={a.id}>
-                        <td><Link to={`/auditorias/${a.id}`}>{a.code ?? a.title}</Link><div className="small muted" style={{ fontWeight: 400 }}>{a.title}</div></td>
-                        <td className="hide-xs small">{a.company_id ? cName.get(a.company_id) : '—'}</td>
-                        <td className="eval" style={st ? { background: st.bg, color: st.fg } : undefined}>{situ ? fmtNum(a.score) : `${fmtNum(a.compliance_pct, 1)} %`}</td>
-                        <td>{a.result_band ? <BandChip label={a.result_band} /> : <span className="muted small">Sin bandas</span>}</td>
-                      </tr>);
-                  })}</tbody>
-                </table>
-              </div>
-            )}
+        <section className="dash-top">
+          <div className="gauge-card">
+            <span className="small">{cfg ? 'Resultado promedio' : 'Cumplimiento promedio'}</span>
+            <Gauge value={gaugeVal} max={gaugeMax} segments={segments} label={`Indicador: ${gaugeVal === null ? 'sin datos' : fmtNum(gaugeVal)}${gaugeBand ? `, ${gaugeBand}` : ''}`} />
+            <div className="gauge-value"><span className="num-font">{gaugeVal === null ? '—' : cfg ? fmtNum(gaugeVal) : `${fmtNum(gaugeVal, 1)} %`}</span>{gaugeBand ? <BandChip label={gaugeBand} /> : null}</div>
+            <span className="small gauge-note">{gaugeVal === null ? 'Todavía no hay auditorías completadas en el período' : cfg ? `Últimas ${situ.length} auditorías con calificación · escala 0 a ${fmtNum(cfg.scale_max, 0)}` : 'Resultados oficiales del período'}</span>
+            <BandStrip bands={S.results.bands} compact />
+          </div>
+          <div className="kpis">
+            <Stat label="Auditorías" value={S.audits.total} sub={`${(S.audits.by_status.completada ?? 0) + (S.audits.by_status.cerrada ?? 0)} completadas · ${S.audits.overdue_planned} atrasadas`} tone={S.audits.overdue_planned ? 'warn' : undefined} />
+            <Stat label="Cumplimiento promedio" value={S.results.avg_compliance === null ? '—' : `${fmtNum(S.results.avg_compliance, 1)} %`} sub="resultados oficiales" tone={S.results.avg_compliance === null ? undefined : S.results.avg_compliance >= 80 ? 'ok' : S.results.avg_compliance >= 60 ? 'warn' : 'bad'} />
+            <Stat label="Hallazgos abiertos" value={S.findings.open} sub={`${S.findings.overdue} vencidos · ${S.findings.recurrent} recurrentes`} tone={S.findings.overdue ? 'bad' : S.findings.open ? 'warn' : 'ok'} />
+            <Stat label="Acciones vencidas" value={S.actions.overdue} sub={`${S.actions.due_7_days} vencen en 7 días · ${S.actions.completed ? fmtNum((100 * S.actions.completed_on_time) / S.actions.completed, 0) : '—'} % en plazo`} tone={S.actions.overdue ? 'bad' : 'ok'} />
+            <Stat label="Pendientes de revisión" value={S.audits.pending_review} sub={`${S.audits.ready_to_close} listas para cerrar`} />
+            <Stat label="Eficacia verificada" value={`${S.findings.effective} / ${S.findings.effective + S.findings.not_effective}`} sub={`hallazgos eficaces / verificados · ${S.findings.pending_verification} por verificar`} tone={S.findings.not_effective ? 'warn' : undefined} />
           </div>
         </section>
+
+        <section className="dash-row">
+          <Card title="Mapa de requisitos por empresa" className="dash-wide">
+            {!heat ? <p className="muted small">Aparece cuando hay auditorías completadas con calificación por requisito.</p> : (<>
+              <div className="heat-wrap"><table className="heat">
+                <thead><tr><th>Empresa</th>{heat.cols.map(c => <th key={c} title={c}>{c}</th>)}<th>Final</th></tr></thead>
+                <tbody>{heat.rows.map(r => (
+                  <tr key={r.audit.id}><td><Link to={`/auditorias/${r.audit.id}`}>{cName.get(r.audit.company_id ?? '') ?? r.audit.title}</Link><span className="small muted"> · {fmtDate(r.audit.scheduled_date ?? r.audit.completed_at)}</span></td>
+                    {r.cells.map((c, i) => { const st = bandStyle(c.band); return <td key={i} className="num-font" style={st ? { background: st.bg, color: st.fg } : undefined} title={c.band ?? undefined}>{c.value === null ? '—' : fmtNum(c.value)}</td>; })}
+                    {(() => { const st = bandStyle(r.audit.result_band); return <td className="num-font heat-final" style={st ? { background: st.bg, color: st.fg } : undefined}>{fmtNum(r.audit.score)}</td>; })()}</tr>))}
+                </tbody>
+              </table></div>
+              {heat.weakest ? <p className="small muted" style={{ margin: '.6rem 0 0' }}>Requisito más débil: <strong>{heat.weakest.title}</strong> (promedio {fmtNum(heat.weakest.avg)}){heat.weakest.count > 1 ? `, bajo en ${heat.weakest.count} empresas` : ''}.</p> : null}
+            </>)}
+          </Card>
+          <Card title="Próximas auditorías" actions={<Link className="btn btn-ghost btn-sm" to="/auditorias">Ver todas</Link>}>
+            {upcoming.length === 0 ? <p className="muted small">No hay auditorías planificadas.</p> : (
+              <ul className="plain date-list">{upcoming.map(a => { const d = a.scheduled_date ? new Date(a.scheduled_date + 'T12:00:00') : null; const late = !!a.scheduled_date && a.scheduled_date < today; return (
+                <li key={a.id}><Link to={`/auditorias/${a.id}`} className="date-item">
+                  <span className={`date-box ${late ? 'late' : ''}`}><strong className="num-font">{d ? String(d.getDate()).padStart(2, '0') : '—'}</strong><span>{d ? d.toLocaleDateString('es-AR', { month: 'short' }).replace('.', '').toUpperCase() : ''}</span></span>
+                  <span><strong>{a.title}</strong><span className="small muted">{a.company_id ? cName.get(a.company_id) : ''}{late ? ' · atrasada' : ''}</span></span>
+                </Link></li>); })}
+              </ul>)}
+          </Card>
+        </section>
+
+        <section className="dash-row">
+          <Card title="Acciones que requieren atención" actions={<Link className="btn btn-ghost btn-sm" to="/acciones">Plan de acción</Link>}>
+            {attention.length === 0 ? <p className="muted small">No hay acciones abiertas.</p> : (
+              <ul className="plain person-list">{attention.map(x => {
+                const who = x.responsible_user_id ? people.get(x.responsible_user_id) ?? 'Responsable' : x.responsible_name ?? (x.responsible_company_id ? cName.get(x.responsible_company_id) : null) ?? 'Sin responsable';
+                const days = Math.round((new Date(x.due_date + 'T12:00:00').getTime() - Date.now()) / 864e5);
+                const tone = days < 0 ? 'bad' : days <= 7 ? 'warn' : 'neutral';
+                const f = findingById.get(x.finding_id);
+                return (
+                  <li key={x.id}><Link to={`/hallazgos/${x.finding_id}`} className="person-item">
+                    <span className={`avatar avatar-${tone}`} aria-hidden>{who.split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase()).join('')}</span>
+                    <span className="grow"><strong>{x.description}</strong><span className="small muted">{who}{f?.company_id ? ` · ${cName.get(f.company_id) ?? ''}` : ''}</span></span>
+                    <Badge tone={tone}>{days < 0 ? `Vencida ${-days} d` : days === 0 ? 'Vence hoy' : `En ${days} d`}</Badge>
+                  </Link></li>);
+              })}</ul>)}
+          </Card>
+          <section className="sheet">
+            <div className="sheet-top" style={{ gridTemplateColumns: '1fr' }}>
+              <div className="row between wrap gap"><h3>Últimos resultados</h3><Link className="btn btn-ghost btn-sm" to="/auditorias">Ver auditorías</Link></div>
+              {latest.length === 0 ? <p className="muted small">Todavía no hay auditorías completadas.</p> : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="sheet-table">
+                    <thead><tr><th>Auditoría</th><th className="hide-xs">Empresa</th><th>Resultado</th><th>Calificación</th></tr></thead>
+                    <tbody>{latest.map(a => {
+                      const v = vById.get(a.template_version_id);
+                      const situ = v?.scoring_method === 'situacion_promedio_secciones';
+                      const st = bandStyle(a.result_band);
+                      return (
+                        <tr key={a.id}>
+                          <td><Link to={`/auditorias/${a.id}`}>{a.code ?? a.title}</Link><div className="small muted" style={{ fontWeight: 400 }}>{a.title}</div></td>
+                          <td className="hide-xs small">{a.company_id ? cName.get(a.company_id) : '—'}</td>
+                          <td className="eval" style={st ? { background: st.bg, color: st.fg } : undefined}>{situ ? fmtNum(a.score) : `${fmtNum(a.compliance_pct, 1)} %`}</td>
+                          <td>{a.result_band ? <BandChip label={a.result_band} /> : <span className="muted small">Sin bandas</span>}</td>
+                        </tr>);
+                    })}</tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </section>
+        </section>
+        <h2 className="dash-sub">Más indicadores</h2>
         <div className="grid grid-4">
-          <Stat label="Pendientes de revisión" value={S.audits.pending_review} sub={`${S.audits.ready_to_close} listas para cerrar`} />
           <Stat label="Por verificar eficacia" value={S.findings.pending_verification} />
-          <Stat label="Eficacia verificada" value={`${S.findings.effective} / ${S.findings.effective + S.findings.not_effective}`} sub="hallazgos eficaces / verificados" tone={S.findings.not_effective ? 'warn' : undefined} />
           <Stat label="Días promedio al cierre" value={S.findings.avg_days_to_close === null ? '—' : fmtNum(S.findings.avg_days_to_close, 1)} />
         </div>
         <div className="grid grid-2">
@@ -170,4 +280,31 @@ export function DashboardPage() {
       </>}
     </div>
   );
+}
+
+/** Mapa de requisitos: última auditoría con calificación por empresa, una columna por requisito (sección). */
+function heatmap(audits: Audit[], vById: Map<string, TemplateVersion>, company: string) {
+  const done = audits.filter(a => !a.deleted_at && ['completada', 'cerrada'].includes(a.status) && a.company_id && a.score !== null
+    && vById.get(a.template_version_id)?.scoring_method === 'situacion_promedio_secciones' && Array.isArray(a.section_results) && (!company || a.company_id === company));
+  if (!done.length) return null;
+  // la plantilla más usada define las columnas
+  const byTpl = new Map<string, number>();
+  for (const a of done) { const t = vById.get(a.template_version_id)!.template_id; byTpl.set(t, (byTpl.get(t) ?? 0) + 1); }
+  const tpl = [...byTpl.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  const last = new Map<string, Audit>();
+  for (const a of done.filter(a => vById.get(a.template_version_id)!.template_id === tpl)
+    .sort((x, y) => (x.completed_at ?? x.scheduled_date ?? '').localeCompare(y.completed_at ?? y.scheduled_date ?? ''))) last.set(a.company_id!, a);
+  const list = [...last.values()].sort((a, b) => Number(b.score) - Number(a.score));
+  const secs = (a: Audit) => a.section_results as { title: string; score: number | null }[];
+  const full = secs(list[0]).map(s => s.title.trim());
+  const short = (t: string) => { const w = t.replace(/[,;].*$/, '').split(/\s+/).filter(x => x.length > 3); return (w[0] ?? t).replace(/^./, c => c.toUpperCase()).slice(0, 14); };
+  const rows = list.map(a => {
+    const cfg = vById.get(a.template_version_id)!.scoring_config;
+    const bands = isSituacionConfig(cfg) ? cfg.bands : undefined;
+    const m = new Map(secs(a).map(s => [s.title.trim(), s.score === null ? null : Number(s.score)]));
+    return { audit: a, cells: full.map(t => { const v = m.get(t) ?? null; return { value: v, band: bandFor(v, bands) }; }) };
+  });
+  const avgs = full.map((t, i) => { const vs = rows.map(r => r.cells[i].value).filter((v): v is number => v !== null); return { title: t, avg: vs.length ? vs.reduce((x, y) => x + y, 0) / vs.length : 99, count: rows.filter(r => ['Crítico', 'Regular'].includes(r.cells[i].band ?? '')).length }; });
+  const weakest = [...avgs].sort((a, b) => a.avg - b.avg)[0];
+  return { cols: full.map(short), rows, weakest: weakest && weakest.avg < 99 ? weakest : null };
 }

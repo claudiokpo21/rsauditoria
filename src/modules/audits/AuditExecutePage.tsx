@@ -11,7 +11,8 @@ import { useAuth } from '../auth/AuthProvider';
 import { auditAccess, canWrite, useParticipants } from '../auth/access';
 import { ParticipantsCard, ReadinessCard, useAuditLifecycle, useLocalReadiness } from './AuditLifecycle';
 import { RecordHistory } from '../../components/RecordHistory';
-import { ResultSheet, type SheetData } from '../../components/ResultSheet';
+import { BandChip, ResultSheet, type SheetData } from '../../components/ResultSheet';
+import { bandStyle } from '../../scoring/bands';
 import { usePreviousAudit } from './previousAudit';
 import { ClosingMeetingCard } from './ClosingMeeting';
 import { answerOptions, deviationFindingType, evaluate } from '../../scoring/engine';
@@ -110,6 +111,29 @@ export function AuditExecutePage() {
         </>} />
 
       {(() => {
+        // resultado al terminar: franja del color de la calificación, comparación y próximos pasos
+        const done = ['completada', 'cerrada'].includes(audit.status) && (audit.score !== null || audit.compliance_pct !== null);
+        if (!done) return null;
+        const situ = version.scoring_method === 'situacion_promedio_secciones';
+        const val = situ ? Number(audit.score) : Number(audit.compliance_pct);
+        const st = bandStyle(audit.result_band);
+        const d = previous && previous.final !== null ? Math.round((val - previous.final) * 100) / 100 : null;
+        return (
+          <section className="result-hero" style={st ? { background: st.bg, color: st.fg } : undefined}>
+            <div className="result-hero-main">
+              <span className="small">{audit.status === 'cerrada' ? 'Auditoría cerrada' : 'Auditoría completada'} · resultado oficial</span>
+              <span className="result-hero-val"><span className="num-font">{situ ? fmtNum(val) : `${fmtNum(val, 1)} %`}</span>{audit.result_band ? <strong>{audit.result_band}</strong> : null}</span>
+              {d !== null ? <span className="result-delta">{d > 0 ? '▲ +' : d < 0 ? '▼ ' : '= '}{fmtNum(d)} respecto de la anterior ({fmtNum(previous!.final)})</span> : null}
+            </div>
+            <div className="result-hero-actions">
+              <a className="btn btn-primary" href="#acta" onClick={e => { e.preventDefault(); document.getElementById('acta')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>Reunión de cierre y firmas</a>
+              <Link className="btn btn-secondary" to={`/informes?audit=${audit.id}`}>Descargar informe</Link>
+            </div>
+          </section>
+        );
+      })()}
+
+      {(() => {
         const official = ['completada', 'cerrada'].includes(audit.status) && Array.isArray(audit.section_results) && (audit.score !== null || audit.compliance_pct !== null);
         const situ = version.scoring_method === 'situacion_promedio_secciones';
         const data: SheetData = official
@@ -137,6 +161,46 @@ export function AuditExecutePage() {
       {life.reviewInfo}
       {['planificada', 'en_curso'].includes(audit.status) && writer ? <ReadinessCard local={local} /> : null}
 
+      {!locked ? (() => {
+        const pct = scorable.length ? answered / scorable.length : 0;
+        const situ = version.scoring_method === 'situacion_promedio_secciones';
+        const partial = situ ? result?.final ?? null : result?.compliance_pct ?? null;
+        const pband = situ ? result?.band ?? null : null;
+        const C = 2 * Math.PI * 18;
+        const nextPending = () => {
+          const order = sections.flatMap(sec => items.filter(i => i.section_id === sec.id).sort((a, b) => a.sort_order - b.sort_order));
+          const it = order.find(i => scorable.includes(i) && !respByItem.get(i.id)?.answer);
+          if (!it) { toast('No quedan requisitos sin responder'); return; }
+          setOpen(o => ({ ...o, [it.section_id]: true }));
+          setTimeout(() => document.getElementById(`item-${it.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+        };
+        return (
+          <div className="audit-bar" role="region" aria-label="Avance de la auditoría">
+            <svg width="44" height="44" viewBox="0 0 44 44" role="img" aria-label={`${answered} de ${scorable.length} respondidas`}>
+              <circle cx="22" cy="22" r="18" fill="none" stroke="var(--line)" strokeWidth="5" />
+              <circle cx="22" cy="22" r="18" fill="none" stroke="var(--band-b)" strokeWidth="5" strokeLinecap="round" strokeDasharray={`${(pct * C).toFixed(1)} ${C.toFixed(1)}`} transform="rotate(-90 22 22)" />
+              <text x="22" y="26" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor" fontFamily="IBM Plex Mono, monospace">{Math.round(pct * 100)}%</text>
+            </svg>
+            <span className="audit-bar-txt"><strong className="num-font">{answered}/{scorable.length}</strong><span className="small muted">respondidas</span></span>
+            {partial !== null ? <span className="audit-bar-txt"><strong className="num-font">{situ ? fmtNum(partial) : `${fmtNum(partial, 1)} %`}</strong><span className="small muted">parcial</span></span> : null}
+            {pband ? <BandChip label={pband} /> : null}
+            <span className="grow" />
+            <Button className="btn-sm" onClick={nextPending} aria-label="Siguiente sin responder">Siguiente<span className="hide-sm">&nbsp;sin responder</span>&nbsp;›</Button>
+          </div>
+        );
+      })() : null}
+
+      {sections.length > 1 ? (
+        <nav className="sec-chips" aria-label="Requisitos">
+          {sections.map((sec, i) => {
+            const total = items.filter(x => x.section_id === sec.id).length;
+            const done = items.filter(x => x.section_id === sec.id && respByItem.get(x.id)?.answer).length;
+            return <button key={sec.id} type="button" className={`sec-chip ${done === total && total ? 'done' : ''}`}
+              onClick={() => { setOpen(o => ({ ...o, [sec.id]: true })); setTimeout(() => document.getElementById(`sec-${sec.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); }}>
+              <span className="sec-chip-n">{i + 1}</span>{displayText(sec.title).trim().split(/[\s,]+/).find(w => w.length > 3) ?? displayText(sec.title)}<span className="num-font small">{done}/{total}</span></button>;
+          })}
+        </nav>) : null}
+
       <div className="row gap wrap between">
         <label className="row gap small"><input type="checkbox" checked={onlyPending} onChange={e => setOnlyPending(e.target.checked)} /> Mostrar sólo sin responder</label>
         <div className="row gap"><Button variant="ghost" className="btn-sm" onClick={() => setOpen(Object.fromEntries(sections.map(s => [s.id, true])))}>Expandir todo</Button><Button variant="ghost" className="btn-sm" onClick={() => setOpen({})}>Contraer</Button></div>
@@ -148,7 +212,7 @@ export function AuditExecutePage() {
         const done = items.filter(i => i.section_id === sec.id && respByItem.get(i.id)?.answer).length;
         const isOpen = open[sec.id] ?? sections.length <= 2;
         return (
-          <div key={sec.id} className="section-block">
+          <div key={sec.id} id={`sec-${sec.id}`} className="section-block">
             <button className="section-head" onClick={() => setOpen({ ...open, [sec.id]: !isOpen })} aria-expanded={isOpen}>
               <h3>{displayText(sec.title)}</h3><span className="muted small">{done}/{total}</span><span aria-hidden>{isOpen ? '▾' : '▸'}</span>
             </button>
@@ -159,7 +223,7 @@ export function AuditExecutePage() {
               const linked = findingByResponse.get(rid);
               const options = answerOptions(version, item.response_type);
               return (
-                <div key={item.id} className="item">
+                <div key={item.id} id={`item-${item.id}`} className={`item ${r?.answer ? 'answered' : ''}`}>
                   <div className="item-q">
                     <span className="item-num">{item.original_number ?? item.code ?? ''}</span>
                     <div className="grow">
@@ -206,6 +270,7 @@ export function AuditExecutePage() {
         );
       })}
 
+      <div id="acta" className="anchor-target" />
       <ClosingMeetingCard audit={audit} writer={writer} companyName={audit.company_id ? cName.get(audit.company_id) ?? '' : ''} leadName={audit.lead_auditor_id ? people.get(audit.lead_auditor_id) ?? '' : ''} />
 
       <div className="grid grid-2">

@@ -215,7 +215,8 @@ with sync_playwright() as p:
     A.goto(BASE + '/'); A.wait_for_selector('text=Cumplimiento promedio', timeout=30000)
     body = A.inner_text('body')
     check('5.1 Dashboard con datos reales sincronizados (resultado oficial, recurrentes, vencidas)', '66,7 %' in body and 'Hallazgos recurrentes' in body and 'HAL-2026-0007' in body, 'origen indicado: ' + ('servidor' if 'Datos del servidor' in body else 'dispositivo'))
-    check('5.2 Sin desplazamiento horizontal en celular (dashboard)', no_hscroll(A), '')
+    wide = A.evaluate("() => [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > 414 && e.getBoundingClientRect().width < 2000).slice(0, 6).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().width))")
+    check('5.2 Sin desplazamiento horizontal en celular (dashboard)', no_hscroll(A), json.dumps(wide))
     A.screenshot(path=f'{OUT}/4-dashboard-android.png', full_page=True)
     ctx.close()
 
