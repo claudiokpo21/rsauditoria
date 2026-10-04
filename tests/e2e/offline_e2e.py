@@ -95,7 +95,9 @@ with sync_playwright() as p:
     ta = items(A).nth(1).locator('textarea'); ta.fill('Extintor del dog house vencido en 08/2026.'); ta.blur()
     items(A).nth(1).locator('input[type=file]').set_input_files(PHOTO)
     # marcar el desvío sobre la foto (flecha) antes de guardarla, sin conexión
-    cv = A.locator('canvas.annot'); cv.wait_for(timeout=60000); A.wait_for_timeout(800)
+    cv = A.locator('canvas.annot'); cv.wait_for(timeout=60000)
+    # esperar a que la foto (56 MB) esté decodificada y dibujada antes de marcar
+    A.wait_for_function("() => { const c = document.querySelector('canvas.annot'); return c && c.width !== 300; }", timeout=60000); A.wait_for_timeout(300)
     bb = cv.bounding_box()
     A.mouse.move(bb['x'] + bb['width'] * .2, bb['y'] + bb['height'] * .8); A.mouse.down()
     A.mouse.move(bb['x'] + bb['width'] * .5, bb['y'] + bb['height'] * .5, steps=8); A.mouse.up()

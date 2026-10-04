@@ -225,3 +225,18 @@ generales (objetivo, alcance y metodología), 2. Resumen ejecutivo, 3. Resultado
 evaluación (y la comparación con la auditoría anterior, si existe), 4. Hallazgos y plan de acción, 5. Lista de
 verificación con las respuestas en color, 6. Registro fotográfico (opcional) y 7. Acta de reunión de cierre con las
 firmas. El nombre de la firma auditora se cambia en `src/config/brand.ts`.
+
+## 17. Dictado por voz
+
+Todos los campos de texto largos (comentarios de la lista de verificación, descripción del hallazgo, acción inmediata,
+causa raíz, avance de acciones, acta de cierre…) tienen un botón de **micrófono**. Tóquelo, hable y vuelva a tocarlo
+(■) para terminar; lo dictado se agrega al final del texto. La primera vez el navegador pide permiso para el micrófono.
+
+- Comandos: **"punto"**, **"coma"**, **"punto y aparte"** (nuevo párrafo), **"nueva línea"**, **"dos puntos"**,
+  **"punto y coma"**, **"abrir / cerrar paréntesis"**. "Punto de encuentro" o "punto 3" se escriben como palabras.
+- En la lista de verificación el comentario dictado se guarda solo al terminar; en los formularios, con *Guardar*.
+- **Conexión:** en Chrome (Android y PC) y Safari (iPhone) el reconocimiento lo hace el servicio del navegador y
+  **necesita conexión**. Sin señal, use el **micrófono del teclado del celular** (Gboard o el teclado del iPhone):
+  en muchos equipos funciona sin conexión si está descargado el idioma español.
+- Firefox no tiene reconocimiento de voz: el botón no aparece y el campo se usa escribiendo.
+- Revise siempre el texto antes de guardar: el reconocimiento puede confundir nombres propios y siglas.

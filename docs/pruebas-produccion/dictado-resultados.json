@@ -1,0 +1,57 @@
+[
+ {
+  "prueba": "1.1 Botón de micrófono en el comentario de cada requisito",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "1.2 Mientras escucha: botón en rojo de detener y aviso \"Escuchando\"",
+  "ok": true,
+  "detalle": "Escuchando… diga \"punto\", \"coma\" o \"punto y aparte\". Toque ■ para terminar."
+ },
+ {
+  "prueba": "1.3 Texto dictado con puntos, punto y aparte y mayúsculas",
+  "ok": true,
+  "detalle": "\"Extintor del sector de carga vencido. Falta la tarjeta de control.\\nSe informa al supervisor.\""
+ },
+ {
+  "prueba": "1.4 Idioma del reconocimiento: español (Argentina)",
+  "ok": true,
+  "detalle": "es-AR"
+ },
+ {
+  "prueba": "1.5 El comentario dictado se guarda y se sincroniza sin tocar otro campo",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "1.6 \"Punto de encuentro\" no se convierte en signo y se agrega al final",
+  "ok": true,
+  "detalle": "\"rol.\\nSe informa al supervisor. Punto de encuentro señalizado\""
+ },
+ {
+  "prueba": "2.1 Dictado en un campo de formulario (acuerdos del acta) y guardado",
+  "ok": true,
+  "detalle": "Presentar el plan de acción en quince días"
+ },
+ {
+  "prueba": "2.2 get_by_label sigue encontrando el campo (el botón no roba la etiqueta)",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "3.1 Sin permiso de micrófono: mensaje claro y el texto queda intacto",
+  "ok": true,
+  "detalle": "El navegador no tiene permiso para usar el micrófono. Habilítelo en el candado de la barra de direcciones (o en Ajustes del celular) y vuelva a intentar."
+ },
+ {
+  "prueba": "3.2 Sin servicio de reconocimiento (red): sugiere el micrófono del teclado",
+  "ok": true,
+  "detalle": "El dictado de este navegador necesita conexión. Sin señal, use el micrófono del teclado del celular o escriba el texto."
+ },
+ {
+  "prueba": "4.1 Navegador sin reconocimiento de voz: no se muestra el botón y el campo funciona igual",
+  "ok": true,
+  "detalle": ""
+ }
+]

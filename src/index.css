@@ -244,3 +244,20 @@ table.t td.result-cell { text-align: center; white-space: nowrap; min-width: 6.5
 .swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line-2); cursor: pointer; padding: 0; }
 
 .thumb .photo-num { position: absolute; top: 3px; left: 3px; background: rgba(23,35,44,.82); color: #fff; border-radius: 4px; font-size: .66rem; font-weight: 700; padding: 0 .3rem; line-height: 1.5; }
+
+/* dictado por voz */
+.dictate { position: relative; display: block; width: 100%; }
+.dictate > textarea.input { padding-right: 2.9rem; }
+.dictate-btn { position: absolute; right: .4rem; top: .4rem; width: 2.1rem; height: 2.1rem; border-radius: 999px; display: grid; place-items: center;
+  color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent); cursor: pointer; }
+.dictate-btn:hover { background: color-mix(in srgb, var(--brand) 18%, var(--surface)); }
+.dictate-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.dictate-btn[aria-disabled] { opacity: .4; cursor: not-allowed; }
+.dictate.is-on .dictate-btn { color: #fff; background: var(--bad); border-color: var(--bad); animation: dictate-pulse 1.4s ease-out infinite; }
+.dictate.is-on > textarea.input { border-color: var(--bad); }
+.dictate-stop { width: .7rem; height: .7rem; background: currentColor; border-radius: 2px; }
+.dictate-live, .dictate-msg { display: block; margin-top: .3rem; font-size: .8rem; line-height: 1.35; }
+.dictate-live { color: var(--muted); font-style: italic; }
+.dictate-msg { color: var(--warn-ink, #8a5a00); }
+@keyframes dictate-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--bad) 55%, transparent); } 100% { box-shadow: 0 0 0 .7rem transparent; } }
+@media (prefers-reduced-motion: reduce) { .dictate.is-on .dictate-btn { animation: none; } }

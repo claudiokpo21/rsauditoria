@@ -189,3 +189,13 @@ PGHOST=/tmp PGPORT=55432 PGUSER=postgres scripts/backup/test-backup-restore.sh
   por requisito / hallazgo, con rótulo sobre la imagen y respuesta del requisito. Excel: columna *Fotos N.º*.
 - `visual_hp_e2e.py`: **24/24** (nuevas 3.6 PDF, 3.7 Excel, 3.8 número en pantalla). `findings_reports_mobile_e2e.py`: 32/32.
   `offline_e2e.py`: 27/27. Build de producción y `check:secrets`: sin secretos.
+
+## 11. Actualización 2026-10-04: dictado por voz
+
+- Botón de micrófono en los campos de texto (Web Speech API, es-AR), comandos de puntuación, mayúsculas al iniciar oración,
+  guardado automático del comentario de la lista de verificación. Encabezado `Permissions-Policy` ahora permite el micrófono
+  sólo al propio sitio (`microphone=(self)`).
+- `dictation_e2e.py`: **11/11** con reconocimiento simulado (el navegador de prueba no tiene micrófono): texto, comandos,
+  sincronización al servidor, campo de formulario, permiso denegado, sin red y navegador sin soporte.
+- **Pendiente de prueba en un celular real** (micrófono, permiso y calidad del reconocimiento en campo).
+- Resto de las pruebas: visual 24/24, hallazgos/informes/móvil 32/32, offline 27/27, migración faltante 2/2.

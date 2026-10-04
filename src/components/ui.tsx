@@ -1,3 +1,4 @@
+import { DictationTextArea } from './DictationTextArea';
 import { createContext, useCallback, useContext, useEffect, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 
 export function Button({ variant = 'primary', busy, children, ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost'; busy?: boolean }) {
@@ -15,7 +16,8 @@ export function Field({ label, hint, error, children, required }: { label: strin
   );
 }
 export const Input = (p: InputHTMLAttributes<HTMLInputElement>) => <input {...p} className={`input ${p.className ?? ''}`} />;
-export const TextArea = (p: TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea rows={3} {...p} className={`input ${p.className ?? ''}`} />;
+/** Textarea con dictado por voz (botón de micrófono); `dictation={false}` lo desactiva. */
+export const TextArea = (p: TextareaHTMLAttributes<HTMLTextAreaElement> & { dictation?: boolean }) => <DictationTextArea {...p} />;
 export function Select({ options, placeholder, ...p }: SelectHTMLAttributes<HTMLSelectElement> & { options: { value: string; label: string }[]; placeholder?: string }) {
   return (
     <select {...p} className={`input ${p.className ?? ''}`}>
