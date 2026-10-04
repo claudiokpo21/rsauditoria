@@ -239,6 +239,7 @@ causa raíz, avance de acciones, acta de cierre…) tienen un botón de **micró
   **necesita conexión**. Sin señal, use el **micrófono del teclado del celular** (Gboard o el teclado del iPhone):
   en muchos equipos funciona sin conexión si está descargado el idioma español.
 - Firefox no tiene reconocimiento de voz: el botón no aparece y el campo se usa escribiendo.
+- Puede hacer pausas: el micrófono sigue escuchando hasta que toca ■ (o tras unos 30 segundos de silencio).
 - Revise siempre el texto antes de guardar: el reconocimiento puede confundir nombres propios y siglas.
 
 ## 18. Usuarios y permisos (panel de administración)

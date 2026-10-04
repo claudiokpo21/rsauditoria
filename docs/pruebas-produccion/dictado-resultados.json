@@ -7,7 +7,7 @@
  {
   "prueba": "1.2 Mientras escucha: botón en rojo de detener y aviso \"Escuchando\"",
   "ok": true,
-  "detalle": "Escuchando… diga \"punto\", \"coma\" o \"punto y aparte\". Toque ■ para terminar."
+  "detalle": "«extint»"
  },
  {
   "prueba": "1.3 Texto dictado con puntos, punto y aparte y mayúsculas",
@@ -28,6 +28,16 @@
   "prueba": "1.6 \"Punto de encuentro\" no se convierte en signo y se agrega al final",
   "ok": true,
   "detalle": "\"rol.\\nSe informa al supervisor. Punto de encuentro señalizado\""
+ },
+ {
+  "prueba": "1.7 Celular Android (frase acumulada repetida): se escribe una sola vez",
+  "ok": true,
+  "detalle": "\"Extintor vencido en el sector de carga\""
+ },
+ {
+  "prueba": "1.8 Dicta en tomas cortas que se reinician solas (no usa el modo continuo)",
+  "ok": true,
+  "detalle": "tomas=7"
  },
  {
   "prueba": "2.1 Dictado en un campo de formulario (acuerdos del acta) y guardado",

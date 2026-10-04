@@ -210,3 +210,12 @@ PGHOST=/tmp PGPORT=55432 PGUSER=postgres scripts/backup/test-backup-restore.sh
   horizontal, enlace de invitación, auditor sin acceso al panel).
 - Resto: visual 24/24, hallazgos/informes/móvil 32/32, offline 27/27, dictado 11/11, migración faltante 2/2.
 - El envío automático del correo de invitación queda para la tanda de avisos por mail (Resend).
+
+## 13. Corrección 2026-10-04: dictado repetido en Android
+
+- Problema informado en un celular real: el texto dictado una vez se escribía varias veces. Causa: en modo continuo,
+  Chrome para Android entrega la frase acumulada varias veces como resultado final.
+- Corrección: el dictado se hace en tomas cortas (una frase) que se reinician solas hasta tocar ■, y cada toma recalcula
+  su texto desde el valor inicial del campo (un resultado repetido no se vuelve a escribir). Se detiene solo tras ~30 s de silencio.
+- `dictation_e2e.py`: **13/13** (nuevo 1.7: frase acumulada repetida como en Android → se escribe una sola vez; 1.8: tomas cortas).
+  **Pendiente:** volver a probar en el celular.

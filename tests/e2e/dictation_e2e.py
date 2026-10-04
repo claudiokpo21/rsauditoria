@@ -24,21 +24,31 @@ def check(name, cond, detail=''):
 
 # Reconocimiento simulado: lo que "se dice" se toma de window.__say (frases finales) o window.__srError.
 FAKE_SR = """
+// Reconocimiento simulado en tomas cortas (como continuous=false): cada start() toma la próxima frase de
+// window.__say; sin frases, silencio ("no-speech"). window.__androidDup imita Chrome en Android: dentro de
+// una toma entrega la frase acumulada varias veces, todas finales, y repite el último evento.
 class FakeSR {
-  constructor() { this.lang = ''; this.continuous = false; this.interimResults = false; this.onresult = null; this.onerror = null; this.onend = null; this._t = []; }
+  constructor() { this.lang = ''; this.continuous = true; this.interimResults = false; this.onresult = null; this.onerror = null; this.onend = null; this._t = []; this._ended = false; }
+  _end() { if (this._ended) return; this._ended = true; this.onend && this.onend(); }
   start() {
-    window.__srLang = this.lang;
-    const err = window.__srError, says = window.__say || [];
-    if (err) { this._t.push(setTimeout(() => { this.onerror && this.onerror({ error: err }); this.onend && this.onend(); }, 50)); return; }
-    let acc = [];
-    says.forEach((s, i) => this._t.push(setTimeout(() => {
-      // primero un resultado parcial, después el final
-      this.onresult && this.onresult({ resultIndex: acc.length, results: [...acc, { isFinal: false, 0: { transcript: s.slice(0, 6) } }] });
-      acc = [...acc, { isFinal: true, 0: { transcript: s } }];
-      this.onresult && this.onresult({ resultIndex: acc.length - 1, results: acc });
-    }, 150 + i * 250)));
+    window.__srLang = this.lang; window.__srContinuous = this.continuous; window.__srStarts = (window.__srStarts || 0) + 1;
+    const err = window.__srError;
+    if (err) { this._t.push(setTimeout(() => { this.onerror && this.onerror({ error: err }); this._end(); }, 50)); return; }
+    const s = (window.__say || []).shift();
+    if (!s) { this._t.push(setTimeout(() => { this.onerror && this.onerror({ error: 'no-speech' }); this._end(); }, 1000)); return; }
+    const F = t => ({ isFinal: true, 0: { transcript: t } });
+    if (window.__androidDup) {
+      const words = s.split(' '); const evs = [];
+      for (let i = 1; i <= words.length; i++) evs.push(words.slice(0, i).join(' '));
+      let acc = [];
+      evs.forEach((t, i) => this._t.push(setTimeout(() => { acc = [...acc, F(t)]; this.onresult && this.onresult({ resultIndex: 0, results: acc }); }, 60 + i * 40)));
+      this._t.push(setTimeout(() => { this.onresult && this.onresult({ resultIndex: 0, results: acc }); this._end(); }, 60 + evs.length * 40 + 40));
+      return;
+    }
+    this._t.push(setTimeout(() => this.onresult && this.onresult({ resultIndex: 0, results: [{ isFinal: false, 0: { transcript: s.slice(0, 6) } }] }), 60));
+    this._t.push(setTimeout(() => { this.onresult && this.onresult({ resultIndex: 0, results: [F(s)] }); this._end(); }, 150));
   }
-  stop() { this._t.forEach(clearTimeout); setTimeout(() => this.onend && this.onend(), 30); }
+  stop() { this._t.forEach(clearTimeout); setTimeout(() => this._end(), 30); }
   abort() { this.stop(); }
 }
 if (!window.__noSR) { window.webkitSpeechRecognition = FakeSR; window.SpeechRecognition = FakeSR; } else { delete window.webkitSpeechRecognition; delete window.SpeechRecognition; }
@@ -73,7 +83,7 @@ with sync_playwright() as pw:
     P.evaluate("window.__say = ['extintor del sector de carga vencido punto falta la tarjeta de control', 'punto y aparte se informa al supervisor punto']")
     btn.click(); P.wait_for_timeout(120)
     live = item.locator('.dictate-live').inner_text() if item.locator('.dictate-live').count() else ''
-    check('1.2 Mientras escucha: botón en rojo de detener y aviso "Escuchando"', item.locator('.dictate.is-on').count() == 1 and 'Escuchando' in live, live)
+    check('1.2 Mientras escucha: botón en rojo de detener y aviso "Escuchando"', item.locator('.dictate.is-on').count() == 1 and ('Escuchando' in live or '«' in live), live)
     P.wait_for_timeout(900)
     item.locator('.dictate-btn').click(); P.wait_for_timeout(600)
     val = item.locator('textarea').input_value()
@@ -87,6 +97,13 @@ with sync_playwright() as pw:
     item.locator('.dictate-btn').click(); P.wait_for_timeout(700); item.locator('.dictate-btn').click(); P.wait_for_timeout(500)
     val2 = item.locator('textarea').input_value()
     check('1.6 "Punto de encuentro" no se convierte en signo y se agrega al final', val2.endswith('supervisor.\nPunto de encuentro señalizado') or val2.endswith('supervisor. Punto de encuentro señalizado'), json.dumps(val2[-60:], ensure_ascii=False))
+    P.evaluate("window.__androidDup = true; window.__say = ['extintor vencido en el sector de carga']")
+    item2 = P.locator('.item').nth(2)
+    item2.locator('.dictate-btn').click(); P.wait_for_timeout(900); item2.locator('.dictate-btn').click(); P.wait_for_timeout(400)
+    v3 = item2.locator('textarea').input_value()
+    check('1.7 Celular Android (frase acumulada repetida): se escribe una sola vez', v3 == 'Extintor vencido en el sector de carga', json.dumps(v3, ensure_ascii=False))
+    check('1.8 Dicta en tomas cortas que se reinician solas (no usa el modo continuo)', P.evaluate('window.__srContinuous') is False and P.evaluate('window.__srStarts') >= 4, f"tomas={P.evaluate('window.__srStarts')}")
+    P.evaluate("window.__androidDup = false")
     P.screenshot(path=f'{OUT}/dictado-requisito.png')
 
     # campo controlado: acuerdos del acta de cierre

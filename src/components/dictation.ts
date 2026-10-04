@@ -74,3 +74,24 @@ export function dictationErrorText(code: string): string {
     default: return 'No se pudo usar el dictado por voz (' + code + ').';
   }
 }
+
+const normDict = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+/**
+ * Une los resultados finales de una toma sin repetir: Chrome en Android devuelve la frase acumulada
+ * varias veces ("extintor", "extintor vencido", "extintor vencido en carga") y a veces el mismo
+ * resultado dos veces. Si un resultado contiene al anterior, lo reemplaza; si ya estaba, se descarta.
+ */
+export function mergeFinals(finals: string[]): string {
+  const out: string[] = [];
+  for (const raw of finals) {
+    const t = raw.trim(); if (!t) continue;
+    const n = normDict(t);
+    const last = out.length ? normDict(out[out.length - 1]) : null;
+    if (last !== null && (n === last || last.startsWith(n + ' ') || last.endsWith(' ' + n))) continue;
+    if (last !== null && (n.startsWith(last + ' ') || n.startsWith(last))) { out[out.length - 1] = t; continue; }
+    if (out.some(o => normDict(o) === n)) continue;
+    out.push(t);
+  }
+  return out.join(' ');
+}
