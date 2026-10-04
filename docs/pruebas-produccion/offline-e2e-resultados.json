@@ -1,0 +1,132 @@
+[
+  {
+    "prueba": "1.1 Primer ingreso con conexión y descarga inicial",
+    "ok": true,
+    "detalle": "fase=sincronizado"
+  },
+  {
+    "prueba": "1.2 Service Worker controla la app (recursos en caché)",
+    "ok": true,
+    "detalle": "activo"
+  },
+  {
+    "prueba": "1.3 Auditoría descargada para uso sin conexión",
+    "ok": true,
+    "detalle": "3 ítems de plantilla"
+  },
+  {
+    "prueba": "2.1 Cambios offline guardados en la cola persistente",
+    "ok": true,
+    "detalle": "6 operaciones {'pendiente'}"
+  },
+  {
+    "prueba": "2.2 Estado visible \"Sin conexión\"",
+    "ok": true,
+    "detalle": "Sin conexión · 6 pendientes"
+  },
+  {
+    "prueba": "2.3 Foto grande comprimida en el dispositivo",
+    "ok": true,
+    "detalle": "original 56.3 MB → 1.32 MB"
+  },
+  {
+    "prueba": "2.4 Archivos guardados cifrados (AES-GCM, sin copia en claro)",
+    "ok": true,
+    "detalle": "2 archivos"
+  },
+  {
+    "prueba": "3.1 Recarga sin conexión: la app abre desde el Service Worker y conserva respuestas",
+    "ok": true,
+    "detalle": "cola=6"
+  },
+  {
+    "prueba": "3.2 Reapertura sin conexión: cola y comentarios intactos",
+    "ok": true,
+    "detalle": "cola=6"
+  },
+  {
+    "prueba": "4.1 Al reconectar se sincroniza solo y queda \"Sincronizado\"",
+    "ok": true,
+    "detalle": "fase=sincronizado llamadas push=2"
+  },
+  {
+    "prueba": "4.2 Respuesta perdida tras aplicar: se reenvió y no hubo duplicados (clave de idempotencia)",
+    "ok": true,
+    "detalle": "respuestas=3 evidencias=2 recibos únicos=6 operaciones enviadas (con reenvío)=12"
+  },
+  {
+    "prueba": "4.3 PDF de 14,7 MB subido por partes y reanudado tras cortes",
+    "ok": true,
+    "detalle": "bytes=14680113 PATCH=6 HEAD=4"
+  },
+  {
+    "prueba": "4.4 Un archivo por evidencia (sin duplicar al reintentar)",
+    "ok": true,
+    "detalle": "objetos=2 subidas estándar=1"
+  },
+  {
+    "prueba": "4.5 Datos correctos en el servidor",
+    "ok": true,
+    "detalle": "{\"answer\": \"no_cumple\", \"comment\": \"Extintor del dog house vencido en 08/2026.\", \"row_version\": 2}"
+  },
+  {
+    "prueba": "4.6 Muestra la fecha de la última sincronización confirmada",
+    "ok": true,
+    "detalle": "Última sincronización confirmada: 3/10/26, 9:14 p. m. (registrada 2026-10-04T00:14:50.279Z)"
+  },
+  {
+    "prueba": "5.1 Sincronizar varias veces no cambia ni duplica nada",
+    "ok": true,
+    "detalle": "antes=(3, 2, 2, 6) después=(3, 2, 2, 6)"
+  },
+  {
+    "prueba": "6.1 Conflicto detectado en el mismo campo (estado \"Error\")",
+    "ok": true,
+    "detalle": "fase B=error cola=['conflicto']"
+  },
+  {
+    "prueba": "6.2 No se sobrescribió el cambio de A",
+    "ok": true,
+    "detalle": "servidor ítem 1=no_cumple"
+  },
+  {
+    "prueba": "6.3 El cambio de B en otro registro sí se aplicó",
+    "ok": true,
+    "detalle": "servidor ítem 3 comentario=B: kit antiderrame completo"
+  },
+  {
+    "prueba": "6.4 Resolución manual: B adopta la versión del servidor",
+    "ok": true,
+    "detalle": "fase=sincronizado"
+  },
+  {
+    "prueba": "7.1 Advierte antes de cerrar sesión con datos pendientes",
+    "ok": true,
+    "detalle": "cola=1"
+  },
+  {
+    "prueba": "7.2 Advierte antes de borrar datos locales con pendientes",
+    "ok": true,
+    "detalle": ""
+  },
+  {
+    "prueba": "7.3 Aviso del navegador al salir/cerrar con cambios pendientes (3 de 3) y permite quedarse",
+    "ok": true,
+    "detalle": "avisos=['beforeunload', 'beforeunload', 'beforeunload'] sigue en la app=True"
+  },
+  {
+    "prueba": "8.1 A los 8 días sin revalidar: la app se bloquea y conserva datos y pendientes",
+    "ok": true,
+    "detalle": "pendientes=1 auditorías locales=1"
+  },
+  {
+    "prueba": "8.2 A los 31 días: borrado de lo sincronizado, sólo quedan los pendientes",
+    "ok": true,
+    "detalle": "pendientes=1 auditorías=0 respuestas=1 archivos=0"
+  },
+  {
+    "prueba": "8.3 Al reconectar se revalidan permisos, se envía lo pendiente y se desbloquea",
+    "ok": true,
+    "detalle": "fase=sincronizado cola=0"
+  }
+]

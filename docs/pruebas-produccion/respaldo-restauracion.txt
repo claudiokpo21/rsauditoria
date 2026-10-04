@@ -1,0 +1,11 @@
+origen: 269 filas principales, 3 archivos
+respaldo archivos: {"fecha":"2026-10-04T00:13:00.381Z","bucket":"hse-evidencias","archivos":3,"bytes":62865,"evidencias_sin_archivo":[],"archivos_huerfanos":["25914b82-8db4-4fe1-b3e6-51160a7211dc/76263d09-e09e-4617-810c-67d007e46300/huerfano.jpg"]}
+desastre simulado: base de origen eliminada y bucket borrado
+base: Restauración verificada: huella idéntica.
+archivos: {"restaurados":3,"ya_presentes":0,"diferentes":[],"corruptos_en_respaldo":[]}
+verificación archivos: {"restaurados":0,"ya_presentes":3,"diferentes":[],"corruptos_en_respaldo":[]}
+restauración repetida: {"restaurados":0,"ya_presentes":3,"diferentes":[],"corruptos_en_respaldo":[]}
+base restaurada: CHK auditor restaurado ve auditorías de otras organizaciones=0 (existen 3); cierre directo por un auditor: filas=0 (esperado 0); auditorías sin código=0; 
+numeración: CHK nueva auditoría tras restaurar recibe código AUD-2026-0003 (repetido=f)
+respaldo de base alterado: rechazado (sha256)
+archivo de respaldo alterado: corruptos detectados=1

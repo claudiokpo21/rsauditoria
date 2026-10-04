@@ -1,0 +1,13 @@
+-- =====================================================================
+-- HSE Audit Manager · 0016 · Rol "Responsable de acciones correctivas"
+-- (ALTER TYPE ... ADD VALUE va en su propia migración)
+--
+-- Roles de la aplicación y su valor en la base:
+--   Administrador ........................ owner (propietario) / admin
+--   Coordinador HSE ...................... supervisor
+--   Auditor .............................. auditor
+--   Responsable de contratista ........... contractor
+--   Responsable de acciones correctivas .. action_owner
+--   Usuario de consulta .................. viewer
+-- =====================================================================
+alter type public.hse_role add value if not exists 'action_owner' before 'viewer';
