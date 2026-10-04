@@ -6,6 +6,8 @@ import { isSituacionConfig } from '../../scoring/engine';
 import { rcaText, type AuditReport } from './reportData';
 import { BAND_STYLES, SHEET, bandFor, bandRange, bandStyle } from '../../scoring/bands';
 import { AUDIT_FIRM } from '../../config/brand';
+import { photoNumbers } from '../evidences/photoNumbers';
+import type { Evidence } from '../../types';
 
 type RGB = [number, number, number];
 export const rgb = (hex: string): RGB => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
@@ -81,6 +83,20 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
     y += 2;
   };
   const tableOpts = { margin: { top: TOP, bottom: BOTTOM, left: 14, right: 14 } };
+
+  // Numeración de fotos (misma que en la app) y referencias cruzadas: lista de verificación y
+  // hallazgos dicen "Fotos 3, 4"; al tocarlas se va a la página de la foto.
+  const pnum = photoNumbers(r.evidences);
+  const numsOf = (evs: Evidence[]) => [...new Set(evs.map(e => pnum.get(e.id)).filter((k): k is number => k !== undefined))].sort((p, q) => p - q);
+  const respPhotos = (respId?: string | null) => (respId ? numsOf(r.evidences.filter(e => e.response_id === respId)) : []);
+  const fotos = (ns: number[]) => (ns.length === 1 ? `Foto ${ns[0]}` : `Fotos ${ns.join(', ')}`);
+  const pendingLinks: { page: number; x: number; y: number; w: number; h: number; nums: number[] }[] = [];
+  const photoPage = new Map<number, { page: number; y: number }>();
+  const curPage = () => doc.getCurrentPageInfo().pageNumber;
+  const linkCell = (c: CellHookData, ns: number[]) => {
+    if (!ns.length) return;
+    pendingLinks.push({ page: curPage(), x: c.cell.x, y: c.cell.y, w: c.cell.width, h: c.cell.height, nums: ns });
+  };
 
   // ================================================================== carátula
   doc.setFillColor(...RAIL); doc.rect(0, 0, W, 118, 'F');
@@ -239,6 +255,18 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
   }
 
   // ================================================================== 4. hallazgos y plan de acción
+  const respIdOf = new Map([...r.responses.values()].map(rr => [rr.item_id, rr.id]));
+  const findingEvs = (f: (typeof r.findings)[number]) => {
+    const acts = new Set(r.actions.filter(x => x.finding_id === f.id).map(x => x.id));
+    const rid = f.response_id ?? (f.item_id ? respIdOf.get(f.item_id) : undefined);
+    return r.evidences.filter(e => e.finding_id === f.id || (rid && e.response_id === rid) || (e.action_id && acts.has(e.action_id)));
+  };
+  const findingPhotos = (f: (typeof r.findings)[number]) => numsOf(findingEvs(f));
+  const findingEvid = (f: (typeof r.findings)[number]) => {
+    const evs = findingEvs(f); const ns = numsOf(evs); const docs = evs.filter(e => !e.mime_type.startsWith('image/')).length;
+    const parts = [ns.length ? `${fotos(ns)} (ver registro fotográfico)` : '', docs ? `${docs} documento${docs > 1 ? 's' : ''} adjunto${docs > 1 ? 's' : ''}` : ''].filter(Boolean);
+    return pdfText(parts.join(' · ') || 'Sin evidencias adjuntas');
+  };
   section('4', 'Hallazgos y plan de acción', { newPage: true });
   if (!r.findings.length) para('No se registraron hallazgos.');
   else {
@@ -250,6 +278,7 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
     y = last() + 7;
     const itemOf = new Map(r.items.map(i => [i.id, i]));
     for (const f of r.findings) {
+      const fp = findingPhotos(f);
       const it = f.item_id ? itemOf.get(f.item_id) : undefined;
       ensure(40);
       autoTable(doc, { ...tableOpts, startY: y, theme: 'grid', styles: { fontSize: 8, valign: 'top', textColor: INK, lineColor: [200, 205, 208] },
@@ -263,9 +292,11 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
           ['Responsable / vence', pdfText(`${f.responsible_user_id ? r.names.person(f.responsible_user_id) : '—'} · ${d(f.due_date)}`)],
           ['Acción inmediata', pdfText(f.immediate_action ?? '—')],
           ['Análisis de causa raíz', pdfText(rcaText(f.rca_method, f.rca_data, f.root_cause))],
-          ['Evidencias', String(r.evidences.filter(e => e.finding_id === f.id).length)],
+          ['Evidencias', findingEvid(f)],
           ...(f.status === 'verificado' || f.verification_notes ? [['Verificación de eficacia', pdfText(`${f.effectiveness === 'eficaz' ? 'Eficaz' : f.effectiveness === 'no_eficaz' ? 'No eficaz' : '—'} · ${d(f.verified_at)} · ${r.names.person(f.verified_by)}\n${f.verification_notes ?? ''}`)]] : []),
         ],
+        didParseCell: (c: CellHookData) => { if (c.section === 'body' && c.column.index === 1 && c.row.raw && (c.row.raw as unknown[])[0] === 'Evidencias' && fp.length) Object.assign(c.cell.styles, { textColor: rgb('#1f4e79'), fontStyle: 'bold' }); },
+        didDrawCell: (c: CellHookData) => { if (c.section === 'body' && c.column.index === 1 && (c.row.raw as unknown[])[0] === 'Evidencias') linkCell(c, fp); },
         columnStyles: { 0: { cellWidth: 38, fontStyle: 'bold', textColor: rgb('#44525c') } } });
       y = last() + 1;
       const acts = r.actions.filter(x => x.finding_id === f.id);
@@ -289,8 +320,10 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
     body.push([{ content: pdfText(s.title.trim()), colSpan: 5, styles: { fillColor: rgb(SHEET.header), textColor: rgb(SHEET.headerInk), fontStyle: 'bold' } }]);
     for (const i of r.items.filter(x => x.section_id === s.id)) {
       const resp = r.responses.get(i.id);
+      const ns = respPhotos(resp?.id);
+      const txt = resp?.comment ?? resp?.text_value ?? (resp?.numeric_value !== null && resp?.numeric_value !== undefined ? String(resp.numeric_value) : '');
       body.push([pdfText(i.original_number ?? i.code ?? ''), pdfText(i.question), pdfText(r.names.process(i.process_id)), r.optionLabel(resp?.answer),
-        pdfText(resp?.comment ?? resp?.text_value ?? (resp?.numeric_value !== null && resp?.numeric_value !== undefined ? String(resp.numeric_value) : ''))]);
+        pdfText([txt, ns.length ? `» ${fotos(ns)}` : ''].filter(Boolean).join('\n'))]);
     }
   }
   const ANS: Record<string, [RGB, RGB]> = {
@@ -299,36 +332,100 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
     ok: [rgb('#e4f2df'), rgb('#2f7d32')], cumple: [rgb('#e4f2df'), rgb('#2f7d32')], si: [rgb('#e4f2df'), rgb('#2f7d32')],
   };
   const ansByRow: (string | null)[] = [];
-  for (const s of r.sections) { ansByRow.push(null); for (const i of r.items.filter(x => x.section_id === s.id)) ansByRow.push(r.responses.get(i.id)?.answer ?? null); }
+  const photosByRow: number[][] = [];
+  for (const s of r.sections) {
+    ansByRow.push(null); photosByRow.push([]);
+    for (const i of r.items.filter(x => x.section_id === s.id)) { const rr = r.responses.get(i.id); ansByRow.push(rr?.answer ?? null); photosByRow.push(respPhotos(rr?.id)); }
+  }
+  if (pnum.size) para(`Las fotos se citan con su número ("Foto 3"); en el PDF, tocar la celda lleva a la imagen en el registro fotográfico.`, 8, MUTED);
   autoTable(doc, { ...tableOpts, startY: y, head: [['N.º', 'Requisito', 'Proceso', 'Resp.', 'Evidencias / comentarios']], headStyles: { fillColor: RAIL, textColor: [255, 255, 255] },
     didParseCell: (c: CellHookData) => {
-      if (c.section !== 'body' || c.column.index !== 3) return;
+      if (c.section !== 'body') return;
+      if (c.column.index === 4 && photosByRow[c.row.index]?.length) Object.assign(c.cell.styles, { textColor: rgb('#1f4e79') });
+      if (c.column.index !== 3) return;
       const k = ansByRow[c.row.index]; const col = k ? ANS[k] : undefined;
       if (col) Object.assign(c.cell.styles, { fillColor: col[0], textColor: col[1], halign: 'center' });
     },
+    didDrawCell: (c: CellHookData) => { if (c.section === 'body' && c.column.index === 4) linkCell(c, photosByRow[c.row.index] ?? []); },
     styles: { fontSize: 7.5, cellPadding: 1.5, valign: 'top', textColor: INK },
     columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 78 }, 2: { cellWidth: 22 }, 3: { cellWidth: 14, fontStyle: 'bold' } }, body });
   y = last() + 6;
 
   // ================================================================== 6. registro fotográfico
+  // Agrupado por requisito (en el orden de la lista), luego hallazgos generales, acciones y otras.
   let num = 6;
-  const imgs = opts.includePhotos ? r.evidences.filter(e => e.mime_type.startsWith('image/')) : [];
+  const imgs = opts.includePhotos ? r.evidences.filter(e => pnum.has(e.id)) : [];
   if (imgs.length) {
     section(String(num++), 'Registro fotográfico', { newPage: true });
-    let x = 14; const w = 58, h = 44;
-    const itemById = new Map(r.items.map(i => [i.id, i]));
-    const respById = new Map([...r.responses.values()].map(rr => [rr.id, rr]));
-    for (const e of imgs) {
-      const url = await evidenceDataUrl(e.id, e.storage_path);
-      if (!url) continue;
-      if (y + h + 10 > H - BOTTOM) { newPage(); x = 14; }
-      try { doc.addImage(url, 'JPEG', x, y, w, h, undefined, 'FAST'); } catch { continue; }
-      const it = e.response_id ? itemById.get(respById.get(e.response_id)?.item_id ?? '') : undefined;
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...MUTED);
-      doc.text(doc.splitTextToSize(pdfText(`${it ? `Req. ${it.original_number ?? it.code ?? ''} · ` : ''}${e.caption ?? ''} ${e.taken_at ? d(e.taken_at) : ''}`), w) as string[], x, y + h + 3);
-      x += w + 4; if (x + w > W - 10) { x = 14; y += h + 12; }
+    para('Cada foto lleva su número dentro de la auditoría y el requisito o hallazgo al que corresponde.', 8, MUTED);
+    const groups: { title: string; sub?: string; ans?: string | null; evs: Evidence[] }[] = [];
+    const used = new Set<string>();
+    const take = (pred: (e: Evidence) => boolean) => { const evs = imgs.filter(e => !used.has(e.id) && pred(e)).sort((p, q) => (pnum.get(p.id) ?? 0) - (pnum.get(q.id) ?? 0)); evs.forEach(e => used.add(e.id)); return evs; };
+    for (const sct of r.sections) for (const it of r.items.filter(x => x.section_id === sct.id)) {
+      const rr = r.responses.get(it.id); if (!rr) continue;
+      const evs = take(e => e.response_id === rr.id);
+      if (evs.length) groups.push({ title: `Req. ${it.original_number ?? it.code ?? ''}`.trim(), sub: it.question, ans: rr.answer, evs });
     }
-    y += h + 14;
+    for (const f of r.findings) {
+      const acts = new Set(r.actions.filter(x => x.finding_id === f.id).map(x => x.id));
+      const evs = take(e => e.finding_id === f.id || (!!e.action_id && acts.has(e.action_id)));
+      if (evs.length) groups.push({ title: `Hallazgo ${f.code ?? ''}`.trim(), sub: f.title, evs });
+    }
+    const rest = take(() => true);
+    if (rest.length) groups.push({ title: 'Otras fotos de la auditoría', evs: rest });
+
+    const w = 58, h = 44, gap = 4, capH = 13;
+    for (const g of groups) {
+      ensure(10 + h + capH);
+      doc.setFillColor(...rgb('#f3f5f6')); doc.rect(14, y, W - 28, 8, 'F');
+      doc.setFillColor(...rgb(SHEET.header)); doc.rect(14, y, 1.6, 8, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...INK);
+      const head = pdfText(g.title); doc.text(head, 18, y + 5.4);
+      let hx = 18 + doc.getTextWidth(head) + 3;
+      if (g.ans) {
+        const lbl = pdfText(`Respuesta: ${r.optionLabel(g.ans)}`);
+        doc.setFontSize(7.5); const lw = doc.getTextWidth(lbl) + 4;
+        const col = ANS[g.ans];
+        doc.setFillColor(...(col ? col[0] : rgb('#e9edf0'))); doc.roundedRect(W - 14 - lw - 2, y + 1.5, lw, 5, 1, 1, 'F');
+        doc.setTextColor(...(col ? col[1] : INK)); doc.text(lbl, W - 14 - lw, y + 5);
+      }
+      if (g.sub) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...rgb('#44525c'));
+        const maxW = W - 14 - hx - (g.ans ? 40 : 4);
+        let t = pdfText(g.sub.replace(/\s+/g, ' ').trim());
+        while (t.length > 4 && doc.getTextWidth(t) > maxW) t = t.slice(0, -2);
+        if (t.length < pdfText(g.sub).replace(/\s+/g, ' ').trim().length) t = t.slice(0, -1) + '…';
+        doc.text(t, hx, y + 5.4); hx += 0;
+      }
+      y += 11;
+      let x = 14;
+      for (const e of g.evs) {
+        const k = pnum.get(e.id)!;
+        if (x + w > W - 13) { x = 14; y += h + capH; }
+        if (y + h + capH > H - BOTTOM) { newPage(); x = 14; }
+        const url = await evidenceDataUrl(e.id, e.storage_path);
+        doc.setDrawColor(...rgb('#d9dfe3')); doc.setFillColor(...rgb('#f6f8f9')); doc.rect(x, y, w, h, 'FD');
+        if (url) {
+          try {
+            const pr = doc.getImageProperties(url);
+            const kk = Math.min(w / pr.width, h / pr.height); const iw = pr.width * kk, ih = pr.height * kk;
+            doc.addImage(url, url.startsWith('data:image/png') ? 'PNG' : 'JPEG', x + (w - iw) / 2, y + (h - ih) / 2, iw, ih, undefined, 'FAST');
+          } catch { /* imagen ilegible: queda el recuadro con el número */ }
+        } else {
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...MUTED); doc.text('Imagen no disponible', x + w / 2, y + h / 2, { align: 'center' });
+        }
+        // rótulo "Foto N" sobre la imagen
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+        const tag = `Foto ${k}`; const tw = doc.getTextWidth(tag) + 4;
+        doc.setFillColor(...RAIL); doc.rect(x, y, tw, 5.5, 'F'); doc.setTextColor(255); doc.text(tag, x + 2, y + 4);
+        photoPage.set(k, { page: curPage(), y });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...INK);
+        const cap = pdfText([`Foto ${k}`, e.caption, e.taken_at ? d(e.taken_at) : null].filter(Boolean).join(' · '));
+        doc.text((doc.splitTextToSize(cap, w) as string[]).slice(0, 3), x, y + h + 3.2);
+        x += w + gap;
+      }
+      y += h + capH + 2;
+    }
   }
 
   // ================================================================== 7. acta de cierre y firmas
@@ -357,6 +454,12 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
       }
       y += bh + 6;
     }
+  }
+
+  // ================================================================== enlaces a las fotos
+  for (const l of pendingLinks) {
+    const target = photoPage.get(l.nums[0]); if (!target) continue;
+    doc.setPage(l.page); doc.link(l.x, l.y, l.w, l.h, { pageNumber: target.page });
   }
 
   // ================================================================== índice

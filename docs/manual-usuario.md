@@ -203,7 +203,19 @@ auditoría se compara. Lo mismo sale en el PDF y el Excel.
 
 Al sacar o elegir una foto como evidencia se abre *Marcar sobre la foto*: elija **Flecha**, **Círculo** o **Trazo** y el
 color, y arrastre sobre la imagen para señalar el desvío (*Deshacer* quita la última marca). **Guardar con marcas**
-guarda la foto marcada; **Guardar sin marcas** guarda la original.
+guarda la foto marcada; **Guardar sin marcas** guarda la original. Escriba también la **Descripción de la foto**
+(ej.: "extintor del sector de carga con carga vencida"); se puede corregir después tocando la miniatura.
+
+### Cómo se identifica cada foto
+
+- Cada foto recibe un **número dentro de la auditoría** (*Foto 1*, *Foto 2*…), visible en la miniatura y en el
+  visor. El número es el mismo en la pantalla, el PDF y el Excel, y no cambia al sincronizar.
+- La foto queda asociada al **requisito** donde se tomó (o al hallazgo / acción donde se adjuntó).
+- En el **PDF**: la lista de verificación dice "» Foto 3" en el requisito y cada hallazgo indica
+  "Evidencias: Fotos 3, 4"; tocando esa celda se va a la foto. El *Registro fotográfico* está agrupado por requisito
+  (número, texto del requisito y respuesta) y luego por hallazgo; cada imagen lleva el rótulo "Foto N" y debajo
+  número, descripción y fecha.
+- En el **Excel**, la hoja *Checklist* tiene la columna **Fotos N.º** con los números de foto de cada requisito.
 
 ## 16. Informe de auditoría (PDF)
 

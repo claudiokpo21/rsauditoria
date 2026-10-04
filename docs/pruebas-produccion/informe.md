@@ -181,3 +181,11 @@ PGHOST=/tmp PGPORT=55432 PGUSER=postgres scripts/backup/test-backup-restore.sh
 - `offline_e2e.py`: **27/27** (nuevo 2.5: foto marcada con flecha sin conexión). `findings_reports_mobile_e2e.py`: 32/32.
 - `missing_migration_e2e.py`: **2/2** (la app sigue sincronizando contra un servidor sin 0025 y oculta las firmas).
 - Migración 0024 (organización de ejemplo): **sigue sin aplicar** en el proyecto.
+
+## 10. Actualización 2026-10-04: identificación de fotos
+
+- Fotos numeradas por auditoría (Foto 1, 2…), con descripción al tomarlas y editable; mismo número en pantalla, PDF y Excel.
+- PDF: referencias cruzadas con enlace desde la lista de verificación y desde cada hallazgo; registro fotográfico agrupado
+  por requisito / hallazgo, con rótulo sobre la imagen y respuesta del requisito. Excel: columna *Fotos N.º*.
+- `visual_hp_e2e.py`: **24/24** (nuevas 3.6 PDF, 3.7 Excel, 3.8 número en pantalla). `findings_reports_mobile_e2e.py`: 32/32.
+  `offline_e2e.py`: 27/27. Build de producción y `check:secrets`: sin secretos.

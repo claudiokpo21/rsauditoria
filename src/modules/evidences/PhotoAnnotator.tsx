@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Modal } from '../../components/ui';
+import { Button, Field, Input, Modal } from '../../components/ui';
 
 type Tool = 'flecha' | 'circulo' | 'trazo';
 type Pt = { x: number; y: number };
@@ -32,7 +32,7 @@ function drawShape(g: CanvasRenderingContext2D, s: Shape, lw: number) {
  * Permite marcar el desvío sobre la foto (flecha, círculo o trazo libre) antes de guardarla
  * como evidencia. La foto marcada reemplaza a la original; si no se marca nada, se guarda tal cual.
  */
-export function PhotoAnnotator({ file, onDone, onCancel }: { file: File | null; onDone: (f: File) => void; onCancel: () => void }) {
+export function PhotoAnnotator({ file, onDone, onCancel }: { file: File | null; onDone: (f: File, caption?: string) => void; onCancel: () => void }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const img = useRef<ImageBitmap | null>(null);
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -40,6 +40,7 @@ export function PhotoAnnotator({ file, onDone, onCancel }: { file: File | null; 
   const [color, setColor] = useState(COLORS[0].c);
   const [error, setError] = useState<string | null>(null);
   const cur = useRef<Shape | null>(null);
+  const [caption, setCaption] = useState('');
 
   const redraw = (extra?: Shape | null) => {
     const c = ref.current, im = img.current; if (!c || !im) return;
@@ -50,7 +51,7 @@ export function PhotoAnnotator({ file, onDone, onCancel }: { file: File | null; 
   };
   useEffect(() => {
     if (!file) return;
-    let alive = true; setShapes([]); setError(null);
+    let alive = true; setShapes([]); setError(null); setCaption('');
     createImageBitmap(file).then(bm => {
       if (!alive) return;
       img.current = bm;
@@ -69,14 +70,14 @@ export function PhotoAnnotator({ file, onDone, onCancel }: { file: File | null; 
   };
   const save = () => {
     const c = ref.current;
-    if (!file || !c || !img.current || shapes.length === 0) { if (file) onDone(file); return; }
-    c.toBlob(b => { if (b) onDone(new File([b], file.name.replace(/\.\w+$/, '') + '-marcada.jpg', { type: 'image/jpeg', lastModified: Date.now() })); else onDone(file); }, 'image/jpeg', 0.9);
+    if (!file || !c || !img.current || shapes.length === 0) { if (file) onDone(file, caption); return; }
+    c.toBlob(b => { if (b) onDone(new File([b], file.name.replace(/\.\w+$/, '') + '-marcada.jpg', { type: 'image/jpeg', lastModified: Date.now() }), caption); else onDone(file, caption); }, 'image/jpeg', 0.9);
   };
 
   return (
     <Modal open={!!file} title="Marcar sobre la foto" wide onClose={onCancel}
       footer={<>
-        <Button variant="secondary" onClick={() => file && onDone(file)}>Guardar sin marcas</Button>
+        <Button variant="secondary" onClick={() => file && onDone(file, caption)}>Guardar sin marcas</Button>
         <Button disabled={!!error || shapes.length === 0} onClick={save}>Guardar con marcas</Button>
       </>}>
       {error ? <div className="alert alert-warn">{error}</div> : null}
@@ -98,6 +99,7 @@ export function PhotoAnnotator({ file, onDone, onCancel }: { file: File | null; 
         onPointerUp={() => { const s = cur.current; cur.current = null; if (s && s.pts.length > 1) setShapes(x => [...x, s]); }}
         onPointerCancel={() => { cur.current = null; redraw(); }} />
       <p className="small muted" style={{ margin: 0 }}>Arrastre sobre la foto para señalar el desvío. La foto marcada es la que queda como evidencia.</p>
+      <Field label="Descripción de la foto" hint="Aparece junto al número de foto en el informe."><Input value={caption} onChange={e => setCaption(e.target.value)} placeholder="Ej.: extintor del sector de carga con carga vencida" maxLength={300} /></Field>
     </Modal>
   );
 }

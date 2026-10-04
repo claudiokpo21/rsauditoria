@@ -74,8 +74,25 @@ class Fake(FakeSupabase):
                 'completed_at': date + 'T15:00:00Z', 'section_results': secres})
             self.put('hse_audit_participants', {'id': str(uuid.uuid4()), 'audit_id': aid, 'user_id': A, 'participant_role': 'lider'})
             for k, iid in ((k, i) for _, _, ids in self.hp_sections for k, i in ids):
-                self.put('hse_audit_responses', {'id': str(uuid.uuid4()), 'audit_id': aid, 'item_id': iid, 'answer': ans(k), 'comment': None, 'rating': None, 'numeric_value': None, 'text_value': None})
+                self.put('hse_audit_responses', {'id': str(uuid.uuid5(uuid.UUID('6f1c0d5e-2b7a-4f0e-9a61-3c2d8e4b7a10'), f'{aid}:{iid}')), 'audit_id': aid, 'item_id': iid, 'answer': ans(k), 'comment': None, 'rating': None, 'numeric_value': None, 'text_value': None})
             self.hp_audits.append((aid, round(final, 2), band_of(round(final, 2))))
+        # fotos de la primera auditoría: una del requisito 1 y otra de un hallazgo del requisito 2
+        import io
+        from PIL import Image
+        a1 = self.hp_audits[0][0]
+        resp = {r['item_id']: r for r in self.tables['hse_audit_responses'].values() if r['audit_id'] == a1}
+        i1, i2 = self.hp_sections[0][2][0][1], self.hp_sections[0][2][1][1]
+        fid = str(uuid.uuid4())
+        self.put('hse_findings', {'id': fid, 'audit_id': a1, 'response_id': resp[i2]['id'], 'item_id': i2, 'company_id': companies[0], 'location_id': None, 'code': 'HAL-2026-0001',
+            'title': 'Falta registro de capacitación', 'description': 'Sin constancias.', 'finding_type': 'nc_menor', 'severity': 'media', 'status': 'abierto', 'root_cause': None,
+            'immediate_action': None, 'legal_reference': None, 'detected_at': '2026-05-07T12:00:00Z', 'due_date': '2026-06-07', 'closed_at': None, 'closed_by': None, 'requirement': None,
+            'category': None, 'process_id': None, 'responsible_user_id': None, 'rca_method': None, 'rca_data': None, 'recurrence_key': None, 'recurrence_of': None, 'recurrence_count': 0,
+            'verification_notes': None, 'effectiveness': None, 'verified_by': None, 'verified_at': None})
+        for n, (color, cap, rid, f) in enumerate([((200, 40, 40), 'Extintor sin tarjeta', resp[i1]['id'], None), ((40, 90, 200), 'Planilla de capacitación vacía', None, fid)]):
+            buf = io.BytesIO(); Image.new('RGB', (640, 480), color).save(buf, 'JPEG'); path = f'org/{a1}/foto{n}.jpg'
+            self.files[path] = (buf.getvalue(), 'image/jpeg'); self.objects[path] = len(buf.getvalue())
+            self.put('hse_evidences', {'id': str(uuid.uuid4()), 'audit_id': a1, 'response_id': rid, 'finding_id': f, 'action_id': None, 'storage_path': path, 'file_name': f'foto{n}.jpg',
+                'mime_type': 'image/jpeg', 'size_bytes': len(buf.getvalue()), 'caption': cap, 'taken_at': f'2026-05-07T1{n}:00:00Z', 'latitude': None, 'longitude': None, 'uploaded_by': A})
 
 fake = Fake()
 
@@ -133,6 +150,11 @@ with sync_playwright() as pw:
 
     # ---- acta de reunión de cierre y firma en campo
     P.goto(f'{BASE}/auditorias/{a1}'); P.wait_for_selector('text=Reunión de cierre y firmas', timeout=60000)
+    P.get_by_role('button', name='Expandir todo').click()
+    P.wait_for_selector('.thumb .photo-num', timeout=30000)
+    tags = P.eval_on_selector_all('.thumb .photo-num', 'xs => xs.map(x => x.innerText.trim())')
+    check('3.8 Pantalla: la foto del requisito muestra su número ("Foto 1")', 'Foto 1' in tags, json.dumps(tags, ensure_ascii=False))
+    P.locator('.thumb').first.scroll_into_view_if_needed(); P.screenshot(path=f'{OUT}/11-foto-numerada.png', full_page=False)
     P.get_by_label('Fecha de la reunión').fill('2026-05-07')
     P.get_by_label('Asistentes').fill('Juan Pérez (Contratista Patagonia SA, Jefe HSE); Auditor A')
     P.get_by_label('Acuerdos y compromisos').fill('Presentar el plan de acción en 15 días.')
@@ -155,13 +177,17 @@ with sync_playwright() as pw:
     P.screenshot(path=f'{OUT}/8-firmas.png', full_page=False)
 
     P.goto(f'{BASE}/informes?audit={a1}'); P.wait_for_selector('text=Informe de una auditoría')
+    P.wait_for_timeout(2500)
     pdf = download(P, lambda: P.get_by_role('button', name='Descargar PDF').first.click())
     txt = ' '.join(' '.join((pg.extract_text() or '').split()) for pg in PdfReader(pdf).pages)
     check('3.4 PDF: acta de reunión de cierre con firmas y conformidad', all(x in txt for x in ['Acta de reunión de cierre', 'Juan Pérez', 'Con observaciones', 'Presentar el plan de acción en 15 días']), '')
     check('3.0 PDF: carátula de RS Consultora, índice y sin historial de cambios', all(s in txt for s in ['RS CONSULTORA', 'Informe de auditoría', 'Índice', '1. Datos generales', 'Resumen ejecutivo', 'Página 3 de']) and 'Historial de cambios' not in txt, '')
+    check('3.6 PDF: fotos numeradas, agrupadas por requisito y citadas en la lista de verificación', all(x in txt for x in ['Registro fotográfico', 'Foto 1 · Extintor sin tarjeta', 'Req. 1 ', '» Foto 1', 'Hallazgo HAL-2026-0001', 'Foto 2 (ver registro fotográfico)']), '')
     check('3.1 PDF: tabla de requisitos, resultado final y criterio de evaluación', all(s in txt for s in ['Requisitos del sistema de gestión', 'Puntaje alcanzado', 'RESULTADO FINAL 175 249 6,27', 'Criterio de evaluación', '8,01 - 10 Muy Bueno']), os.path.basename(pdf))
     xlsx = download(P, lambda: P.get_by_role('button', name='Descargar Excel').first.click())
     wbx = load_workbook(xlsx)
+    ckr = [[c.value for c in row] for row in wbx['Checklist'].iter_rows(min_row=1)]
+    check('3.7 Excel: columna "Fotos N.º" con los números de foto', ckr[0][6] == 'Fotos N.º' and any(r[6] == '1' for r in ckr[1:]), json.dumps([r[6] for r in ckr[1:4]], ensure_ascii=False))
     check('3.5 Excel: hoja "Acta y firmas"', 'Acta y firmas' in wbx.sheetnames and any(c.value == 'Juan Pérez' for c in wbx['Acta y firmas']['A']), ', '.join(wbx.sheetnames))
     ws = wbx['Secciones (oficial)']
     fills = [ws.cell(r, 4).fill.fgColor.rgb for r in range(2, 9)]

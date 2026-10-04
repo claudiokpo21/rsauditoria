@@ -41,6 +41,7 @@ class FakeSupabase:
                                         'hse_audit_participants','hse_notifications','hse_audit_signatures']}
         self.receipts = {}            # op_id -> row_version
         self.objects = {}             # path -> bytes length
+        self.files = {}               # path -> (bytes, mime) sembrados por las pruebas para descargar
         self.tus = {}                 # id -> {path, length, offset, chunks}
         self.down = False             # caída total del servidor / red
         self.lose_next_push_response = 0   # aplica el lote pero "se corta" la respuesta
@@ -200,7 +201,11 @@ class FakeSupabase:
                     return self.json(rows[0]) if rows else self.json({'code': 'PGRST116', 'message': 'no rows'}, 406)
                 return self.json(rows)
             # ---- Storage estándar
-            m = re.match(r'^/storage/v1/object/hse-evidencias/(.+)$', path)
+            m = re.match(r'^/storage/v1/object/(?:authenticated/)?hse-evidencias/(.+)$', path)
+            if m and req.method == 'GET':
+                f = self.files.get(urllib.parse.unquote(m.group(1)))
+                if not f: return route.fulfill(status=404, headers=CORS, body='')
+                return route.fulfill(status=200, headers={**CORS, 'Content-Type': f[1]}, body=f[0])
             if m and req.method in ('POST', 'PUT'):
                 self.calls['upload'] += 1
                 p = urllib.parse.unquote(m.group(1))

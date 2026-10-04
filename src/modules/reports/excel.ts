@@ -1,3 +1,4 @@
+import { photoNumbers } from '../evidences/photoNumbers';
 import ExcelJS from 'exceljs';
 import { db } from '../../db/db';
 import { LABELS, type Action, type Audit, type Finding } from '../../types';
@@ -74,11 +75,13 @@ export async function buildAuditXlsx(r: AuditReport): Promise<Blob> {
   }
   const ck = sheet(wb, 'Checklist', [
     { header: 'Sección', key: 'sec', width: 30 }, { header: 'N.º', key: 'num', width: 7 }, { header: 'Requisito', key: 'q', width: 70 }, { header: 'Proceso', key: 'p', width: 18 },
-    { header: 'Respuesta', key: 'ans', width: 11 }, { header: 'Evidencias / comentarios', key: 'c', width: 60 }, { header: 'Fotos', key: 'ph', width: 8 }]);
-  const photos = new Map<string, number>(); for (const e of r.evidences) if (e.response_id) photos.set(e.response_id, (photos.get(e.response_id) ?? 0) + 1);
+    { header: 'Respuesta', key: 'ans', width: 11 }, { header: 'Evidencias / comentarios', key: 'c', width: 60 }, { header: 'Fotos N.º', key: 'ph', width: 12 }]);
+  const pnums = photoNumbers(r.evidences);
+  const photos = new Map<string, number[]>();
+  for (const e of r.evidences) { const k = pnums.get(e.id); if (e.response_id && k) photos.set(e.response_id, [...(photos.get(e.response_id) ?? []), k]); }
   for (const s of r.sections) for (const i of r.items.filter(x => x.section_id === s.id)) {
     const resp = r.responses.get(i.id);
-    ck.addRow({ sec: s.title.trim(), num: i.original_number ?? i.code ?? '', q: i.question, p: r.names.process(i.process_id), ans: r.optionLabel(resp?.answer), c: resp?.comment ?? resp?.text_value ?? '', ph: resp ? photos.get(resp.id) ?? 0 : 0 });
+    ck.addRow({ sec: s.title.trim(), num: i.original_number ?? i.code ?? '', q: i.question, p: r.names.process(i.process_id), ans: r.optionLabel(resp?.answer), c: resp?.comment ?? resp?.text_value ?? '', ph: resp ? (photos.get(resp.id) ?? []).sort((x, y) => x - y).join(', ') : '' });
   }
   wrap(ck); ck.autoFilter = { from: 'A1', to: 'G1' };
   if (a.closing_meeting_at || a.closing_attendees || a.closing_agreements || r.signatures.length) {

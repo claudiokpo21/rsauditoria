@@ -50,6 +50,11 @@
     "detalle": "[\"Resultado final\", \"132\", \"249\", \"5,29\", \"6,27\", \"▼ -0,98\", \"\"]"
   },
   {
+    "prueba": "3.8 Pantalla: la foto del requisito muestra su número (\"Foto 1\")",
+    "ok": true,
+    "detalle": "[\"Foto 1\"]"
+  },
+  {
     "prueba": "7.1 Acta y dos firmas capturadas en el dispositivo (auditor y contratista)",
     "ok": true,
     "detalle": "[\"Auditor A\", \"Juan Pérez\"]"
@@ -70,9 +75,19 @@
     "detalle": ""
   },
   {
+    "prueba": "3.6 PDF: fotos numeradas, agrupadas por requisito y citadas en la lista de verificación",
+    "ok": true,
+    "detalle": ""
+  },
+  {
     "prueba": "3.1 PDF: tabla de requisitos, resultado final y criterio de evaluación",
     "ok": true,
     "detalle": "Auditoria_AUD-2026-0010.pdf"
+  },
+  {
+    "prueba": "3.7 Excel: columna \"Fotos N.º\" con los números de foto",
+    "ok": true,
+    "detalle": "[\"1\", \"\", \"\"]"
   },
   {
     "prueba": "3.5 Excel: hoja \"Acta y firmas\"",
