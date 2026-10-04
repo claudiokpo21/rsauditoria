@@ -178,6 +178,9 @@ export async function push(orgId: string, onProgress?: (msg: string) => void): P
   return { pushed, failed, conflicts };
 }
 
+/** Tablas agregadas por migraciones que pueden no estar aplicadas aún en el servidor. */
+export const OPTIONAL_TABLES: SyncTable[] = ['hse_audit_signatures'];
+
 async function pullTable(orgId: string, table: SyncTable, pending: Set<string>): Promise<number> {
   const since = await getMeta<string>(cursorKey(orgId, table));
   let from = since ? new Date(new Date(since).getTime() - OVERLAP_MS).toISOString() : '1970-01-01T00:00:00Z';
@@ -188,7 +191,14 @@ async function pullTable(orgId: string, table: SyncTable, pending: Set<string>):
       .eq('organization_id', orgId).gt('updated_at', from)
       .order('updated_at', { ascending: true }).order('id', { ascending: true })
       .range(offset, offset + PAGE - 1);
-    if (error) throw error;
+    if (error) {
+      // tabla de una migración opcional todavía no aplicada en el servidor: se omite sin frenar la sincronización
+      if (OPTIONAL_TABLES.includes(table) && (error.code === 'PGRST205' || error.code === '42P01' || /could not find the table|does not exist/i.test(error.message ?? ''))) {
+        await setMeta(`missing_table:${table}`, true);
+        return 0;
+      }
+      throw error;
+    }
     const rows = (data ?? []) as { id: string; updated_at: string }[];
     const writable = rows.filter(r => !pending.has(`${table}:${r.id}`));
     if (writable.length) await db.table(table).bulkPut(writable);
@@ -198,6 +208,7 @@ async function pullTable(orgId: string, table: SyncTable, pending: Set<string>):
     offset += PAGE;
   }
   await setMeta(cursorKey(orgId, table), maxSeen);
+  if (OPTIONAL_TABLES.includes(table)) await setMeta(`missing_table:${table}`, false);
   return total;
 }
 

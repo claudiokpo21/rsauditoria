@@ -10,7 +10,9 @@ import ExcelJS from 'exceljs';
 import { db } from '../../db/db';
 import { LABELS, type Action, type Audit, type Finding, type TemplateCategory } from '../../types';
 import type { SummaryResult } from './summary';
-import { addFindingSheets } from './excel';
+import { SHEET } from '../../scoring/bands';
+import { bandCell, rgb } from './pdf';
+import { addFindingSheets, paintBand } from './excel';
 
 export interface MgmtFilters { from: string | null; to: string | null; company: string | null; companyName?: string }
 const live = <T extends { deleted_at?: string | null }>(r: T[]) => r.filter(x => !x.deleted_at);
@@ -41,11 +43,11 @@ const sourceText = (s: SummaryResult) => s.source === 'servidor'
 
 export async function buildMgmtPdf(orgName: string, f: MgmtFilters, s: SummaryResult, det: MgmtDetail): Promise<Blob> {
   const S = s.data; const doc = new jsPDF({ unit: 'mm', format: 'a4' }); const W = doc.internal.pageSize.getWidth();
-  const brand: [number, number, number] = [31, 77, 58];
+  const brand = rgb('#1c2b36');
   const last = () => (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
   const h2 = (txt: string, y: number) => { if (y > 260) { doc.addPage(); y = 16; } doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(30); doc.text(t(txt), 14, y); return y + 3; };
   const table = (y: number, head: string[], body: (string | number)[][], opts: Record<string, unknown> = {}) => {
-    autoTable(doc, { startY: y, head: [head], body: body.length ? body.map(r => r.map(c => t(String(c)))) : [[{ content: 'Sin datos', colSpan: head.length }] as never], headStyles: { fillColor: brand }, styles: { fontSize: 8, valign: 'top' }, ...opts });
+    autoTable(doc, { startY: y, head: [head], body: body.length ? body.map(r => r.map(c => t(String(c)))) : [[{ content: 'Sin datos', colSpan: head.length }] as never], headStyles: { fillColor: rgb(SHEET.header), textColor: rgb(SHEET.headerInk) }, styles: { fontSize: 8, valign: 'top' }, ...opts });
     return last() + 7;
   };
   doc.setFillColor(...brand); doc.rect(0, 0, W, 24, 'F'); doc.setTextColor(255);
@@ -67,7 +69,21 @@ export async function buildMgmtPdf(orgName: string, f: MgmtFilters, s: SummaryRe
 
   y = h2('Resultados por categoría de plantilla', y);
   y = table(y, ['Categoría', 'Auditorías completadas', 'Cumplimiento promedio', 'Hallazgos'], S.by_template_category.map(c => [LABELS.category[c.category as TemplateCategory] ?? c.category, c.audits, c.avg_compliance === null ? '—' : `${n(c.avg_compliance)} %`, c.findings]));
-  if (Object.keys(S.results.bands).length) { y = h2('Calificación (bandas de la metodología)', y); y = table(y, ['Calificación', 'Auditorías'], Object.entries(S.results.bands).map(([k, v]) => [k, v])); }
+  if (Object.keys(S.results.bands).length) {
+    y = h2('Calificación (bandas de la metodología)', y);
+    y = table(y, ['Calificación', 'Auditorías'], Object.entries(S.results.bands).map(([k, v]) => [k, v]),
+      { didParseCell: (c: { section: string; column: { index: number }; cell: { raw: unknown; styles: Record<string, unknown> } }) => { if (c.section === 'body' && c.column.index === 0) Object.assign(c.cell.styles, bandCell(String(c.cell.raw)) ?? {}); } });
+  }
+  const done = det.audits.filter(a => ['completada', 'cerrada'].includes(a.status) && (a.score !== null || a.compliance_pct !== null))
+    .sort((a, b) => (a.scheduled_date ?? '').localeCompare(b.scheduled_date ?? ''));
+  if (done.length) {
+    y = h2('Resultados por auditoría (oficiales)', y);
+    y = table(y, ['Auditoría', 'Empresa', 'Fecha', 'Resultado', 'Calificación'], done.map(a => [`${a.code ?? ''} ${a.title}`.trim(), det.names.company(a.company_id), d(a.scheduled_date),
+        a.result_band ? n(a.score) : `${n(a.compliance_pct)} %`, a.result_band ?? '—']),
+      { columnStyles: { 0: { cellWidth: 70 }, 3: { halign: 'center' }, 4: { halign: 'center' } },
+        didParseCell: (c: { section: string; column: { index: number }; row: { index: number }; cell: { styles: Record<string, unknown> } }) => {
+          if (c.section === 'body' && (c.column.index === 3 || c.column.index === 4)) Object.assign(c.cell.styles, bandCell(done[c.row.index]?.result_band) ?? {}); } });
+  }
   y = h2('Resultados por sección (promedio de resultados oficiales)', y);
   y = table(y, ['Plantilla', 'Sección', 'Auditorías', 'Promedio', 'Escala'], S.by_section.map(x => [x.template_name, x.title.trim(), x.audits, n(x.avg_score, 2), x.scoring_method === 'ponderado' ? '% cumplimiento' : 'nota 0–10']),
     { columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 80 } } });
@@ -116,8 +132,8 @@ export async function buildMgmtPdf(orgName: string, f: MgmtFilters, s: SummaryRe
 }
 
 export async function buildMgmtXlsx(orgName: string, f: MgmtFilters, s: SummaryResult, det: MgmtDetail): Promise<Blob> {
-  const S = s.data; const wb = new ExcelJS.Workbook(); wb.creator = 'HSE Audit Manager'; wb.title = `Informe de gestión ${orgName}`;
-  const head = (ws: ExcelJS.Worksheet) => ws.getRow(1).eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4D3A' } }; c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; });
+  const S = s.data; const wb = new ExcelJS.Workbook(); wb.creator = 'Auditorías HSE'; wb.title = `Informe de gestión ${orgName}`;
+  const head = (ws: ExcelJS.Worksheet) => ws.getRow(1).eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + SHEET.header.slice(1).toUpperCase() } }; c.font = { bold: true, color: { argb: 'FF' + SHEET.headerInk.slice(1).toUpperCase() } }; });
   const add = (name: string, cols: { header: string; key: string; width: number }[], rows: Record<string, unknown>[]) => {
     const ws = wb.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1 }] }); ws.columns = cols; head(ws); ws.addRows(rows); ws.autoFilter = { from: 'A1', to: { row: 1, column: cols.length } }; return ws;
   };
@@ -147,9 +163,10 @@ export async function buildMgmtXlsx(orgName: string, f: MgmtFilters, s: SummaryR
   add('Mensual', [{ header: 'Mes', key: 'm', width: 10 }, { header: 'Auditorías completadas', key: 'a', width: 22 }, { header: 'Cumplimiento %', key: 'p', width: 15 }, { header: 'Hallazgos detectados', key: 'd', width: 20 }, { header: 'Hallazgos cerrados', key: 'c', width: 18 }],
     months.map(m => { const a = S.monthly.find(x => x.month === m); const fm = S.findings_monthly.find(x => x.month === m); return { m, a: a?.audits ?? 0, p: a?.avg_compliance ?? null, d: fm?.detected ?? 0, c: fm?.closed ?? 0 }; }));
   const today = new Date().toISOString().slice(0, 10);
-  add('Seguimiento auditorías', [{ header: 'Auditoría', key: 'a', width: 18 }, { header: 'Título', key: 't', width: 40 }, { header: 'Empresa', key: 'c', width: 26 }, { header: 'Fecha', key: 'f', width: 12 }, { header: 'Estado', key: 's', width: 14 }, { header: 'Revisión', key: 'r', width: 14 }, { header: 'Seguimiento', key: 'g', width: 22 }, { header: 'Cumplimiento %', key: 'p', width: 14 }, { header: 'Calificación', key: 'b', width: 14 }],
+  const seg = add('Seguimiento auditorías', [{ header: 'Auditoría', key: 'a', width: 18 }, { header: 'Título', key: 't', width: 40 }, { header: 'Empresa', key: 'c', width: 26 }, { header: 'Fecha', key: 'f', width: 12 }, { header: 'Estado', key: 's', width: 14 }, { header: 'Revisión', key: 'r', width: 14 }, { header: 'Seguimiento', key: 'g', width: 22 }, { header: 'Cumplimiento %', key: 'p', width: 14 }, { header: 'Calificación', key: 'b', width: 14 }],
     det.audits.map(a => ({ a: a.code ?? '', t: a.title, c: det.names.company(a.company_id), f: a.scheduled_date ? new Date(a.scheduled_date + 'T12:00:00') : null, s: LABELS.auditStatus[a.status], r: a.reviewed_at ? new Date(a.reviewed_at) : null,
       g: a.status === 'planificada' && a.scheduled_date && a.scheduled_date < today ? 'Atrasada' : a.status === 'completada' ? (a.reviewed_at ? 'Lista para cerrar' : 'Pendiente de revisión') : '', p: a.compliance_pct, b: a.result_band })));
+  seg.eachRow((row, i) => { if (i > 1) { const c = row.getCell('b'); paintBand(c, c.value ? String(c.value) : null); } });
   addFindingSheets(wb, det.findings, det.actions, det.names.company, det.names.person, det.names.audit);
   const buf = await wb.xlsx.writeBuffer();
   return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

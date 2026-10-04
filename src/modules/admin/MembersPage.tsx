@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase, errorMessage } from '../../lib/supabase';
 import { runSync } from '../../sync/scheduler';
 import { useOrgRows, useProfiles } from '../../db/hooks';
+import { DemoButton } from '../demo/DemoButton';
 import { useAuth, can } from '../auth/AuthProvider';
 import { Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, fmtDate, useToast } from '../../components/ui';
 import { LABELS, type Company, type MemberRow, type Role } from '../../types';
@@ -80,6 +81,13 @@ export function MembersPage() {
           ))}</tbody></table></div>
         )}
         <p className="muted small">El invitado crea su cuenta en la pantalla de ingreso con el mismo correo. La invitación sólo se acepta si el correo está verificado.</p>
+      </Card>
+
+      <Card title="Datos de ejemplo">
+        <div className="row between wrap gap">
+          <p className="small muted" style={{ margin: 0, maxWidth: '60ch' }}>Una organización aparte con contratistas, auditorías, hallazgos y planes de acción ficticios, para capacitar al equipo o probar la aplicación sin tocar los datos reales.</p>
+          <DemoButton />
+        </div>
       </Card>
 
       <Modal open={!!inv} title="Invitar usuario" onClose={() => setInv(null)} footer={<><Button variant="secondary" onClick={() => setInv(null)}>Cancelar</Button><Button busy={busy} onClick={doInvite}>Invitar</Button></>}>

@@ -15,7 +15,8 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 WRITABLE = {
-    'hse_audits': ['template_version_id','company_id','location_id','title','audit_type','status','scheduled_date','started_at','completed_at','lead_auditor_id','audit_team','scope','summary','latitude','longitude','deleted_at','client_updated_at'],
+    'hse_audits': ['template_version_id','company_id','location_id','title','audit_type','status','scheduled_date','started_at','completed_at','lead_auditor_id','audit_team','scope','summary','latitude','longitude','closing_meeting_at','closing_attendees','closing_agreements','deleted_at','client_updated_at'],
+    'hse_audit_signatures': ['audit_id','signer_role','signer_name','signer_position','signer_company','agreement','observations','signature_png','signed_at','deleted_at','client_updated_at'],
     'hse_audit_responses': ['audit_id','item_id','answer','rating','numeric_value','text_value','comment','deleted_at','client_updated_at'],
     'hse_evidences': ['audit_id','response_id','finding_id','action_id','storage_path','file_name','mime_type','size_bytes','caption','taken_at','latitude','longitude','uploaded_by','deleted_at','client_updated_at'],
     'hse_findings': ['audit_id','response_id','item_id','company_id','location_id','title','description','requirement','finding_type','severity','category','process_id','responsible_user_id','status','root_cause','rca_method','rca_data','immediate_action','legal_reference','detected_at','due_date','verification_notes','effectiveness','deleted_at','client_updated_at'],
@@ -37,7 +38,7 @@ class FakeSupabase:
         self.tables = {t: {} for t in ['hse_companies','hse_locations','hse_processes','hse_templates','hse_template_versions','hse_template_sections',
                                         'hse_template_items','hse_template_import_issues','hse_template_validation_cases','hse_audits','hse_audit_responses',
                                         'hse_findings','hse_actions','hse_evidences','hse_memberships','hse_profiles',
-                                        'hse_audit_participants','hse_notifications']}
+                                        'hse_audit_participants','hse_notifications','hse_audit_signatures']}
         self.receipts = {}            # op_id -> row_version
         self.objects = {}             # path -> bytes length
         self.tus = {}                 # id -> {path, length, offset, chunks}

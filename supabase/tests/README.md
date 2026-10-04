@@ -14,6 +14,8 @@ mínimos) y luego `supabase/migrations/*.sql` en orden.
 | `scoring_parity.sql` | 37 casos: el servidor (`hse_evaluate_answers`) contra los valores del motor del cliente, generados con `npm run test:parity:gen` | 0 diferencias (máx. 5,2·10⁻¹⁴) en el proyecto y local |
 | `import_hp_parity.sql` | Importa la lista H&P (payload de `npm run import:hp`), caso de validación del servidor = Excel (6,2711… "Bueno"), publicación bloqueada sin validar, metodología inmutable | OK local después de 0022 (difmax 6,7·10⁻¹⁶); OK en el proyecto en la etapa de importación |
 | `sync_push_protocol.sql` | `hse_sync_push`/`hse_sync_confirm`: alta, reenvío idempotente, conflicto por campo sin sobrescribir, fusión, evidencia sin archivo, cascada, contratista, lector, otra organización, columnas protegidas, recibos, usuario dado de baja | 15/15 en el proyecto (antes de 0023) y local (después) |
+| `signatures.sql` | Acta de cierre y firmas (0025): captura por auditor, hora del dispositivo, firma inmutable, baja sin restauración, visibilidad (observador, contratista, otra organización), cola de sincronización, historial, cierre bloquea acta y firmas | **24/24** en el proyecto y local |
+| `demo_organization.sql` | Organización de ejemplo (0024, requiere psql): 6,27 Bueno con las secciones de la planilla, Muy Bueno, Crítico, Regular, recurrencias, avisos | OK local (0024 no aplicada en el proyecto) |
 | `sync_semantics.sql` | Upsert con ids del dispositivo, rutas de Storage de otra organización, `uploaded_by` lo fija el servidor, lectura condicionada al metadato | OK local |
 
 `rls_isolation.sql` (primera versión, 21 casos, roles anteriores a 0016) se eliminó: su contenido quedó cubierto y

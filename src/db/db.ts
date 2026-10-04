@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type {
+import type { AuditSignature,
   Company, Location, Process, Template, TemplateVersion, TemplateSection, TemplateItem, ImportIssue,
   ValidationCaseRow, Audit, AuditResponse, Evidence, Finding, Action, MemberRow, ProfileRow, AuditParticipant, NotificationRow,
 } from '../types';
@@ -47,7 +47,7 @@ export const SYNC_TABLES = [
   'hse_templates', 'hse_template_versions', 'hse_template_sections', 'hse_template_items',
   'hse_template_import_issues', 'hse_template_validation_cases',
   'hse_audits', 'hse_audit_participants', 'hse_audit_responses', 'hse_findings', 'hse_actions', 'hse_evidences',
-  'hse_memberships', 'hse_notifications',
+  'hse_audit_signatures', 'hse_memberships', 'hse_notifications',
 ] as const;
 export type SyncTable = typeof SYNC_TABLES[number];
 
@@ -56,10 +56,11 @@ export const WRITABLE_TABLES: SyncTable[] = [
   'hse_companies', 'hse_locations', 'hse_processes', 'hse_templates', 'hse_template_versions',
   'hse_template_sections', 'hse_template_items', 'hse_template_import_issues',
   'hse_audits', 'hse_audit_participants', 'hse_audit_responses', 'hse_findings', 'hse_actions', 'hse_evidences',
+  'hse_audit_signatures',
 ];
 
 /** Tablas cuyo acceso depende de la asignación a la auditoría (se re-descargan si cambia la asignación). */
-export const AUDIT_SCOPED_TABLES: SyncTable[] = ['hse_audits', 'hse_audit_participants', 'hse_audit_responses', 'hse_findings', 'hse_actions', 'hse_evidences'];
+export const AUDIT_SCOPED_TABLES: SyncTable[] = ['hse_audits', 'hse_audit_participants', 'hse_audit_responses', 'hse_findings', 'hse_actions', 'hse_evidences', 'hse_audit_signatures'];
 
 /** Columnas que el cliente puede enviar por tabla (todo lo demás lo fija el servidor). */
 /** Columnas que el cliente puede enviar por tabla (todo lo demás lo fija el servidor). Espejo de hse_sync_writable_columns (0020). */
@@ -72,12 +73,13 @@ export const WRITABLE_COLUMNS: Record<string, string[]> = {
   hse_template_sections: ['id', 'organization_id', 'version_id', 'title', 'description', 'sort_order', 'code', 'deleted_at', 'client_updated_at'],
   hse_template_items: ['id', 'organization_id', 'version_id', 'section_id', 'code', 'question', 'guidance', 'response_type', 'weight', 'is_critical', 'evidence_required_on_fail', 'is_required', 'legal_reference', 'sort_order', 'process_id', 'deleted_at', 'client_updated_at'],
   hse_template_import_issues: ['id', 'organization_id', 'status', 'resolution_note', 'client_updated_at'],
-  hse_audits: ['id', 'organization_id', 'template_version_id', 'company_id', 'location_id', 'title', 'audit_type', 'status', 'scheduled_date', 'lead_auditor_id', 'audit_team', 'scope', 'summary', 'latitude', 'longitude', 'deleted_at', 'client_updated_at'],
+  hse_audits: ['id', 'organization_id', 'template_version_id', 'company_id', 'location_id', 'title', 'audit_type', 'status', 'scheduled_date', 'lead_auditor_id', 'audit_team', 'scope', 'summary', 'latitude', 'longitude', 'closing_meeting_at', 'closing_attendees', 'closing_agreements', 'deleted_at', 'client_updated_at'],
   hse_audit_participants: ['id', 'organization_id', 'audit_id', 'user_id', 'participant_role', 'deleted_at', 'client_updated_at'],
   hse_audit_responses: ['id', 'organization_id', 'audit_id', 'item_id', 'answer', 'rating', 'numeric_value', 'text_value', 'comment', 'deleted_at', 'client_updated_at'],
   hse_findings: ['id', 'organization_id', 'audit_id', 'response_id', 'item_id', 'company_id', 'location_id', 'title', 'description', 'requirement', 'finding_type', 'severity', 'category', 'process_id', 'responsible_user_id', 'status', 'root_cause', 'rca_method', 'rca_data', 'immediate_action', 'legal_reference', 'detected_at', 'due_date', 'verification_notes', 'effectiveness', 'deleted_at', 'client_updated_at'],
   hse_actions: ['id', 'organization_id', 'finding_id', 'description', 'action_type', 'responsible_user_id', 'responsible_name', 'responsible_company_id', 'due_date', 'status', 'progress_notes', 'effectiveness_criteria', 'verification_notes', 'effectiveness', 'deleted_at', 'client_updated_at'],
   hse_evidences: ['id', 'organization_id', 'audit_id', 'response_id', 'finding_id', 'action_id', 'storage_path', 'file_name', 'mime_type', 'size_bytes', 'caption', 'taken_at', 'latitude', 'longitude', 'deleted_at', 'client_updated_at'],
+  hse_audit_signatures: ['id', 'organization_id', 'audit_id', 'signer_role', 'signer_name', 'signer_position', 'signer_company', 'agreement', 'observations', 'signature_png', 'signed_at', 'deleted_at', 'client_updated_at'],
 };
 
 class HseDB extends Dexie {
@@ -92,6 +94,7 @@ class HseDB extends Dexie {
   hse_template_validation_cases!: Table<ValidationCaseRow, string>;
   hse_audits!: Table<Audit, string>;
   hse_audit_participants!: Table<AuditParticipant, string>;
+  hse_audit_signatures!: Table<AuditSignature, string>;
   hse_notifications!: Table<NotificationRow, string>;
   hse_audit_responses!: Table<AuditResponse, string>;
   hse_findings!: Table<Finding, string>;
@@ -154,6 +157,13 @@ class HseDB extends Dexie {
     }).upgrade(async tx => {
       // columnas nuevas en hallazgos/auditorías: se fuerza una descarga completa
       const keys = (await tx.table('meta').toArray()).map((m: MetaRow) => m.key).filter((k: string) => k.startsWith('cursor:'));
+      await tx.table('meta').bulkDelete(keys);
+    });
+    // v4: firmas en campo y acta de reunión de cierre (migración 0025)
+    this.version(4).stores({
+      hse_audit_signatures: 'id, organization_id, audit_id, updated_at',
+    }).upgrade(async tx => {
+      const keys = (await tx.table('meta').toArray()).map((m: MetaRow) => m.key).filter((k: string) => k.startsWith('cursor:') && k.includes('hse_audits'));
       await tx.table('meta').bulkDelete(keys);
     });
   }

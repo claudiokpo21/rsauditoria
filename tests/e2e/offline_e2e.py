@@ -94,6 +94,13 @@ with sync_playwright() as p:
     answer(A, 1, 'No cumple')
     ta = items(A).nth(1).locator('textarea'); ta.fill('Extintor del dog house vencido en 08/2026.'); ta.blur()
     items(A).nth(1).locator('input[type=file]').set_input_files(PHOTO)
+    # marcar el desvío sobre la foto (flecha) antes de guardarla, sin conexión
+    cv = A.locator('canvas.annot'); cv.wait_for(timeout=60000); A.wait_for_timeout(800)
+    bb = cv.bounding_box()
+    A.mouse.move(bb['x'] + bb['width'] * .2, bb['y'] + bb['height'] * .8); A.mouse.down()
+    A.mouse.move(bb['x'] + bb['width'] * .5, bb['y'] + bb['height'] * .5, steps=8); A.mouse.up()
+    A.get_by_role('button', name='Guardar con marcas').click()
+    A.wait_for_selector('canvas.annot', state='detached', timeout=30000)
     items(A).nth(2).locator('input[type=file]').set_input_files(PDF)
     A.wait_for_function("document.querySelectorAll('.thumb .pend').length >= 2", timeout=60000)
     time.sleep(1)
@@ -103,6 +110,8 @@ with sync_playwright() as p:
     bl = idb(A, 'blobs', 'blobsizes')
     photo = [b for b in bl if b['type'] == 'image/jpeg']; pdf = [b for b in bl if b['type'] == 'application/pdf']
     check('2.3 Foto grande comprimida en el dispositivo', photo and photo[0]['size'] < 2_500_000, f"original {os.path.getsize(PHOTO)/1e6:.1f} MB → {photo[0]['size']/1e6:.2f} MB" if photo else 'sin foto')
+    evs = idb(A, 'hse_evidences', 'all')
+    check('2.5 Foto marcada sobre el desvío (flecha) y guardada como evidencia, sin conexión', any('marcada' in (e.get('file_name') or '') for e in evs), ', '.join(e.get('file_name') or '' for e in evs))
     check('2.4 Archivos guardados cifrados (AES-GCM, sin copia en claro)', all(not b['hasPlain'] and b['cipher'] == b['size'] + 16 for b in bl), f'{len(bl)} archivos')
     A.screenshot(path=f'{OUT}/2-offline-celular.png', full_page=True)
 

@@ -44,7 +44,7 @@ export function Layout() {
   return (
     <div className="shell">
       <aside className={`side ${open ? 'open' : ''}`}>
-        <div className="brand"><span className="brand-mark">HSE</span><span>Audit Manager</span></div>
+        <div className="brand"><span className="brand-mark" aria-hidden><i /><i /><i /><i /></span><span>Auditorías HSE</span></div>
         <nav className="nav">
           {L('/', 'Dashboard')}
           {L('/auditorias', 'Auditorías')}

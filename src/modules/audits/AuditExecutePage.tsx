@@ -11,8 +11,11 @@ import { useAuth } from '../auth/AuthProvider';
 import { auditAccess, canWrite, useParticipants } from '../auth/access';
 import { ParticipantsCard, ReadinessCard, useAuditLifecycle, useLocalReadiness } from './AuditLifecycle';
 import { RecordHistory } from '../../components/RecordHistory';
+import { ResultSheet, type SheetData } from '../../components/ResultSheet';
+import { usePreviousAudit } from './previousAudit';
+import { ClosingMeetingCard } from './ClosingMeeting';
 import { answerOptions, deviationFindingType, evaluate } from '../../scoring/engine';
-import { Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, Stat, TextArea, displayText, fmtDate, fmtNum, useToast } from '../../components/ui';
+import { Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, TextArea, displayText, fmtDate, fmtNum, useToast } from '../../components/ui';
 import { EvidenceStrip } from '../evidences/EvidenceStrip';
 import { FindingForm } from '../findings/FindingForm';
 import { statusTone } from './AuditsPage';
@@ -59,6 +62,7 @@ export function AuditExecutePage() {
   const local = useLocalReadiness(audit, items, responses);
   const access = auditAccess(audit, role, userId, participants, current?.company_id);
   const life = useAuditLifecycle(audit ?? ({} as Audit), access, local);
+  const previous = usePreviousAudit(audit, version);
 
   if (audit === undefined) return null;
   if (audit === null) return <Empty>Auditoría no encontrada en este dispositivo.</Empty>;
@@ -105,27 +109,33 @@ export function AuditExecutePage() {
           {life.buttons}
         </>} />
 
-      <div className="grid grid-4">
-        <Stat label="Avance" value={`${answered}/${scorable.length}`} sub={<div className="progress" style={{ marginTop: '.35rem' }}><span style={{ width: `${scorable.length ? (100 * answered) / scorable.length : 0}%` }} /></div>} />
-        {version.scoring_method === 'situacion_promedio_secciones'
-          ? <Stat label="Nota (0–10)" value={fmtNum(result?.final ?? null)} sub={result?.band ?? '—'} tone={result?.band === 'Crítico' ? 'bad' : result?.band === 'Regular' ? 'warn' : result?.band ? 'ok' : undefined} />
-          : <Stat label="Cumplimiento" value={result?.compliance_pct !== null && result?.compliance_pct !== undefined ? `${fmtNum(result.compliance_pct, 1)} %` : '—'} sub={`${fmtNum(result?.score ?? null)} de ${fmtNum(result?.max_score ?? null)}`} />}
-        <Stat label="Hallazgos" value={findings.length} sub={`${findings.filter(f => f.status === 'abierto' || f.status === 'en_tratamiento').length} abiertos`} />
-        <Stat label="Críticos con desvío" value={result?.critical_failures ?? 0} tone={result?.critical_failures ? 'bad' : undefined} />
-      </div>
-      {audit.status === 'completada' || audit.status === 'cerrada'
-        ? <div className="alert alert-info small"><strong>Resultado oficial</strong> (calculado por el servidor con la metodología de la versión v{version.version_number}): {audit.compliance_pct !== null || audit.result_band ? `${version.scoring_method === 'situacion_promedio_secciones' ? `nota ${fmtNum(audit.score)}` : `${fmtNum(audit.score)} / ${fmtNum(audit.max_score, 0)} (${fmtNum(audit.compliance_pct, 1)} %)`}${audit.result_band ? ` · ${audit.result_band}` : ''}` : 'pendiente de sincronización'}.</div>
-        : <div className="muted small">Vista previa: se calcula en el dispositivo con las mismas reglas versionadas de la plantilla (v{version.version_number}) para orientar al auditor; no es el resultado oficial. El resultado oficial lo calcula el servidor al completar.</div>}
+      {(() => {
+        const official = ['completada', 'cerrada'].includes(audit.status) && Array.isArray(audit.section_results) && (audit.score !== null || audit.compliance_pct !== null);
+        const situ = version.scoring_method === 'situacion_promedio_secciones';
+        const data: SheetData = official
+          ? { method: version.scoring_method, official: true, band: audit.result_band ?? null,
+              sections: audit.section_results as unknown as SheetData['sections'],
+              final: situ ? (audit.score === null ? null : Number(audit.score)) : (audit.compliance_pct === null ? null : Number(audit.compliance_pct)) }
+          : { method: version.scoring_method, official: false, band: result?.band ?? null, sections: result?.sections ?? [],
+              final: situ ? (result?.final ?? null) : (result?.compliance_pct ?? null) };
+        return (
+          <ResultSheet data={data} config={version.scoring_config} previous={previous}
+            meta={<>
+              <p className="small muted" style={{ margin: 0 }}>{official
+                ? `Calculado por el servidor al completar, con la metodología de la versión v${version.version_number} de la plantilla.`
+                : `Se calcula en el dispositivo con las reglas de la versión v${version.version_number} para orientar al auditor; el resultado oficial lo calcula el servidor al completar.`}</p>
+              {!situ && data.sections.length ? <p className="small muted" style={{ margin: 0 }}>Puntaje: {fmtNum(official ? audit.score : result?.score ?? null)} de {fmtNum(official ? audit.max_score : result?.max_score ?? null)}</p> : null}
+            </>}
+            extra={<div className="row gap-lg wrap small">
+              <span><strong>{answered}</strong>/{scorable.length} respondidas</span>
+              <span><strong>{findings.length}</strong> hallazgos ({findings.filter(f => f.status === 'abierto' || f.status === 'en_tratamiento').length} abiertos{findings.some(f => f.recurrence_count > 0) ? `, ${findings.filter(f => f.recurrence_count > 0).length} recurrentes` : ''})</span>
+              <span style={result?.critical_failures ? { color: 'var(--bad)' } : undefined}><strong>{result?.critical_failures ?? 0}</strong> críticos con desvío</span>
+              <div className="progress grow" style={{ minWidth: 120 }}><span style={{ width: `${scorable.length ? (100 * answered) / scorable.length : 0}%` }} /></div>
+            </div>} />
+        );
+      })()}
       {life.reviewInfo}
       {['planificada', 'en_curso'].includes(audit.status) && writer ? <ReadinessCard local={local} /> : null}
-
-      {result?.sections.length ? (
-        <Card title={audit.section_results && ['completada', 'cerrada'].includes(audit.status) ? 'Resultado por sección (vista previa; ver informe para el oficial)' : 'Resultado por sección (vista previa)'}>
-          <div className="table-wrap"><table className="t"><thead><tr><th>Sección</th><th className="num">Obtenido</th><th className="num">Objetivo</th><th className="num">Nota</th><th className="num">Respondidos</th></tr></thead>
-            <tbody>{result.sections.map(s => <tr key={s.section_id}><td>{displayText(s.title)}</td><td className="num">{s.raw}</td><td className="num">{s.target}</td><td className="num">{fmtNum(s.score)}</td><td className="num">{s.answered}/{s.items}</td></tr>)}</tbody></table></div>
-          {version.scoring_method === 'situacion_promedio_secciones' ? <p className="muted small">Según la metodología de la plantilla, los requisitos sin responder suman 0 y cuentan en el objetivo.</p> : null}
-        </Card>
-      ) : null}
 
       <div className="row gap wrap between">
         <label className="row gap small"><input type="checkbox" checked={onlyPending} onChange={e => setOnlyPending(e.target.checked)} /> Mostrar sólo sin responder</label>
@@ -195,6 +205,8 @@ export function AuditExecutePage() {
           </div>
         );
       })}
+
+      <ClosingMeetingCard audit={audit} writer={writer} companyName={audit.company_id ? cName.get(audit.company_id) ?? '' : ''} leadName={audit.lead_auditor_id ? people.get(audit.lead_auditor_id) ?? '' : ''} />
 
       <div className="grid grid-2">
         <ParticipantsCard audit={audit} access={access} />

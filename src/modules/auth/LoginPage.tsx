@@ -36,9 +36,9 @@ export function LoginPage() {
 
   return (
     <div className="auth-wrap">
-      <Card className="auth-card">
+      <Card className="auth-card auth-banded">
         <form className="stack" onSubmit={submit}>
-          <div className="row gap"><span className="brand-mark">HSE</span><div><h1>HSE Audit Manager</h1><p className="muted small">Auditorías de Seguridad, Salud, Medio Ambiente y CSMS</p></div></div>
+          <div className="row gap"><span className="brand-mark" aria-hidden><i /><i /><i /><i /></span><div><h1>Auditorías HSE</h1><p className="muted small" style={{ margin: 0 }}>Seguridad e Higiene, Salud Ocupacional, Medio Ambiente y CSMS</p></div></div>
           <h2>{mode === 'login' ? 'Iniciar sesión' : mode === 'signup' ? 'Crear cuenta' : 'Restablecer contraseña'}</h2>
           {mode === 'signup' ? <Field label="Nombre y apellido" required><Input value={name} onChange={e => setName(e.target.value)} required autoComplete="name" /></Field> : null}
           <Field label="Correo electrónico" required><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" /></Field>

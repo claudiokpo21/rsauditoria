@@ -190,7 +190,7 @@ with sync_playwright() as p:
     pdf_path = download(A, lambda: A.get_by_role('button', name='Descargar PDF').first.click())
     txt = '\n'.join(pg.extract_text() or '' for pg in PdfReader(pdf_path).pages)
     norm = ' '.join(txt.split())
-    check('4.1 PDF de auditoría: resultado oficial y por sección', 'Resultados por sección (oficiales)' in norm and 'Locación' in norm and '66,7' in norm, os.path.basename(pdf_path))
+    check('4.1 PDF de auditoría: resultado oficial y por sección', 'Resultados por sección oficiales' in norm and 'Resultado oficial' in norm and 'Locación' in norm and '66,7' in norm, os.path.basename(pdf_path))
     check('4.2 PDF: hallazgo con pregunta, requisito, clasificación, responsable, causa raíz y plan', all(s in norm for s in ['HAL-2026-0007', 'extintores están vigentes', 'Extintores vigentes y accesibles', 'RECURRENTE', 'Nadie controla los vencimientos', 'Criterio de eficacia']), '')
     check('4.3 PDF: historial de cambios', 'Historial de cambios' in norm, f'{len(PdfReader(pdf_path).pages)} páginas')
     xlsx_path = download(A, lambda: A.get_by_role('button', name='Descargar Excel').first.click())

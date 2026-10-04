@@ -1,0 +1,102 @@
+[
+  {
+    "prueba": "0.1 Datos de prueba: auditoría con las respuestas de la planilla = 6,27 Bueno",
+    "ok": true,
+    "detalle": "6.27 Bueno"
+  },
+  {
+    "prueba": "1.1 Planilla de resultado: 6,27 Bueno, oficial",
+    "ok": true,
+    "detalle": ""
+  },
+  {
+    "prueba": "1.2 Requisitos con puntaje alcanzado, objetivo y evaluación iguales a la planilla",
+    "ok": true,
+    "detalle": "[[\"Liderazgo, Compromiso y Enfoque al Cliente\", \"16\", \"24\", \"6,67\", \"8/8\"], [\"Planificación, Organización y Recursos\", \"63\", \"90\", \"7,00\", \"30/30\"], [\"Operación y control operacional\", \"65\", \"84\", \"7,74\", \"28/28\"], [\"Gestión de Proveedores\", \"4\", \"12\", \"3,33\", \"4/4\"], [\"Preparación y respuesta ante "
+  },
+  {
+    "prueba": "1.3 Fila de resultado final 175 / 249 / 6,27",
+    "ok": true,
+    "detalle": "[\"Resultado final\", \"175\", \"249\", \"6,27\", \"\"]"
+  },
+  {
+    "prueba": "1.4 Colores de evaluación por sección como la planilla (verde, naranja, amarillo)",
+    "ok": true,
+    "detalle": "[\"rgb(146, 208, 80)\", \"rgb(146, 208, 80)\", \"rgb(146, 208, 80)\", \"rgb(226, 107, 10)\", \"rgb(255, 255, 0)\", \"rgb(146, 208, 80)\", \"rgb(146, 208, 80)\"]"
+  },
+  {
+    "prueba": "1.5 Cuadro \"Criterio de evaluación\" con rangos y bandas",
+    "ok": true,
+    "detalle": "8,01 - 10 Muy Bueno 6,01 - 8 Bueno 4,01 - 6 Regular 0 - 4 Crítico"
+  },
+  {
+    "prueba": "1.6 Recuadro del resultado con el color de la banda",
+    "ok": true,
+    "detalle": "rgb(146, 208, 80)"
+  },
+  {
+    "prueba": "2.1 Dashboard: últimos resultados con las cuatro bandas en color",
+    "ok": true,
+    "detalle": "[[\"Regular\", \"rgb(255, 255, 0)\"], [\"Crítico\", \"rgb(226, 107, 10)\"], [\"Muy Bueno\", \"rgb(197, 217, 241)\"], [\"Bueno\", \"rgb(146, 208, 80)\"]]"
+  },
+  {
+    "prueba": "6.1 Seguimiento: columnas Anterior y Variación con la auditoría previa de la misma empresa",
+    "ok": true,
+    "detalle": "[\"Requisitos del sistema de gestión\", \"Puntaje alcanzado\", \"Puntaje objetivo\", \"Evaluación\", \"Anterior\", \"Variación\", \"Respondidos\"]"
+  },
+  {
+    "prueba": "6.2 Variación del resultado final (5,29 vs 6,27 → ▼ -0,98, en rojo)",
+    "ok": true,
+    "detalle": "[\"Resultado final\", \"132\", \"249\", \"5,29\", \"6,27\", \"▼ -0,98\", \"\"]"
+  },
+  {
+    "prueba": "7.1 Acta y dos firmas capturadas en el dispositivo (auditor y contratista)",
+    "ok": true,
+    "detalle": "[\"Auditor A\", \"Juan Pérez\"]"
+  },
+  {
+    "prueba": "7.2 Firmas sincronizadas como imagen PNG",
+    "ok": true,
+    "detalle": "2 en el servidor"
+  },
+  {
+    "prueba": "3.4 PDF: acta de reunión de cierre con firmas y conformidad",
+    "ok": true,
+    "detalle": ""
+  },
+  {
+    "prueba": "3.1 PDF: tabla de requisitos, resultado final y criterio de evaluación",
+    "ok": true,
+    "detalle": "Auditoria_AUD-2026-0010.pdf"
+  },
+  {
+    "prueba": "3.5 Excel: hoja \"Acta y firmas\"",
+    "ok": true,
+    "detalle": "Resumen, Secciones (oficial), Checklist, Acta y firmas, Hallazgos, Plan de acción"
+  },
+  {
+    "prueba": "3.2 Excel: evaluación coloreada por banda y fila de resultado final",
+    "ok": true,
+    "detalle": "[\"FF92D050\", \"FF92D050\", \"FF92D050\", \"FFE26B0A\", \"FFFFFF00\", \"FF92D050\", \"FF92D050\"]"
+  },
+  {
+    "prueba": "3.3 Excel: encabezado con el color de la planilla",
+    "ok": true,
+    "detalle": "FFFAC090"
+  },
+  {
+    "prueba": "4.1 Celular: planilla sin desplazamiento horizontal de la página",
+    "ok": true,
+    "detalle": ""
+  },
+  {
+    "prueba": "4.2 Celular: dashboard sin desplazamiento horizontal",
+    "ok": true,
+    "detalle": ""
+  },
+  {
+    "prueba": "5.1 Pantalla de ingreso con la tipografía nueva",
+    "ok": true,
+    "detalle": ""
+  }
+]

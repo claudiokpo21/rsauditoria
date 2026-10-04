@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase, errorMessage } from '../../lib/supabase';
 import { Button, Card, Field, Input } from '../../components/ui';
 import { useAuth } from '../auth/AuthProvider';
+import { DemoButton } from '../demo/DemoButton';
 
 /** Primer ingreso sin organizaciones: crear una propia o esperar invitación. */
 export function CreateOrgPage() {
@@ -29,6 +30,10 @@ export function CreateOrgPage() {
           <Field label="CUIT (opcional)"><Input value={tax} onChange={e => setTax(e.target.value)} /></Field>
           {err ? <div className="alert alert-bad">{err}</div> : null}
           <Button onClick={create} busy={busy} disabled={name.trim().length < 2 || !navigator.onLine}>Crear organización</Button>
+          <div className="alert alert-info stack" style={{ gap: '.5rem' }}>
+            <span><strong>¿Quiere verla funcionando primero?</strong> Cree una organización de ejemplo con auditorías, hallazgos y planes de acción ficticios. Su organización real la puede crear después.</span>
+            <div><DemoButton /></div>
+          </div>
           <div className="row between">
             <Button variant="ghost" onClick={() => void refresh()}>Ya me invitaron: reintentar</Button>
             <Button variant="ghost" onClick={() => void signOut(true)}>Salir</Button>

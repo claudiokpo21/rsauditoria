@@ -168,3 +168,39 @@ conecte y espere ✓ Sincronizado.
 **No puedo cerrar.** Falta la revisión de Coordinación, el resumen, o una NC sin plan de acción.
 **El puntaje del celular no coincide con el informe.** El del celular es una vista previa; vale el oficial.
 **No veo una auditoría.** Sólo se ven las asignadas (auditores) o las de su empresa (contratistas).
+
+## 11. Organización de ejemplo
+
+Para conocer la aplicación o capacitar al equipo sin tocar datos reales: *Crear organización de ejemplo* (en el primer
+ingreso, en el Dashboard vacío o en *Usuarios y organización*). Se crea una organización aparte con contratistas,
+auditorías en todos los estados, hallazgos con causa raíz, acciones vencidas y por vencer, y hallazgos recurrentes.
+Para volver a su organización, elíjala en la barra superior. Requiere conexión.
+
+## 12. Cómo leer el resultado
+
+En cada auditoría, la planilla de resultado muestra, como la planilla H&P: los requisitos del sistema de gestión con
+puntaje alcanzado, puntaje objetivo y evaluación (0 a 10) coloreada según el criterio de evaluación — **Muy Bueno**
+(8,01 a 10, celeste), **Bueno** (6,01 a 8, verde), **Regular** (4,01 a 6, amarillo) y **Crítico** (0 a 4, naranja) —,
+y la fila de resultado final (promedio de las secciones). El recuadro grande indica si es el **resultado oficial**
+(calculado por el servidor al completar) o una **vista previa** mientras se trabaja.
+
+## 13. Reunión de cierre y firmas
+
+Al terminar la auditoría, en la tarjeta *Reunión de cierre y firmas*: cargue la fecha, los asistentes y los acuerdos
+(*Guardar acta*) y toque **Agregar firma**. Elija quién firma (auditor líder, representante del contratista, etc.),
+el nombre, y si firma **conforme** o **con observaciones** (en ese caso escriba las observaciones). La persona firma con
+el dedo en el recuadro. Funciona sin señal: las firmas se envían al sincronizar. Si una firma quedó mal, **Dar de baja**
+y firmar de nuevo (queda registrado). Con la auditoría cerrada, el acta y las firmas ya no cambian. El informe PDF
+incluye el acta con las firmas.
+
+## 14. Comparación con la auditoría anterior
+
+Si la empresa ya tuvo una auditoría completada con la misma plantilla, la planilla de resultado muestra la nota
+**anterior** de cada requisito y la **variación**: ▲ en verde si mejoró, ▼ en rojo si empeoró. Debajo se indica con qué
+auditoría se compara. Lo mismo sale en el PDF y el Excel.
+
+## 15. Marcar sobre la foto
+
+Al sacar o elegir una foto como evidencia se abre *Marcar sobre la foto*: elija **Flecha**, **Círculo** o **Trazo** y el
+color, y arrastre sobre la imagen para señalar el desvío (*Deshacer* quita la última marca). **Guardar con marcas**
+guarda la foto marcada; **Guardar sin marcas** guarda la original.

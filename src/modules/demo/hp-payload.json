@@ -1,0 +1,2030 @@
+{
+  "template": {
+    "id": null,
+    "name": "Lista de verificación – Auditoría a Segundas Partes (CSMS)",
+    "category": "csms",
+    "description": "Importada de \"hp.xlsx\". Requisitos CSMS por categoría del sistema de gestión, escala NC/OBS/OPM/OK/N/A."
+  },
+  "version": {
+    "change_notes": "Importación desde hp.xlsx",
+    "scoring_method": "situacion_promedio_secciones",
+    "scoring_config": {
+      "options": [
+        {
+          "code": "nc",
+          "label": "NC",
+          "points": 0,
+          "finding_type": "no_conformidad",
+          "source": "'Table 1'!I15 · puntaje inferido de los valores cargados"
+        },
+        {
+          "code": "obs",
+          "label": "OBS",
+          "points": 1,
+          "finding_type": "observacion",
+          "source": "'Table 1'!J15 · puntaje inferido de los valores cargados"
+        },
+        {
+          "code": "opm",
+          "label": "OPM",
+          "points": 2,
+          "finding_type": "oportunidad_mejora",
+          "source": "'Table 1'!K15 · puntaje inferido de los valores cargados"
+        },
+        {
+          "code": "ok",
+          "label": "OK",
+          "points": 3,
+          "source": "'Table 1'!L15 · puntaje inferido de los valores cargados"
+        },
+        {
+          "code": "na",
+          "label": "N/A",
+          "points": 0,
+          "source": "'Table 1'!H14 · suma 0 (SUMIF sin efecto) y cuenta en el objetivo"
+        }
+      ],
+      "max_points_per_item": 3,
+      "scale_max": 10,
+      "na_mode": "contar_cero",
+      "unanswered_mode": "contar_cero",
+      "section_formula": "nota = obtenido / (filas_de_la_sección × 3) × 10",
+      "final_formula": "promedio simple de las notas de sección",
+      "bands": [
+        {
+          "label": "Muy Bueno",
+          "min": 8.01,
+          "max": 10,
+          "source": "Formato condicional O105: entre 8.01 y 10"
+        },
+        {
+          "label": "Bueno",
+          "min": 6.01,
+          "max": 8,
+          "source": "Formato condicional O105: entre 6.01 y 8"
+        },
+        {
+          "label": "Regular",
+          "min": 4.01,
+          "max": 6,
+          "source": "Formato condicional O105: entre 4.01 y 6"
+        },
+        {
+          "label": "Crítico",
+          "min": null,
+          "max": 4,
+          "source": "Formato condicional O105: ≤ 4"
+        }
+      ],
+      "band_rounding": null,
+      "provenance": {
+        "file": "hp.xlsx",
+        "sha256": "606f9065f1894fb427bfe37bc4a71fca28e8bcccd6d738318a0bb96a6cf064b5",
+        "sheet": "Table 1",
+        "section_formulas": [
+          {
+            "section": "Liderazgo, Compromiso y Enfoque al Cliente",
+            "result": "N16",
+            "score": "O16",
+            "totals_row": 24
+          },
+          {
+            "section": "Planificación, Organización y Recursos",
+            "result": "N25",
+            "score": "O25",
+            "totals_row": 55
+          },
+          {
+            "section": "Operación y control operacional",
+            "result": "N56",
+            "score": "O56",
+            "totals_row": 84
+          },
+          {
+            "section": "Gestión de Proveedores",
+            "result": "N85",
+            "score": "O85",
+            "totals_row": 89
+          },
+          {
+            "section": "Preparación y respuesta ante emergencias",
+            "result": "N90",
+            "score": "O90",
+            "totals_row": 93
+          },
+          {
+            "section": "Seguimiento, Medición, Evaluación de desempeño y Mejora Contínua",
+            "result": "N94",
+            "score": "O94",
+            "totals_row": 104
+          }
+        ],
+        "final_cell": "O105",
+        "final_formula": "=AVERAGE(O16,O25,O56,O85,O90,O94)"
+      }
+    },
+    "source_file_name": "hp.xlsx",
+    "source_sha256": "606f9065f1894fb427bfe37bc4a71fca28e8bcccd6d738318a0bb96a6cf064b5",
+    "import_report": {
+      "stats": {
+        "hojas": 3,
+        "categorias": 6,
+        "preguntas": 83,
+        "preguntas_numeradas": 81,
+        "preguntas_sin_numero": 2,
+        "procesos_catalogo": 8,
+        "procesos_usados": 7,
+        "formulas_total": 66,
+        "formulas_identificadas": 66,
+        "numeros_duplicados": 3,
+        "saltos_numeracion": 5,
+        "opciones_situacion": 5,
+        "bandas_evaluacion": 4,
+        "incidencias": 28,
+        "incidencias_bloqueantes": 0,
+        "incidencias_advertencia": 20,
+        "incidencias_info": 8
+      },
+      "diagnosis": [
+        {
+          "name": "Table 1",
+          "dimension": "B2:O110",
+          "rows": 106,
+          "columns": 14,
+          "merges": 47,
+          "formulas": 45,
+          "conditionalFormats": 1,
+          "dataValidations": 1,
+          "role": "Checklist (plantilla + ejecución de ejemplo)",
+          "notes": []
+        },
+        {
+          "name": "Hoja1",
+          "dimension": "B7:K21",
+          "rows": 12,
+          "columns": 10,
+          "merges": 17,
+          "formulas": 21,
+          "conditionalFormats": 2,
+          "dataValidations": 0,
+          "role": "Resumen de resultados por requisito (referencias a Table 1)",
+          "notes": []
+        },
+        {
+          "name": "Hoja2",
+          "dimension": "A2:A9",
+          "rows": 8,
+          "columns": 1,
+          "merges": 0,
+          "formulas": 0,
+          "conditionalFormats": 0,
+          "dataValidations": 0,
+          "role": "Catálogo de procesos (lista desplegable de la columna Procesos)",
+          "notes": []
+        }
+      ],
+      "cellMap": [
+        {
+          "source": "'Table 1'!B16…",
+          "target": "hse_template_sections.title",
+          "rule": "Celda combinada de la columna \"Requisitos\" = categoría/requisito del sistema de gestión (texto exacto).",
+          "imported": true
+        },
+        {
+          "source": "'Table 1'!Dn",
+          "target": "hse_template_items.original_number / code",
+          "rule": "Numeración tal cual figura (sin renumerar).",
+          "imported": true
+        },
+        {
+          "source": "'Table 1'!En",
+          "target": "hse_template_items.question",
+          "rule": "Texto completo del requisito, sin recortar.",
+          "imported": true
+        },
+        {
+          "source": "'Table 1'!Gn",
+          "target": "hse_template_items.process_id → hse_processes",
+          "rule": "Proceso a auditar (lista de Hoja2).",
+          "imported": true
+        },
+        {
+          "source": "'Table 1'!I/J/K/L15",
+          "target": "scoring_config.options",
+          "rule": "Opciones de situación NC/OBS/OPM/OK.",
+          "imported": true
+        },
+        {
+          "source": "'Table 1'!H14",
+          "target": "scoring_config.options[na]",
+          "rule": "Columna \"N/A marcar X\".",
+          "imported": true
+        },
+        {
+          "source": "'Table 1'!Fn",
+          "target": "— (excluido)",
+          "rule": "Evidencias/comentarios de una auditoría ejecutada.",
+          "imported": false
+        },
+        {
+          "source": "'Table 1'!Mn",
+          "target": "— (excluido)",
+          "rule": "Descripción de hallazgos de una auditoría ejecutada.",
+          "imported": false
+        },
+        {
+          "source": "'Table 1'!I/J/K/Ln",
+          "target": "hse_template_validation_cases.answers (sólo códigos)",
+          "rule": "Resultado histórico: sólo como caso de validación aislado; nunca como valor por defecto.",
+          "imported": false
+        },
+        {
+          "source": "Hoja2!$A$2:$A$9 (validación de lista en G16:G23 G25:G54 G56:G83 G90:G92 G85:G88 G94:G103)",
+          "target": "hse_processes",
+          "rule": "Catálogo de procesos auditables.",
+          "imported": true
+        }
+      ],
+      "comparison": [
+        {
+          "label": "Liderazgo, Compromiso y Enfoque al Cliente · obtenido",
+          "expected": 16,
+          "computed": 16,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Liderazgo, Compromiso y Enfoque al Cliente · objetivo",
+          "expected": 24,
+          "computed": 24,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Liderazgo, Compromiso y Enfoque al Cliente · nota",
+          "expected": 6.666666666666666,
+          "computed": 6.666666666666666,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Planificación, Organización y Recursos · obtenido",
+          "expected": 63,
+          "computed": 63,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Planificación, Organización y Recursos · objetivo",
+          "expected": 90,
+          "computed": 90,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Planificación, Organización y Recursos · nota",
+          "expected": 7,
+          "computed": 7,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Operación y control operacional · obtenido",
+          "expected": 65,
+          "computed": 65,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Operación y control operacional · objetivo",
+          "expected": 84,
+          "computed": 84,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Operación y control operacional · nota",
+          "expected": 7.738095238095238,
+          "computed": 7.738095238095238,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Gestión de Proveedores · obtenido",
+          "expected": 4,
+          "computed": 4,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Gestión de Proveedores · objetivo",
+          "expected": 12,
+          "computed": 12,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Gestión de Proveedores · nota",
+          "expected": 3.333333333333333,
+          "computed": 3.333333333333333,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Preparación y respuesta ante emergencias · obtenido",
+          "expected": 5,
+          "computed": 5,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Preparación y respuesta ante emergencias · objetivo",
+          "expected": 9,
+          "computed": 9,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Preparación y respuesta ante emergencias · nota",
+          "expected": 5.555555555555555,
+          "computed": 5.555555555555555,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Seguimiento, Medición, Evaluación de desempeño y Mejora Contínua · obtenido",
+          "expected": 22,
+          "computed": 22,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Seguimiento, Medición, Evaluación de desempeño y Mejora Contínua · objetivo",
+          "expected": 30,
+          "computed": 30,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Seguimiento, Medición, Evaluación de desempeño y Mejora Contínua · nota",
+          "expected": 7.333333333333333,
+          "computed": 7.333333333333333,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Resultado final",
+          "expected": 6.271164021164021,
+          "computed": 6.271164021164021,
+          "diff": 0,
+          "ok": true
+        },
+        {
+          "label": "Calificación (Bueno)",
+          "expected": null,
+          "computed": null,
+          "diff": null,
+          "ok": true
+        }
+      ],
+      "alternativeFinal": {
+        "label": "Nota global ponderada (alcanzado total / objetivo total)",
+        "value": 7.028112449799196,
+        "source": "'Hoja1'!I15/J15"
+      }
+    }
+  },
+  "processes": [
+    "Dirección / Gerencia",
+    "Licitaciones",
+    "HSE",
+    "OPER/HSE",
+    "OPER/RRHH",
+    "OPER/SALUD",
+    "Compras/Contrat.",
+    "OPER/MANT"
+  ],
+  "sections": [
+    {
+      "key": "S16",
+      "title": "Liderazgo, Compromiso y Enfoque al Cliente ",
+      "sort_order": 0,
+      "source_ref": "'Table 1'!B16",
+      "items": [
+        {
+          "key": "R16",
+          "code": "1",
+          "original_number": "1",
+          "question": "El Contratista posee un organigrama de su organizacion definido y aprobado por la Direccion y/o Gerencias? ",
+          "process": "Dirección / Gerencia",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 0,
+          "source_ref": "'Table 1'!E16",
+          "review_flags": []
+        },
+        {
+          "key": "R17",
+          "code": "2",
+          "original_number": "2",
+          "question": "El Contratista posee Política  CSMS (Calidad, Seguridad,  Medio Ambiente y Calidad);  Politica de Alcohol  y  Drogas,  Autoridad  para detener,  Politica Vehicular,  entre  otras?. ",
+          "process": "Dirección / Gerencia",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 1,
+          "source_ref": "'Table 1'!E17",
+          "review_flags": []
+        },
+        {
+          "key": "R18",
+          "code": "3",
+          "original_number": "3",
+          "question": "Se han realizado campañas de difusión de las Políticas del Contratista y del Cliente?.",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 2,
+          "source_ref": "'Table 1'!E18",
+          "review_flags": []
+        },
+        {
+          "key": "R19",
+          "code": "4",
+          "original_number": "4",
+          "question": "La Direccion del Contratista ha realizado un analisis de contexto determinando las cuestiones externas e internas pertinentes para el proposito de la Empresa y pueden afectar su capacidad para alcanzar los resultados previstos? Este analisis tiene prevista revisiones constantes?",
+          "process": "Dirección / Gerencia",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 3,
+          "source_ref": "'Table 1'!E19",
+          "review_flags": []
+        },
+        {
+          "key": "R20",
+          "code": "5",
+          "original_number": "5",
+          "question": "Como demuestra la Gerencia del Contratista en forma visible su compromiso en temas de CSMS ante su personal propio y de terceros?  Posee un programa sistematico de Visitas Gerenciales? Posee un plan de reuniones sobre temas de CSMS? Como Analiza y gestiona la Gerencia los requerimientos del Cliente? Ej: Roger / Pase / Sistema de Gestion de acciones? ",
+          "process": "Dirección / Gerencia",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 4,
+          "source_ref": "'Table 1'!E20",
+          "review_flags": []
+        },
+        {
+          "key": "R21",
+          "code": "6",
+          "original_number": "6",
+          "question": "Como trata la Direccion y Gerencias del Contratista los temas de CSMS? Realizan  revisiones sistematicas y periodicas? Que temas tratan?  Tienen en  cuenta  las  auditorias anteriores, las inspecciones de campo, observaciones preventivas de los trabajadores, ordenes de servicios, quejas e informes?",
+          "process": "Dirección / Gerencia",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 5,
+          "source_ref": "'Table 1'!E21",
+          "review_flags": []
+        },
+        {
+          "key": "R22",
+          "code": "7",
+          "original_number": "7",
+          "question": "Como realiza el Contratista el tratamiento y seguimiento de las OOSS, quejas, reclamos y otras comunicaciones enviadas por El cliente? Ver ejemplos",
+          "process": "Dirección / Gerencia",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 6,
+          "source_ref": "'Table 1'!E22",
+          "review_flags": []
+        },
+        {
+          "key": "R23",
+          "code": "8",
+          "original_number": "8",
+          "question": "Como realiza el Contratista el tratamiento y seguimiento de las licitaciones a las que se presentan? Como son analizadas las mismas? Como se aseguran los recursos para el cumplimiento de los requisitos de CSMS del Cliente ? IMPORTANTE",
+          "process": "Licitaciones",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 7,
+          "source_ref": "'Table 1'!E23",
+          "review_flags": []
+        }
+      ]
+    },
+    {
+      "key": "S25",
+      "title": "Planificación, Organización y Recursos",
+      "sort_order": 1,
+      "source_ref": "'Table 1'!B25",
+      "items": [
+        {
+          "key": "R25",
+          "code": "9",
+          "original_number": "9",
+          "question": "El Contratista cuenta con un Organigrama CSMS? Se ajusta al requerimiento normativo de Higiene y Seguridad?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 0,
+          "source_ref": "'Table 1'!E25",
+          "review_flags": []
+        },
+        {
+          "key": "R26",
+          "code": "10",
+          "original_number": "10",
+          "question": "Cual es la distribucion del personal de SMS para asistir a las operaciones de campo? Con que frecuencia asisten?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 1,
+          "source_ref": "'Table 1'!E26",
+          "review_flags": []
+        },
+        {
+          "key": "R27",
+          "code": "11",
+          "original_number": "11",
+          "question": "Tienen definidas las actividades del personal de SMS en forma sistematica? Cual es el tratamiento de los resultados de observaciones realizadas por el personal de SMS? Como analizan cuantitativa y cualitativamente la participacion del personl de SMS en las actividades de campo? VERIFICAR EN CAMPO",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 2,
+          "source_ref": "'Table 1'!E27",
+          "review_flags": []
+        },
+        {
+          "key": "R28",
+          "code": "12",
+          "original_number": "12",
+          "question": "Como tiene definido el Contratista la participacion y consulta de los trabajadores no directivos? VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 3,
+          "source_ref": "'Table 1'!E28",
+          "review_flags": []
+        },
+        {
+          "key": "R29",
+          "code": "13",
+          "original_number": "13",
+          "question": "El Contratista tiene implementado un sistema de observaciones preventivas? Cual es la metodologia para analizar y definir acciones? VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 4,
+          "source_ref": "'Table 1'!E29",
+          "review_flags": []
+        },
+        {
+          "key": "R30",
+          "code": "14",
+          "original_number": "14",
+          "question": "Como se asegura el Contratista la comunicación al personal operativo de los resultados de las observaciones preventivas de seguridad?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 5,
+          "source_ref": "'Table 1'!E30",
+          "review_flags": []
+        },
+        {
+          "key": "R31",
+          "code": "15",
+          "original_number": "15",
+          "question": "El Contratista tiene implementado uno o más sistemas de identificacion de peligros/aspectos ambientales y evaluacion de riesgos/impactos ambientales? Analizar metodologia, criterios y VERFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 6,
+          "source_ref": "'Table 1'!E31",
+          "review_flags": []
+        },
+        {
+          "key": "R32",
+          "code": "16",
+          "original_number": "16",
+          "question": "El personal operativo involucrado participa de la identificacion de peligros/aspectos ambientales y evaluacion de riesgos/impactos ambientales? Evidenciar.VERFICAR EN CAMPO Como se asegura la Contratista la comunicación al personal operativo? Que medidas de control tienen definidas?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 7,
+          "source_ref": "'Table 1'!E32",
+          "review_flags": []
+        },
+        {
+          "key": "R33",
+          "code": "17",
+          "original_number": "17",
+          "question": "La identificacion de peligros/aspectos ambientales y evaluacion de riesgos/impactos ambientales fue presentada al Cliente?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 8,
+          "source_ref": "'Table 1'!E33",
+          "review_flags": []
+        },
+        {
+          "key": "R34",
+          "code": "18",
+          "original_number": "18",
+          "question": "Sobre las evaluaciones de riesgos / Impactos definidas, como establecen las medidas de control para eliminar o mitigar los mismos? Eliminar, sustituir, utilizar controles de ingenieria, administrativos, formacion, uso de EPP.  ATS - Procedimientos - instructivos",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 9,
+          "source_ref": "'Table 1'!E34",
+          "review_flags": []
+        },
+        {
+          "key": "R35",
+          "code": "19",
+          "original_number": "19",
+          "question": "El Contratista cuenta con una matriz legal actualizada?. Cual es la metodologia de actualizacion? Como se aseguran el cumplimiento de los requisitos legales? Fue presentada al Cliente?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 10,
+          "source_ref": "'Table 1'!E35",
+          "review_flags": []
+        },
+        {
+          "key": "R36",
+          "code": "20",
+          "original_number": "20",
+          "question": "El  Contratista cuenta con Planes de SMS? Estan aprobados por la Direccion o Gerencia? Son coherentes con los objetivos, las Politicas, evaluaciones de riesgos e impactos, contexto y requerimientos legales?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 11,
+          "source_ref": "'Table 1'!E36",
+          "review_flags": []
+        },
+        {
+          "key": "R37",
+          "code": "21",
+          "original_number": "21",
+          "question": "De que manera y cada cuanto se realiza el control y seguimiento de dichos planes?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 12,
+          "source_ref": "'Table 1'!E37",
+          "review_flags": []
+        },
+        {
+          "key": "R38",
+          "code": "22",
+          "original_number": "22",
+          "question": "Son comunicados al personal? De que manera? VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 13,
+          "source_ref": "'Table 1'!E38",
+          "review_flags": []
+        },
+        {
+          "key": "R39",
+          "code": "23",
+          "original_number": "23",
+          "question": "El Contratista realiza programas de toma de conciencia al personal? Campañas de concientizacion sobre riesgos significativos, politicas de trabajo, seguridad vial, seguridad basada en el comportamiento, etc. Como miden la eficacia? VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 14,
+          "source_ref": "'Table 1'!E39",
+          "review_flags": []
+        },
+        {
+          "key": "R40",
+          "code": "24",
+          "original_number": "24",
+          "question": "El Contratista tiene implementado  un  esquema  de  reuniones  internas  de SMS  y  un sistema de seguimiento de las acciones correctivas acordada? VERIFICAR EN CAMPO",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 15,
+          "source_ref": "'Table 1'!E40",
+          "review_flags": []
+        },
+        {
+          "key": "R41",
+          "code": "25",
+          "original_number": "25",
+          "question": "El Contratista tiene definida las actividades de SMS para la supervisión de línea (operaciones)? \n- Inspecciones SMS; Observaciones preventivas; cacerias de riesgos, etc VERFICAR EN CAMPO\n",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 16,
+          "source_ref": "'Table 1'!E41",
+          "review_flags": []
+        },
+        {
+          "key": "R42",
+          "code": "26",
+          "original_number": "26",
+          "question": "La Contratista tiene implementado un mecanismo de Dialogos Diarios en SMS? Fue presentado al Cliente? VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 17,
+          "source_ref": "'Table 1'!E42",
+          "review_flags": []
+        },
+        {
+          "key": "R43",
+          "code": "27",
+          "original_number": "27",
+          "question": "Tiene el Contratista un sistema de recepcion y difusion de alertas y/o lecciones aprendidas y está documentado? Como se aseguran la difusión y aplicación de ser necesario por parte del personal? VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 18,
+          "source_ref": "'Table 1'!E43",
+          "review_flags": []
+        },
+        {
+          "key": "R44",
+          "code": "28",
+          "original_number": "28",
+          "question": "Tiene el Contratista una metodologia de selección de personal ingresante? Tienen definido los perfiles de puesto? Cual es el metodo?",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 19,
+          "source_ref": "'Table 1'!E44",
+          "review_flags": []
+        },
+        {
+          "key": "R45",
+          "code": "29",
+          "original_number": "29",
+          "question": "El Contratista cuenta con una metodologia para empleados nuevos o en mayor funcion?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 20,
+          "source_ref": "'Table 1'!E45",
+          "review_flags": []
+        },
+        {
+          "key": "R46",
+          "code": "30",
+          "original_number": "30",
+          "question": "Cuenta el Contratista con roles, responsabilidad y autoridad definidos para los perfiles de puesto? Analizarlos. Se han comunicado a los empleados de la empresa? ",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 21,
+          "source_ref": "'Table 1'!E46",
+          "review_flags": []
+        },
+        {
+          "key": "R47",
+          "code": "31",
+          "original_number": "31",
+          "question": "Tiene  el  Contratista  un  programa  de  capacitación y entrenamiento  en SMS por puesto de trabajo?  Fue presentado al Cliente?. (Gestion del conocimiento) ",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 22,
+          "source_ref": "'Table 1'!E47",
+          "review_flags": []
+        },
+        {
+          "key": "R48",
+          "code": "32",
+          "original_number": "32",
+          "question": "Tiene el Contratista un programa de inducción en SMS. Como se documenta? Como se aseguran que sus contratistas lo reciban?. Como determinan la necesidades de capacitacion?",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 23,
+          "source_ref": "'Table 1'!E48",
+          "review_flags": []
+        },
+        {
+          "key": "R49",
+          "code": "33",
+          "original_number": "33",
+          "question": "Todo el personal del Contratista afectado a las operaciones del Cliente ha recibido la capacitación sobre las 10 Reglas de Oro, Políticas y procedimientos obligatorios del Cliente? Programa ROGER y PASE?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 24,
+          "source_ref": "'Table 1'!E49",
+          "review_flags": []
+        },
+        {
+          "key": "R50",
+          "code": "34",
+          "original_number": "34",
+          "question": "Cuenta   el   Contratista   con   mecanismos   de   evaluación   de   desempeño   de   sus empleados.\nIncluyen pruebas de conocimientos y habilidades en el trabajo. Como miden la eficacia?",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 25,
+          "source_ref": "'Table 1'!E50",
+          "review_flags": []
+        },
+        {
+          "key": "R51",
+          "code": "35",
+          "original_number": "35",
+          "question": "La contratista cuenta  con un sistema o mecanismo de  control de certificaciones de Operadores   y   Equipamiento   para   actividades   críticas.   (Operador   manipulador hidráulico, manlift, hidrogrúa, trabajo en altura, well control, equipo de izaje, etc.) VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 26,
+          "source_ref": "'Table 1'!E51",
+          "review_flags": []
+        },
+        {
+          "key": "R52",
+          "code": "36",
+          "original_number": "36",
+          "question": "La Contratista cuenta con un sistema de examenes medicos de acuerdo a los peligros y riesgos asociados a las distintas actividades de sus empleados? VERIFICAR CON EMPLEADOS DEL CAMPO. Cerrar tema con RRHH",
+          "process": "OPER/SALUD",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 27,
+          "source_ref": "'Table 1'!E52",
+          "review_flags": [
+            "numeracion_duplicada"
+          ]
+        },
+        {
+          "key": "R53",
+          "code": "36",
+          "original_number": "36",
+          "question": "El Contratista tiene algun sistema de seguimiento de los exámenes médicos de los subcontratistas?",
+          "process": null,
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 28,
+          "source_ref": "'Table 1'!E53",
+          "review_flags": [
+            "numeracion_duplicada",
+            "proceso_faltante"
+          ]
+        },
+        {
+          "key": "R54",
+          "code": "37",
+          "original_number": "37",
+          "question": "El Contratista cuenta con procedimientos para la ejecución de los trabajos objeto del contrato. Fueron presentados al referente del Cliente? VERIFICAR EN CAMPO.Como se aseguran el entrenamiento de sus trabajadores sobre los mismos? Los trabajadores los conocen?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 29,
+          "source_ref": "'Table 1'!E54",
+          "review_flags": []
+        }
+      ]
+    },
+    {
+      "key": "S56",
+      "title": "Operación y control operacional",
+      "sort_order": 2,
+      "source_ref": "'Table 1'!B56",
+      "items": [
+        {
+          "key": "R56",
+          "code": "38",
+          "original_number": "38",
+          "question": "El Contratista ha implementado  un  programa  de  inspecciones focalizado en  las  tareas  críticas  de su proceso?. Con que frecuencia? \nComo realiza el  seguimiento   de   las   acciones   de   mejora sobre las observaciones o incumplimientos detectados?. VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 0,
+          "source_ref": "'Table 1'!E56",
+          "review_flags": []
+        },
+        {
+          "key": "R57",
+          "code": "39",
+          "original_number": "39",
+          "question": "Cuenta el Contratista con un sistema de verificación  de  puesta  en  marcha de sus equipos  instalados,  montados  o  modificados.  Se  realiza  y  registra  este  chequeo  antes  del arranque de las operaciones en cada sitio o locacion?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 1,
+          "source_ref": "'Table 1'!E57",
+          "review_flags": []
+        },
+        {
+          "key": "R58",
+          "code": "40",
+          "original_number": "40",
+          "question": "Hay evidencia documentada de que los supervisores o responsables operativos entrenan a los empleados para controlar los riesgos de las actividades? Reuniones pretareas, reuniones de seguridad periódicas in situ, etc",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 2,
+          "source_ref": "'Table 1'!E58",
+          "review_flags": []
+        },
+        {
+          "key": "R59",
+          "code": "41",
+          "original_number": "41",
+          "question": "Tiene el Contratista implementado un proceso de Gestion para el control de los  cambios  temporales y/o permanentes? Ver aplicación práctica",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 3,
+          "source_ref": "'Table 1'!E59",
+          "review_flags": []
+        },
+        {
+          "key": "R60",
+          "code": "42",
+          "original_number": "42",
+          "question": "Trabajo en Altura:\n- Cuenta con las Habilitaciones y/o Certificaciones necesarias?.\n- Se realizan los Exámenes médicos correspondientes al personal que realiza trabajos en altura?.                                                                                                             Si utiliza el procedimiento del Cliente ha capacitado a su personal en el mismo? ",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 4,
+          "source_ref": "'Table 1'!E60",
+          "review_flags": []
+        },
+        {
+          "key": "R61",
+          "code": "43",
+          "original_number": "43",
+          "question": "Trabajo en Altura:\n-Cuenta el Contratista con  Medición y seguimiento de vida útil de elementos de trabajos en altura?.\n- Cuenta la Contratista con Procedimientos e instructivos alineados.                                                     - Los EPP de altura son provistos en forma personal a los trabajadores afectados a la tarea?                                                                                                                                                               - Los EPP son chequeados antes de su uso? Queda registro?",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 5,
+          "source_ref": "'Table 1'!E61",
+          "review_flags": []
+        },
+        {
+          "key": "R62",
+          "code": "44",
+          "original_number": "44",
+          "question": "Izaje de Cargas \n- Cuenta con Certificaciones: del equipo, los accesorios, el señalero, el eslingador y el operador del equipo de izaje?\n- Se realizan los Exámenes médicos correspondientes al personal que realiza estas tareas?                                                                                                                           Si utiliza el procedimiento del Cliente ha capacitado a su personal en el mismo? ",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 6,
+          "source_ref": "'Table 1'!E62",
+          "review_flags": []
+        },
+        {
+          "key": "R63",
+          "code": "45",
+          "original_number": "45",
+          "question": "Izaje de Cargas \n- El Supervisor de Izaje está calificado?\n-  Cuenta la Contratista con Procedimientos e instructivos alineados",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 7,
+          "source_ref": "'Table 1'!E63",
+          "review_flags": []
+        },
+        {
+          "key": "R64",
+          "code": "46",
+          "original_number": "46",
+          "question": "Espacios Confinados:                                                                                                                                                         - Se cuenta con una identficacion de los espacios confinados?\n- Cuenta con las habilitaciones o certificaciones correspondientes?\n- El sistema implementado contempla tiempo de trabajo y descanso o relevo?                                                                                                                                                             Si utiliza el procedimiento del Cliente ha capacitado a su personal en el mismo? ",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 8,
+          "source_ref": "'Table 1'!E64",
+          "review_flags": []
+        },
+        {
+          "key": "R65",
+          "code": "47",
+          "original_number": "47",
+          "question": "Espacios Confinados::\n- Se encuentran provistos los Elementos de Protección Personal necesarios para la tarea?.\n- Se cuenta con un Plan de emergencia para Espacios confinados?",
+          "process": "OPER/RRHH",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 9,
+          "source_ref": "'Table 1'!E65",
+          "review_flags": []
+        },
+        {
+          "key": "R66",
+          "code": "48",
+          "original_number": "48",
+          "question": "Well Control:                                                                                                                                                        - El personal afectado a la operación cuenta con capacitacion y certificación en Control de pozo? - Se cuenta con el equipamiento adecuado y certificado?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 10,
+          "source_ref": "'Table 1'!E66",
+          "review_flags": []
+        },
+        {
+          "key": "R67",
+          "code": "49",
+          "original_number": "49",
+          "question": "Sistemas de Bloqueos y Etiquetados:\n- Se cuenta con un Inventario de dispositivos según tipo de energía. Etiquetas.\n- Cuentan con Procedimientos e instructivos. \n- Verificaciones, registros.\n- Capacitaciones del personal sobre Procedimientos e instructivos del Cliente.",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 11,
+          "source_ref": "'Table 1'!E67",
+          "review_flags": []
+        },
+        {
+          "key": "R68",
+          "code": "50",
+          "original_number": "50",
+          "question": "Sistema de Permisos de trabajo:                                                                                                                                                                 - Se cuenta con procedimiento propio y se implementa el del cliente? - Cuentan con las capacitaciones y habilitaciones correspondientes del personal segun su jerarquia de participacion en los Permisos de trabajo? Solicitante, Analista de gases, Aprobador, etc VERIFICAR EN CAMPO SU APLICACION",
+          "process": null,
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 12,
+          "source_ref": "'Table 1'!E68",
+          "review_flags": [
+            "proceso_faltante"
+          ]
+        },
+        {
+          "key": "R69",
+          "code": "51",
+          "original_number": "51",
+          "question": "Equipos de criticos de seguridad: el contratista tiene implementada alguna metodologia de control de los equipamientos criticos de seguridad? Posee una identificacion de los mismos? Ej: equipos de monogases; multigases, equipos de respiracion autónoma. VERIFICAR EN CAMPO  Fue presentado al Cliente?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 13,
+          "source_ref": "'Table 1'!E69",
+          "review_flags": []
+        },
+        {
+          "key": "R70",
+          "code": "52",
+          "original_number": "52",
+          "question": "El Contratista tiene implementada alguna campaña o documentacion sobre orden y limpieza en sus instalaciones?  Como realiza las verificaciones del estado de orden y limpieza en área de trabajo?. Fue presentado al Cliente?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 14,
+          "source_ref": "'Table 1'!E70",
+          "review_flags": []
+        },
+        {
+          "key": "R71",
+          "code": "53",
+          "original_number": "53",
+          "question": "Gestión Vehícular:\n- El  Contratista tiene implementado algun sistema de control de performance de conduccion vehicular? Explicar proceso.\n- Que documentacion y con que frecuencia al Cliente?\n- Tienen implementado un sistema de Parque cerrado?.\n- Tienen implementado algun sistema de Gerenciamiento de viajes? VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 15,
+          "source_ref": "'Table 1'!E71",
+          "review_flags": []
+        },
+        {
+          "key": "R72",
+          "code": "54",
+          "original_number": "54",
+          "question": "Gestión Vehicular equipos pesados: - el Contratista tiene implementado algun sistema de manejo y control de cargas? VERIFICAR EN CAMPO",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 16,
+          "source_ref": "'Table 1'!E72",
+          "review_flags": []
+        },
+        {
+          "key": "R73",
+          "code": "55",
+          "original_number": "55",
+          "question": "El Contratista mantiene medidas de control  sobre   el  manejo   de  productos  químicos  - Inventario,  elementos  de  protección  personal,  procedimientos  de  transporte,  uso  y disposición, hojas de seguridad, etc. Fue presentado al Cliente?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 17,
+          "source_ref": "'Table 1'!E73",
+          "review_flags": []
+        },
+        {
+          "key": "R74",
+          "code": "56",
+          "original_number": "56",
+          "question": "Como implementa el Contratista la Gestión  de Residuos? Tiene procedimiento que contemple los  tipos  de  residuos  generados  en  su  proceso  y  registre  la  trazabilidad  de  los mismos?. Mantiene la gestion del Cliente? Capacitó a su personal en ambos procedimientos?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 18,
+          "source_ref": "'Table 1'!E74",
+          "review_flags": []
+        },
+        {
+          "key": "R75",
+          "code": "57",
+          "original_number": "57",
+          "question": "El Contratista mantiene un programa de Caída de Objetos. Verificar su implementacion.  Registros. Fue presentado al Cliente?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 19,
+          "source_ref": "'Table 1'!E75",
+          "review_flags": []
+        },
+        {
+          "key": "R76",
+          "code": "58",
+          "original_number": "58",
+          "question": "El Contratista tiene mediciones de Iluminación según Res. 84/2012, Existe plan con acciones de mejora sobre los resultados de las mediciones?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 20,
+          "source_ref": "'Table 1'!E76",
+          "review_flags": []
+        },
+        {
+          "key": "R77",
+          "code": "59",
+          "original_number": "59",
+          "question": "El Contratista tiene mediciones de Ruido según Res. 85/2012. Existe plan con acciones de mejora sobre los resultados de las mediciones?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 21,
+          "source_ref": "'Table 1'!E77",
+          "review_flags": []
+        },
+        {
+          "key": "R78",
+          "code": "60",
+          "original_number": "60",
+          "question": "El Contratista ha realizado el estudio de ergonomia según Res. 886/2015 sobre protocolo de ergonomia.",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 22,
+          "source_ref": "'Table 1'!E78",
+          "review_flags": []
+        },
+        {
+          "key": "R79",
+          "code": "62",
+          "original_number": "62",
+          "question": "Bacteriológico y fisicoquímico del agua de uso humano",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 23,
+          "source_ref": "'Table 1'!E79",
+          "review_flags": []
+        },
+        {
+          "key": "R80",
+          "code": "63",
+          "original_number": "63",
+          "question": "El Contratista mantiene mediciones de puesta a Tierra según Res. 900/2015. Existe plan con acciones de mejora sobre los resultados de las mediciones?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 24,
+          "source_ref": "'Table 1'!E80",
+          "review_flags": [
+            "numeracion_duplicada"
+          ]
+        },
+        {
+          "key": "R81",
+          "code": null,
+          "original_number": null,
+          "question": "Sistema de suministro de Gas oil",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 25,
+          "source_ref": "'Table 1'!E81",
+          "review_flags": [
+            "sin_numeracion"
+          ]
+        },
+        {
+          "key": "R82",
+          "code": null,
+          "original_number": null,
+          "question": "Mochilas lavaojos",
+          "process": null,
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 26,
+          "source_ref": "'Table 1'!E82",
+          "review_flags": [
+            "sin_numeracion",
+            "proceso_faltante"
+          ]
+        },
+        {
+          "key": "R83",
+          "code": "64",
+          "original_number": "64",
+          "question": "Tiene  el  Contratista  documentado   el  programa  de  mantenimiento  preventivo  e inspección  de  los  equipos  que  utiliza  para  el  contrato  (equipo  pesado,  grúas, vehículos, herramientas y equipos).",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 27,
+          "source_ref": "'Table 1'!E83",
+          "review_flags": [
+            "numeracion_duplicada"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "S85",
+      "title": "Gestión de Proveedores",
+      "sort_order": 3,
+      "source_ref": "'Table 1'!B85",
+      "items": [
+        {
+          "key": "R85",
+          "code": "63",
+          "original_number": "63",
+          "question": "El Contratista tiene definido un sistema para la difusión de las Políticas, Objetivos y Procedimientos de SMS propios y del cliente a sus subcontratistas? ¿Cómo se asegura el control de estos documentos? Fue presentado al Cliente?  VERIFICAR EN CAMPO",
+          "process": "Compras/Contrat.",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 0,
+          "source_ref": "'Table 1'!E85",
+          "review_flags": [
+            "numeracion_duplicada"
+          ]
+        },
+        {
+          "key": "R86",
+          "code": "64",
+          "original_number": "64",
+          "question": "El Contratista mantiene un proceso de calificación y selección de proveedores? Se realiza una evaluacion periodica de desempeño de proveedores?  En dicha evaluación se contempla el cumplimiento de los requerimientos de SMS tano propios com de los Clientes?",
+          "process": "Compras/Contrat.",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 1,
+          "source_ref": "'Table 1'!E86",
+          "review_flags": [
+            "numeracion_duplicada"
+          ]
+        },
+        {
+          "key": "R87",
+          "code": "66",
+          "original_number": "66",
+          "question": "Como evalua el Contratista en forma periodica el desempeño  de  sus proveedores?,  Incluye el  monitoreo  de  los  requerimientos SMS?. Ejemplo: Estadísticas de siniestralidad, conductas de manejo, etc",
+          "process": "Compras/Contrat.",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 2,
+          "source_ref": "'Table 1'!E87",
+          "review_flags": []
+        },
+        {
+          "key": "R88",
+          "code": "67",
+          "original_number": "67",
+          "question": "El Contratista mantiene un  programa  de  Auditorías  y  /  o  Inspecciones  a  los  sub-contratistas?  ¿Se verifican los requerimientos de SMS?",
+          "process": "Compras/Contrat.",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 3,
+          "source_ref": "'Table 1'!E88",
+          "review_flags": []
+        }
+      ]
+    },
+    {
+      "key": "S90",
+      "title": "Preparación y respuesta ante emergencias",
+      "sort_order": 4,
+      "source_ref": "'Table 1'!B90",
+      "items": [
+        {
+          "key": "R90",
+          "code": "68",
+          "original_number": "68",
+          "question": "El Contratista ha identificado los posibles escenarios de emergencias de su actividad y ha definido su planes de respuesta específicos? Ej:\n- Atención de lesiones a personas y evacuación\n- Incendio\n- Derrame de produtos químicos, crudo, agua residual, combustibles, etc.\n- Control de pozos\n- Incidentes de tránsito\n- Presencia de Sulfhidrico , etc.                                                                                                                 Los escenarios definidos y los planes de respuestas específicos estan alineados a los del Cliente?                                                                                                                                                            Se han presentado al representante del Cliente?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 0,
+          "source_ref": "'Table 1'!E90",
+          "review_flags": []
+        },
+        {
+          "key": "R91",
+          "code": "69",
+          "original_number": "69",
+          "question": "El Contratista cuenta  con  los  recursos necesarios para  cumplir los distintos planes de respuesta?  Ej:  atención  de  lesionados  en  el  sitio  de trabajo, Sistemas de extinción de incendios, detectores, equipos autonomos, kits para contingencias ambientales, etc.",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 1,
+          "source_ref": "'Table 1'!E91",
+          "review_flags": []
+        },
+        {
+          "key": "R92",
+          "code": "70",
+          "original_number": "70",
+          "question": "El Contratista tiene implementado un cronograma de simulacros? contempla todos los escenarios definidos? \nSe adecua al cronograma propuesto por el cliente?\nSe identifican oportunidades de mejora y sedefinen planes de acción?.                                          Se verifica el cumplimiento y cierre de las acciones de mejora identificadas.?",
+          "process": "OPER/HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 2,
+          "source_ref": "'Table 1'!E92",
+          "review_flags": []
+        }
+      ]
+    },
+    {
+      "key": "S94",
+      "title": "Seguimiento, Medición, Evaluación de desempeño y Mejora Contínua",
+      "sort_order": 5,
+      "source_ref": "'Table 1'!B94",
+      "items": [
+        {
+          "key": "R94",
+          "code": "71",
+          "original_number": "71",
+          "question": "El Contratista tiene implementado procesos para el seguimiento, medicion, analisis y evaluación de desempeño? Ej: Indicadores de la gestión de SMS, KPI´s de cumplimiento de objetivos,  desempeño del Sistema de SMS, Etc.                                                                              ",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 0,
+          "source_ref": "'Table 1'!E94",
+          "review_flags": []
+        },
+        {
+          "key": "R95",
+          "code": "72",
+          "original_number": "72",
+          "question": "Como se analizan y se tratan los desvíos?. con que frecuencia? se generan planes de accion o modifican algun plan vigente?                                                                                                                     Se evidencia una mejora en las estadisticas de SMS? (indique el % de reducción o aumento   de   las   tasas   de   accidentes   con   días   perdidos,   totales,   vehiculares, industriales y ambientales). Como son comunicados al personal los resultados?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 1,
+          "source_ref": "'Table 1'!E95",
+          "review_flags": []
+        },
+        {
+          "key": "R96",
+          "code": "73",
+          "original_number": "73",
+          "question": "El Contratista ha presentado y presenta la siguiente información del último año:\n Cantidad HH trabajadas.\n Número de accidentados con y sin días perdidos\n Índice de frecuencia de accidentados con días perdidos\n Índice de frecuencia de accidentados sin días perdidos\n Índice de gravedad\n Número de accidentados in itinere.\n Número de casos de enfermedades ocupacionales\n Número de Accidentes con los subcontratados\n Número de Accidentes Ambientales.                                                                          Como aeguran la inclusion en estas estadisticas de los datos de los subcontratistas?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 2,
+          "source_ref": "'Table 1'!E96",
+          "review_flags": [
+            "caracter_simbolo_privado"
+          ]
+        },
+        {
+          "key": "R97",
+          "code": "74",
+          "original_number": "74",
+          "question": "El Contratista tiene implementado un proceso para evaluar el cumplimiento de requisitos legales y otros requisitos de SMS. Como se analizan y se tratan los desvíos?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 3,
+          "source_ref": "'Table 1'!E97",
+          "review_flags": []
+        },
+        {
+          "key": "R98",
+          "code": "75",
+          "original_number": "75",
+          "question": "El Contratista cuenta con un sistema para la realización de auditorias internas de su sistema SMS? Cuenta con un plan de auditorías internas? (mensual, bimensual, trimestral, etc). Fue presentado al Cliente?\nSe realizan las auditorias en los tiempos planificados? VERIFICAR CUMPLIMIENTO",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 4,
+          "source_ref": "'Table 1'!E98",
+          "review_flags": []
+        },
+        {
+          "key": "R99",
+          "code": "78",
+          "original_number": "78",
+          "question": "Tiene el Contatista un procedimiento para reportar incidentes y casi incidentes? Es compatible con el del Cliente? Tiene definido los niveles comites de investigacion de incidentes según potencialidad o severidad? VER CASOS DE INCIDENTES  Fue Presentado al Cliente?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 5,
+          "source_ref": "'Table 1'!E99",
+          "review_flags": []
+        },
+        {
+          "key": "R100",
+          "code": "79",
+          "original_number": "79",
+          "question": "Ha capacitado el Contratista a la línea de Gerencia y Supervisión sobre investigación de incidentes para integrar los comités?.",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 6,
+          "source_ref": "'Table 1'!E100",
+          "review_flags": []
+        },
+        {
+          "key": "R101",
+          "code": "80",
+          "original_number": "80",
+          "question": "Tiene  un sistema de seguimiento  para las acciones resultantes de investigación  de incidentes? Como mide la eficacia de las acciones? VER CASOS DE INCIDENTES ",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 7,
+          "source_ref": "'Table 1'!E101",
+          "review_flags": []
+        },
+        {
+          "key": "R102",
+          "code": "82",
+          "original_number": "82",
+          "question": "Tiene el Contratista un proceso para gestionar las no conformidades? VER CASOS  Las quejas o reclamos del Cliente son tratadas bajo el proceso de no conformidades? Fue presentado al Cliente?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 8,
+          "source_ref": "'Table 1'!E102",
+          "review_flags": []
+        },
+        {
+          "key": "R103",
+          "code": "83",
+          "original_number": "83",
+          "question": "Una vez tratadas las NC, desvios y recomendaciones, se verifica el cumplimiento y eficacia?",
+          "process": "HSE",
+          "response_type": "situacion",
+          "weight": 1,
+          "is_critical": false,
+          "evidence_required_on_fail": false,
+          "sort_order": 9,
+          "source_ref": "'Table 1'!E103",
+          "review_flags": []
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_type": "dato_personal_excluido",
+      "severity": "info",
+      "source_ref": "'Table 1'!A1:O13",
+      "message": "Se excluyeron 14 celdas del encabezado (rótulos y valores) con datos de una auditoría ejecutada: compania solicitante, solicitado por, cargo / funcion, contratista, referente, fecha de realizacion, auditor, normas certificadas. Incluyen nombres de personas y empresas; no forman parte de la plantilla y no se muestran en este reporte.",
+      "details": {
+        "cells": [
+          "B8",
+          "E8",
+          "F8",
+          "H8",
+          "B9",
+          "E9",
+          "F9",
+          "H9",
+          "B10",
+          "E10",
+          "F10",
+          "B11",
+          "E11",
+          "B12"
+        ]
+      }
+    },
+    {
+      "issue_type": "texto_formato",
+      "severity": "info",
+      "source_ref": "'Table 1'!B16",
+      "message": "El título de la categoría tiene espacios al inicio o final; se conserva tal cual: \"Liderazgo, Compromiso y Enfoque al Cliente \"."
+    },
+    {
+      "issue_type": "texto_formato",
+      "severity": "info",
+      "item_key": "R96",
+      "source_ref": "'Table 1'!E96",
+      "message": "El texto contiene viñetas de la fuente Symbol (U+F0B7). Se conserva el texto original; la aplicación las muestra como \"•\"."
+    },
+    {
+      "issue_type": "sin_numeracion",
+      "severity": "advertencia",
+      "item_key": "R81",
+      "source_ref": "'Table 1'!D81",
+      "message": "El requisito de la fila 81 (\"Sistema de suministro de Gas oil\") no tiene número. Está dentro del rango de la fórmula, por lo que cuenta en el denominador de \"Operación y control operacional\". Confirmar si es parte de la plantilla o fue agregado durante la ejecución."
+    },
+    {
+      "issue_type": "sin_numeracion",
+      "severity": "advertencia",
+      "item_key": "R82",
+      "source_ref": "'Table 1'!D82",
+      "message": "El requisito de la fila 82 (\"Mochilas lavaojos\") no tiene número. Está dentro del rango de la fórmula, por lo que cuenta en el denominador de \"Operación y control operacional\". Confirmar si es parte de la plantilla o fue agregado durante la ejecución."
+    },
+    {
+      "issue_type": "numeracion_duplicada",
+      "severity": "advertencia",
+      "item_key": "R53",
+      "source_ref": "'Table 1'!D52, 'Table 1'!D53",
+      "message": "El número 36 se repite en las filas 52 y 53 (\"Planificación, Organización y Recursos\"). Se conserva la numeración original.",
+      "details": {
+        "number": "36",
+        "rows": [
+          52,
+          53
+        ]
+      }
+    },
+    {
+      "issue_type": "numeracion_duplicada",
+      "severity": "advertencia",
+      "item_key": "R85",
+      "source_ref": "'Table 1'!D80, 'Table 1'!D85",
+      "message": "El número 63 se repite en las filas 80 y 85 (\"Operación y control operacional\" / \"Gestión de Proveedores\"). Se conserva la numeración original.",
+      "details": {
+        "number": "63",
+        "rows": [
+          80,
+          85
+        ]
+      }
+    },
+    {
+      "issue_type": "numeracion_duplicada",
+      "severity": "advertencia",
+      "item_key": "R86",
+      "source_ref": "'Table 1'!D83, 'Table 1'!D86",
+      "message": "El número 64 se repite en las filas 83 y 86 (\"Operación y control operacional\" / \"Gestión de Proveedores\"). Se conserva la numeración original.",
+      "details": {
+        "number": "64",
+        "rows": [
+          83,
+          86
+        ]
+      }
+    },
+    {
+      "issue_type": "numeracion_salto",
+      "severity": "advertencia",
+      "item_key": "R78",
+      "source_ref": "'Table 1'!D78",
+      "message": "Falta el número 61 en la secuencia (después de la fila 78). Verificar si hay un requisito omitido en el original.",
+      "details": {
+        "missing": 61
+      }
+    },
+    {
+      "issue_type": "numeracion_salto",
+      "severity": "advertencia",
+      "item_key": "R86",
+      "source_ref": "'Table 1'!D86",
+      "message": "Falta el número 65 en la secuencia (después de la fila 86). Verificar si hay un requisito omitido en el original.",
+      "details": {
+        "missing": 65
+      }
+    },
+    {
+      "issue_type": "numeracion_salto",
+      "severity": "advertencia",
+      "item_key": "R98",
+      "source_ref": "'Table 1'!D98",
+      "message": "Falta el número 76 en la secuencia (después de la fila 98). Verificar si hay un requisito omitido en el original.",
+      "details": {
+        "missing": 76
+      }
+    },
+    {
+      "issue_type": "numeracion_salto",
+      "severity": "advertencia",
+      "item_key": "R98",
+      "source_ref": "'Table 1'!D98",
+      "message": "Falta el número 77 en la secuencia (después de la fila 98). Verificar si hay un requisito omitido en el original.",
+      "details": {
+        "missing": 77
+      }
+    },
+    {
+      "issue_type": "numeracion_salto",
+      "severity": "advertencia",
+      "item_key": "R101",
+      "source_ref": "'Table 1'!D101",
+      "message": "Falta el número 81 en la secuencia (después de la fila 101). Verificar si hay un requisito omitido en el original.",
+      "details": {
+        "missing": 81
+      }
+    },
+    {
+      "issue_type": "proceso_no_utilizado",
+      "severity": "info",
+      "source_ref": "'Hoja2'",
+      "message": "El proceso \"OPER/MANT\" figura en el catálogo pero ningún requisito lo usa. Se importa al catálogo."
+    },
+    {
+      "issue_type": "proceso_faltante",
+      "severity": "advertencia",
+      "item_key": "R53",
+      "source_ref": "'Table 1'!G53",
+      "message": "El requisito 36 no tiene proceso asignado."
+    },
+    {
+      "issue_type": "proceso_faltante",
+      "severity": "advertencia",
+      "item_key": "R68",
+      "source_ref": "'Table 1'!G68",
+      "message": "El requisito 50 no tiene proceso asignado."
+    },
+    {
+      "issue_type": "proceso_faltante",
+      "severity": "advertencia",
+      "item_key": "R82",
+      "source_ref": "'Table 1'!G82",
+      "message": "El requisito (fila 82) no tiene proceso asignado."
+    },
+    {
+      "issue_type": "regla_inferida",
+      "severity": "advertencia",
+      "source_ref": "'Table 1'!I/J/K/L15",
+      "message": "El puntaje de cada situación no está en ninguna fórmula: el auditor escribe el número en la columna elegida y las fórmulas sólo suman. Se infirió de los valores cargados: NC = 0, OBS = 1, OPM = 2, OK = 3. Es coherente con el máximo ×3 de las fórmulas, pero requiere confirmación.",
+      "details": {
+        "points": {
+          "nc": 0,
+          "obs": 1,
+          "opm": 2,
+          "ok": 3
+        }
+      }
+    },
+    {
+      "issue_type": "formula_sin_efecto",
+      "severity": "advertencia",
+      "source_ref": "'Table 1'!H24",
+      "message": "La columna \"N/A marcar X\" se totaliza con =SUMIF(H16:H23,\"X\"): SUMIF sin rango de suma suma los propios textos \"X\", por lo que siempre da 0, y ninguna fórmula de resultado usa ese total. Además, el denominador cuenta TODAS las filas (COUNTA+COUNTBLANK). Consecuencia literal: un requisito marcado N/A suma 0 puntos y sigue contando en el objetivo (igual que una NC). Se importa ese comportamiento sin cambios (\"na_mode = contar_cero\"); validar si el criterio real es excluir los N/A del denominador.",
+      "details": {
+        "formula": "SUMIF(H16:H23,\"X\")",
+        "referenced": false
+      }
+    },
+    {
+      "issue_type": "regla_inferida",
+      "severity": "advertencia",
+      "message": "Un requisito sin situación marcada suma 0 y cuenta en el objetivo (el conteo incluye celdas vacías con COUNTBLANK). Se reproduce tal cual (\"unanswered_mode = contar_cero\"). Confirmar el criterio."
+    },
+    {
+      "issue_type": "regla_inferida",
+      "severity": "info",
+      "source_ref": "'Table 1'!O105",
+      "message": "El resultado final es el promedio simple de las notas de sección: cada sección pesa lo mismo sin importar su cantidad de requisitos (p.ej. 3 ítems pesan igual que 30). Se reproduce sin cambios."
+    },
+    {
+      "issue_type": "formula_ambigua",
+      "severity": "advertencia",
+      "source_ref": "'Hoja1'!I15:J15",
+      "message": "\"Hoja1\" muestra el total alcanzado (175) y el objetivo total (249), que darían una nota ponderada de 7.03, pero la \"Evaluación\" final de esa misma hoja toma el promedio simple de Table 1 (6.27). Se importa el promedio simple, que es el resultado oficial del libro; confirmar que es el criterio deseado.",
+      "details": {
+        "weighted": 7.028112449799196,
+        "average": 6.271164021164021
+      }
+    },
+    {
+      "issue_type": "limite_evaluacion",
+      "severity": "info",
+      "source_ref": "'Table 1'!E110",
+      "message": "La leyenda dice \"0 - 4\" y el formato condicional aplica \"≤ 4\". Equivalentes para notas 0–10."
+    },
+    {
+      "issue_type": "limite_evaluacion",
+      "severity": "advertencia",
+      "source_ref": "'Table 1'!O105",
+      "message": "Entre 4 y 4.01 no hay banda: una nota como 4.005 (sin redondear) no recibe calificación en el Excel. Se conservan los límites sin alterarlos; la aplicación la mostrará como \"sin clasificar\". Definir si corresponde redondear a 2 decimales antes de clasificar.",
+      "details": {
+        "from": 4,
+        "to": 4.01
+      }
+    },
+    {
+      "issue_type": "limite_evaluacion",
+      "severity": "advertencia",
+      "source_ref": "'Table 1'!O105",
+      "message": "Entre 6 y 6.01 no hay banda: una nota como 6.005 (sin redondear) no recibe calificación en el Excel. Se conservan los límites sin alterarlos; la aplicación la mostrará como \"sin clasificar\". Definir si corresponde redondear a 2 decimales antes de clasificar.",
+      "details": {
+        "from": 6,
+        "to": 6.01
+      }
+    },
+    {
+      "issue_type": "limite_evaluacion",
+      "severity": "advertencia",
+      "source_ref": "'Table 1'!O105",
+      "message": "Entre 8 y 8.01 no hay banda: una nota como 8.005 (sin redondear) no recibe calificación en el Excel. Se conservan los límites sin alterarlos; la aplicación la mostrará como \"sin clasificar\". Definir si corresponde redondear a 2 decimales antes de clasificar.",
+      "details": {
+        "from": 8,
+        "to": 8.01
+      }
+    },
+    {
+      "issue_type": "dato_ejecucion_excluido",
+      "severity": "info",
+      "message": "Se excluyeron de la plantilla 80 comentarios de evidencia, 30 descripciones de hallazgos y 83 situaciones registradas de una auditoría ejecutada. Las situaciones se guardan sólo como códigos (NC/OBS/OPM/OK/N/A) en un caso de validación separado; ninguna se usa como valor por defecto en auditorías nuevas."
+    },
+    {
+      "issue_type": "otro",
+      "severity": "info",
+      "message": "En la ejecución de ejemplo, 4 requisitos con NC/OBS/OPM no tienen descripción de hallazgo (filas 38, 72, 91, 103). No afecta la plantilla; en la aplicación esas situaciones proponen registrar un hallazgo."
+    }
+  ],
+  "validation_cases": [
+    {
+      "name": "Resultados de prueba del Excel (hp.xlsx)",
+      "source_ref": "'Table 1'!O105",
+      "answers": {
+        "R16": "ok",
+        "R17": "ok",
+        "R18": "obs",
+        "R19": "ok",
+        "R20": "obs",
+        "R21": "opm",
+        "R22": "ok",
+        "R23": "nc",
+        "R25": "ok",
+        "R26": "ok",
+        "R27": "ok",
+        "R28": "obs",
+        "R29": "opm",
+        "R30": "obs",
+        "R31": "ok",
+        "R32": "obs",
+        "R33": "nc",
+        "R34": "ok",
+        "R35": "ok",
+        "R36": "ok",
+        "R37": "ok",
+        "R38": "obs",
+        "R39": "ok",
+        "R40": "ok",
+        "R41": "ok",
+        "R42": "nc",
+        "R43": "ok",
+        "R44": "ok",
+        "R45": "opm",
+        "R46": "ok",
+        "R47": "nc",
+        "R48": "ok",
+        "R49": "nc",
+        "R50": "obs",
+        "R51": "ok",
+        "R52": "opm",
+        "R53": "obs",
+        "R54": "ok",
+        "R56": "ok",
+        "R57": "ok",
+        "R58": "ok",
+        "R59": "ok",
+        "R60": "ok",
+        "R61": "ok",
+        "R62": "ok",
+        "R63": "ok",
+        "R64": "ok",
+        "R65": "ok",
+        "R66": "ok",
+        "R67": "ok",
+        "R68": "ok",
+        "R69": "ok",
+        "R70": "ok",
+        "R71": "nc",
+        "R72": "nc",
+        "R73": "obs",
+        "R74": "nc",
+        "R75": "ok",
+        "R76": "opm",
+        "R77": "ok",
+        "R78": "ok",
+        "R79": "nc",
+        "R80": "ok",
+        "R81": "obs",
+        "R82": "obs",
+        "R83": "ok",
+        "R85": "nc",
+        "R86": "nc",
+        "R87": "obs",
+        "R88": "ok",
+        "R90": "opm",
+        "R91": "opm",
+        "R92": "obs",
+        "R94": "ok",
+        "R95": "ok",
+        "R96": "ok",
+        "R97": "ok",
+        "R98": "obs",
+        "R99": "ok",
+        "R100": "ok",
+        "R101": "ok",
+        "R102": "nc",
+        "R103": "nc"
+      },
+      "expected": {
+        "sections": {
+          "S16": {
+            "raw": 16,
+            "target": 24,
+            "score": 6.666666666666666
+          },
+          "S25": {
+            "raw": 63,
+            "target": 90,
+            "score": 7
+          },
+          "S56": {
+            "raw": 65,
+            "target": 84,
+            "score": 7.738095238095238
+          },
+          "S85": {
+            "raw": 4,
+            "target": 12,
+            "score": 3.333333333333333
+          },
+          "S90": {
+            "raw": 5,
+            "target": 9,
+            "score": 5.555555555555555
+          },
+          "S94": {
+            "raw": 22,
+            "target": 30,
+            "score": 7.333333333333333
+          }
+        },
+        "final": 6.271164021164021
+      }
+    }
+  ]
+}

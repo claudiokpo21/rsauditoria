@@ -2,7 +2,8 @@ import { db } from '../../db/db';
 import { evaluate, isSituacionConfig, type EvalResult, type SectionResult } from '../../scoring/engine';
 import { supabase } from '../../lib/supabase';
 import { LABELS, type RcaData } from '../../types';
-import type { Action, Audit, AuditResponse, Evidence, Finding, Template, TemplateItem, TemplateSection, TemplateVersion } from '../../types';
+import type { Action, Audit, AuditResponse, AuditSignature, Evidence, Finding, Template, TemplateItem, TemplateSection, TemplateVersion } from '../../types';
+import { findPreviousAudit, normTitle, type PreviousResult } from '../audits/previousAudit';
 
 export interface AuditReport {
   orgName: string; audit: Audit; version: TemplateVersion; template: Template | undefined;
@@ -13,6 +14,10 @@ export interface AuditReport {
   /** Resultado por sección: el OFICIAL guardado por el servidor si la auditoría está completada; si no, vista previa. */
   sectionsResult: SectionResult[];
   history: HistoryRow[] | null;
+  signatures: AuditSignature[];
+  previous: PreviousResult | null;
+  /** evaluación anterior de una sección (por título), si hay auditoría anterior comparable */
+  prevOf: (title: string) => number | null | undefined;
 }
 export interface HistoryRow { changed_at: string; table_name: string; record_label: string; action: string; changed_fields: string[] | null; old_data: Record<string, unknown> | null; new_data: Record<string, unknown> | null; user_name: string }
 
@@ -56,6 +61,7 @@ export async function loadAuditReport(auditId: string, orgName: string, opts: { 
   if (isSituacionConfig(version.scoring_config)) for (const o of version.scoring_config.options) labels[o.code] = o.label;
   const result = evaluate(version, sections, items, answers);
   const official = audit.status === 'completada' || audit.status === 'cerrada';
+  const previous = await findPreviousAudit(audit, version);
   const serverSections = Array.isArray(audit.section_results) ? audit.section_results as SectionResult[] : null;
   return {
     orgName, audit, version, template, sections, items, responses: new Map(resp.map(r => [r.item_id, r])), findings, actions, evidences,
@@ -65,5 +71,8 @@ export async function loadAuditReport(auditId: string, orgName: string, opts: { 
     official,
     sectionsResult: official && serverSections ? serverSections : result.sections,
     history: opts.history ? await loadAuditHistory(auditId) : null,
+    signatures: live(await db.hse_audit_signatures.where('audit_id').equals(auditId).toArray()).sort((a, b) => a.signed_at.localeCompare(b.signed_at)),
+    previous,
+    prevOf: (title: string) => previous?.sections.get(normTitle(title)),
   };
 }

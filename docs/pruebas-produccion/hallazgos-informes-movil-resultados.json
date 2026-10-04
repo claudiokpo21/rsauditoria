@@ -87,7 +87,7 @@
   {
     "prueba": "3.4 Cierre con resumen enviado al servidor",
     "ok": true,
-    "detalle": "estado=cerrada en 0.5 s"
+    "detalle": "estado=cerrada en 2.0 s"
   },
   {
     "prueba": "4.1 PDF de auditoría: resultado oficial y por sección",

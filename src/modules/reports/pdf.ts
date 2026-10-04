@@ -4,6 +4,19 @@ import { LABELS } from '../../types';
 import { evidenceDataUrl } from '../evidences/evidenceService';
 import { isSituacionConfig } from '../../scoring/engine';
 import { rcaText, type AuditReport } from './reportData';
+import { SHEET, bandFor, bandRange, bandStyle } from '../../scoring/bands';
+
+type RGB = [number, number, number];
+export const rgb = (hex: string): RGB => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+/** Estilo de celda con el color de la banda (o undefined si no hay banda). */
+/** Celdas "Anterior" y "Variación" (▲ mejora en verde, ▼ empeora en rojo). */
+function prevCells(now: number | null, before: number | null | undefined) {
+  if (before === null || before === undefined) return ['—', '—'];
+  if (now === null) return [n(before), '—'];
+  const dd = Math.round((now - before) * 100) / 100;
+  return [n(before), { content: `${dd > 0 ? '+' : ''}${n(dd)}`, styles: { textColor: dd > 0 ? rgb('#2f7d32') : dd < 0 ? rgb('#b42318') : rgb('#67747d'), fontStyle: 'bold' as const } }];
+}
+export const bandCell = (band: string | null | undefined) => { const st = bandStyle(band); return st ? { fillColor: rgb(st.bg), textColor: rgb(st.fg), fontStyle: 'bold' as const } : undefined; };
 
 // Las fuentes estándar de PDF usan Windows-1252: se normalizan los caracteres fuera de ese juego.
 const CP1252_EXTRA = '€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ';
@@ -17,7 +30,7 @@ const n = (v?: number | null, dec = 2) => (v === null || v === undefined ? '—'
 export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boolean }): Promise<Blob> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const W = doc.internal.pageSize.getWidth();
-  const brand: [number, number, number] = [31, 77, 58];
+  const brand: RGB = rgb('#1c2b36');
   const a = r.audit;
   const sit = isSituacionConfig(r.version.scoring_config);
 
@@ -39,29 +52,58 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
     ],
   });
 
-  // ---- resultado
+  // ---- resultado (con los colores de la planilla H&P)
   const res = r.result;
-  const finalTxt = sit ? `${n(r.official ? a.score : res.final)} / ${n(res.max_score, 0)}  ·  ${r.official ? a.result_band ?? res.band : res.band ?? '—'}`
-    : `${n(r.official ? a.compliance_pct : res.compliance_pct, 1)} %  (${n(r.official ? a.score : res.score)} de ${n(r.official ? a.max_score : res.max_score)})`;
+  const cfg = isSituacionConfig(r.version.scoring_config) ? r.version.scoring_config : null;
+  const finalVal = sit ? (r.official ? a.score : res.final) : (r.official ? a.compliance_pct : res.compliance_pct);
+  const band = r.official ? (a.result_band ?? null) : (res.band ?? null);
   let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text('Resultado', 14, y);
-  doc.setFontSize(18); doc.setTextColor(...brand); doc.text(pdfText(finalTxt), 14, y + 9); doc.setTextColor(30);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
-  doc.text(pdfText(r.official ? 'Resultado oficial calculado por el servidor al completar la auditoría.' : 'Resultado preliminar (auditoría no completada).'), 14, y + 14);
-  y += 18;
+  const st = bandStyle(band);
+  doc.setFillColor(...(st ? rgb(st.bg) : rgb('#eef1f3'))); doc.setDrawColor(...(st ? rgb(st.border) : rgb('#c3ccd2')));
+  doc.roundedRect(14, y + 3, 52, 20, 2, 2, 'FD');
+  doc.setTextColor(...(st ? rgb(st.fg) : rgb('#17232c')));
+  doc.setFontSize(20); doc.text(pdfText(sit ? n(finalVal) : `${n(finalVal, 1)} %`), 40, y + 13.5, { align: 'center' });
+  doc.setFontSize(10); doc.text(pdfText(band ?? (sit ? 'Sin resultado' : 'Cumplimiento')), 40, y + 19.5, { align: 'center' });
+  doc.setTextColor(30); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+  doc.text(doc.splitTextToSize(pdfText(r.official ? 'Resultado oficial calculado por el servidor al completar la auditoría, con la metodología de la versión de la plantilla.' : 'Resultado preliminar (auditoría no completada).'), 70), 72, y + 8);
+  if (!sit) doc.text(pdfText(`Puntaje: ${n(r.official ? a.score : res.score)} de ${n(r.official ? a.max_score : res.max_score)}`), 72, y + 18);
+  if (cfg) {
+    autoTable(doc, { startY: y + 3, margin: { left: 150 }, tableWidth: 46, theme: 'grid', styles: { fontSize: 7, cellPadding: 0.9, halign: 'center', lineColor: [160, 160, 160] },
+      head: [[{ content: 'Criterio de evaluación', colSpan: 2 }]], headStyles: { fillColor: rgb(SHEET.header), textColor: rgb(SHEET.headerInk) },
+      body: cfg.bands.map(b => [pdfText(bandRange(b)), { content: pdfText(b.label), styles: bandCell(b.label) ?? {} }]) });
+  }
+  y += 28;
   if (r.sectionsResult.length) {
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text(pdfText(`Resultados por sección${r.official ? ' (oficiales)' : ' (vista previa)'}`), 14, y + 2); y += 4;
+    const raw = r.sectionsResult.reduce((t, x) => t + Number(x.raw || 0), 0);
+    const target = r.sectionsResult.reduce((t, x) => t + Number(x.target || 0), 0);
     autoTable(doc, {
-      startY: y, head: [['Sección', 'Obtenido', 'Objetivo', sit ? 'Nota' : '%', 'Respondidos']], headStyles: { fillColor: brand },
-      styles: { fontSize: 8.5 }, columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
-      body: r.sectionsResult.map(s => [pdfText(String(s.title).trim()), n(Number(s.raw), 0), n(Number(s.target), 0), n(s.score === null ? null : Number(s.score)), `${s.answered}/${s.items}`]),
+      startY: y, theme: 'grid',
+      head: [[sit ? 'Requisitos del sistema de gestión' : 'Sección', 'Puntaje alcanzado', 'Puntaje objetivo', sit ? 'Evaluación' : 'Cumplimiento', ...(r.previous ? ['Anterior', 'Variación'] : [])]],
+      headStyles: { fillColor: rgb(SHEET.header), textColor: rgb(SHEET.headerInk), fontStyle: 'bold', halign: 'center', lineColor: [150, 150, 150] },
+      styles: { fontSize: 8.5, lineColor: [170, 170, 170] }, columnStyles: { 0: { fontStyle: 'bold', cellWidth: r.previous ? 70 : 98 }, 1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' }, 5: { halign: 'center' } },
+      body: [
+        ...r.sectionsResult.map(s => {
+          const v = s.score === null || s.score === undefined ? null : Number(s.score);
+          return [pdfText(sit ? String(s.title).trim().toUpperCase() : String(s.title).trim()), n(Number(s.raw), sit ? 0 : 2), n(Number(s.target), sit ? 0 : 2),
+            sit ? { content: n(v), styles: bandCell(bandFor(v, cfg?.bands)) ?? {} } : `${n(v, 1)} %`,
+            ...(r.previous ? prevCells(v, r.prevOf(String(s.title))) : [])];
+        }),
+        [{ content: pdfText(sit ? 'RESULTADO FINAL' : 'TOTAL'), styles: { fillColor: rgb(SHEET.total), textColor: rgb(SHEET.totalInk), fontStyle: 'bold' } },
+         { content: n(raw, sit ? 0 : 2), styles: { fillColor: [255, 255, 255], fontStyle: 'bold' } },
+         { content: n(target, sit ? 0 : 2), styles: { fillColor: [255, 255, 255], fontStyle: 'bold' } },
+         sit ? { content: n(finalVal), styles: { ...(bandCell(band) ?? {}), fontStyle: 'bold' } } : { content: `${n(finalVal, 1)} %`, styles: { fontStyle: 'bold' } },
+         ...(r.previous ? prevCells(finalVal === null || finalVal === undefined ? null : Number(finalVal), r.previous.final) : [])],
+      ],
     });
     y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
-  }
-  if (sit && isSituacionConfig(r.version.scoring_config)) {
-    const c = r.version.scoring_config;
     doc.setFontSize(7.5); doc.setTextColor(90);
-    const lines = doc.splitTextToSize(pdfText(`Metodología (v${r.version.version_number}): ${c.options.map(o => `${o.label}=${o.points ?? '-'}`).join(', ')}. ${c.section_formula}. Final: ${c.final_formula}. Criterio: ${c.bands.map(b => `${b.label} ${b.min ?? 0}–${b.max}`).join('; ')}.`), W - 28);
+    doc.text(pdfText(`Resultados por sección ${r.official ? 'oficiales' : '(vista previa)'}.${r.previous ? ` Comparado con ${r.previous.audit.code ?? r.previous.audit.title} del ${d(r.previous.audit.scheduled_date)}${r.previous.band ? ` (${r.previous.band})` : ''}: misma empresa y plantilla, resultados oficiales.` : ''}`), 14, y + 1); doc.setTextColor(30); y += 3;
+  }
+  if (cfg) {
+    const c = cfg;
+    doc.setFontSize(7.5); doc.setTextColor(90);
+    const lines = doc.splitTextToSize(pdfText(`Metodología (v${r.version.version_number}): ${c.options.map(o => `${o.label}=${o.points ?? '-'}`).join(', ')}. ${c.section_formula}. Final: ${c.final_formula}.`), W - 28);
     doc.text(lines, 14, y + 3); y += lines.length * 3.4 + 4; doc.setTextColor(30);
   }
   if (a.summary) {
@@ -70,12 +112,38 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
     const lines = doc.splitTextToSize(pdfText(a.summary), W - 28); doc.text(lines, 14, y + 10); y += lines.length * 4 + 12;
   }
 
+  // ---- acta de reunión de cierre y firmas
+  if (a.closing_meeting_at || a.closing_attendees || a.closing_agreements || r.signatures.length) {
+    if (y > 200) { doc.addPage(); y = 10; }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text('Acta de reunión de cierre', 14, y + 6);
+    autoTable(doc, { startY: y + 8, theme: 'plain', styles: { fontSize: 8.5, cellPadding: 1.2 }, columnStyles: { 0: { fontStyle: 'bold', cellWidth: 38 } },
+      body: [['Fecha', d(a.closing_meeting_at)], ['Asistentes', pdfText(a.closing_attendees ?? '—')], ['Acuerdos y compromisos', pdfText(a.closing_agreements ?? '—')]] });
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 3;
+    const bw = 58, bh = 40; let x = 14;
+    for (const s of r.signatures) {
+      if (x + bw > W - 10) { x = 14; y += bh + 6; }
+      if (y + bh > doc.internal.pageSize.getHeight() - 14) { doc.addPage(); y = 14; x = 14; }
+      doc.setDrawColor(190); doc.roundedRect(x, y, bw, bh, 1.5, 1.5, 'S');
+      try { doc.addImage(s.signature_png, 'PNG', x + 2, y + 1.5, bw - 4, 17); } catch { /* firma ilegible: se omite la imagen */ }
+      doc.setDrawColor(150); doc.line(x + 4, y + 19.5, x + bw - 4, y + 19.5);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(30);
+      doc.text(doc.splitTextToSize(pdfText(s.signer_name), bw - 6)[0], x + 3, y + 23.5);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(70);
+      const lines = doc.splitTextToSize(pdfText([LABELS.signerRole[s.signer_role], s.signer_position, s.signer_company].filter(Boolean).join(' · ')), bw - 6).slice(0, 2);
+      doc.text(lines, x + 3, y + 27);
+      doc.text(pdfText(`${new Date(s.signed_at).toLocaleString('es-AR')} · ${LABELS.agreement[s.agreement]}`), x + 3, y + 33.5);
+      if (s.observations) doc.text(doc.splitTextToSize(pdfText(`Obs.: ${s.observations}`), bw - 6).slice(0, 1), x + 3, y + 37);
+      x += bw + 4;
+    }
+    doc.setTextColor(30);
+  }
+
   // ---- checklist
   doc.addPage();
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text('Checklist', 14, 16);
   const body: (string | { content: string; colSpan: number; styles: Record<string, unknown> })[][] = [];
   for (const s of r.sections) {
-    body.push([{ content: pdfText(s.title.trim()), colSpan: 5, styles: { fillColor: [227, 238, 232], fontStyle: 'bold' } }]);
+    body.push([{ content: pdfText(s.title.trim()), colSpan: 5, styles: { fillColor: rgb(SHEET.header), textColor: rgb(SHEET.headerInk), fontStyle: 'bold' } }]);
     for (const i of r.items.filter(x => x.section_id === s.id)) {
       const resp = r.responses.get(i.id);
       body.push([pdfText(i.original_number ?? i.code ?? ''), pdfText(i.question), pdfText(r.names.process(i.process_id)), r.optionLabel(resp?.answer),
@@ -160,7 +228,7 @@ export async function buildAuditPdf(r: AuditReport, opts: { includePhotos: boole
   const pages = doc.getNumberOfPages();
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p); doc.setFontSize(7); doc.setTextColor(120);
-    doc.text(pdfText(`${a.code ?? ''} · Generado ${new Date().toLocaleString('es-AR')} · HSE Audit Manager`), 14, 290);
+    doc.text(pdfText(`${a.code ?? ''} · Generado ${new Date().toLocaleString('es-AR')} · Auditorías HSE`), 14, 290);
     doc.text(`${p} / ${pages}`, W - 14, 290, { align: 'right' });
   }
   return doc.output('blob');

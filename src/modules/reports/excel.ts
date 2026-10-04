@@ -2,19 +2,30 @@ import ExcelJS from 'exceljs';
 import { db } from '../../db/db';
 import { LABELS, type Action, type Audit, type Finding } from '../../types';
 import { rcaText, type AuditReport } from './reportData';
+import { SHEET, bandFor, bandRange, bandStyle } from '../../scoring/bands';
+import { isSituacionConfig } from '../../scoring/engine';
 
-const HEADER: Partial<ExcelJS.Fill> = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4D3A' } };
+const argb = (hex: string) => 'FF' + hex.slice(1).toUpperCase();
+const solid = (hex: string): ExcelJS.Fill => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: argb(hex) } });
+/** Pinta una celda con el color de la banda de evaluación (colores de la planilla H&P). */
+export function paintBand(c: ExcelJS.Cell, band: string | null | undefined) {
+  const st = bandStyle(band);
+  if (!st) return;
+  c.fill = solid(st.bg); c.font = { bold: true, color: { argb: argb(st.fg) } };
+}
+const THIN: Partial<ExcelJS.Borders> = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+const HEADER: Partial<ExcelJS.Fill> = solid(SHEET.header);
 function sheet(wb: ExcelJS.Workbook, name: string, cols: { header: string; key: string; width: number }[]) {
   const ws = wb.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1 }] });
   ws.columns = cols;
-  ws.getRow(1).eachCell(c => { c.fill = HEADER as ExcelJS.Fill; c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.alignment = { vertical: 'middle', wrapText: true }; });
+  ws.getRow(1).eachCell(c => { c.fill = HEADER as ExcelJS.Fill; c.font = { bold: true, color: { argb: argb(SHEET.headerInk) } }; c.alignment = { vertical: 'middle', wrapText: true }; c.border = THIN; });
   return ws;
 }
 const wrap = (ws: ExcelJS.Worksheet) => ws.eachRow((r, i) => { if (i > 1) r.alignment = { vertical: 'top', wrapText: true }; });
 const dt = (s?: string | null) => (s ? new Date(s.length === 10 ? s + 'T12:00:00' : s) : null);
 
 export async function buildAuditXlsx(r: AuditReport): Promise<Blob> {
-  const wb = new ExcelJS.Workbook(); wb.creator = 'HSE Audit Manager'; wb.created = new Date();
+  const wb = new ExcelJS.Workbook(); wb.creator = 'Auditorías HSE'; wb.created = new Date();
   const a = r.audit;
   const sum = sheet(wb, 'Resumen', [{ header: 'Campo', key: 'k', width: 28 }, { header: 'Valor', key: 'v', width: 80 }]);
   sum.addRows([
@@ -27,9 +38,38 @@ export async function buildAuditXlsx(r: AuditReport): Promise<Blob> {
     { k: 'Origen del resultado', v: r.official ? 'Oficial (servidor)' : 'Preliminar (auditoría no completada)' }, { k: 'Conclusiones', v: a.summary ?? '' },
   ]);
   wrap(sum);
+  sum.eachRow(row => { if (row.getCell('k').value === 'Calificación') paintBand(row.getCell('v'), (r.official ? a.result_band : r.result.band) ?? null); });
   if (r.sectionsResult.length) {
-    const s = sheet(wb, r.official ? 'Secciones (oficial)' : 'Secciones (preliminar)', [{ header: 'Sección', key: 's', width: 60 }, { header: 'Obtenido', key: 'r', width: 12 }, { header: 'Objetivo', key: 't', width: 12 }, { header: r.version.scoring_method === 'ponderado' ? '%' : 'Nota', key: 'n', width: 12 }, { header: 'Respondidos', key: 'a', width: 14 }, { header: 'N/A', key: 'na', width: 8 }]);
-    for (const x of r.sectionsResult) s.addRow({ s: String(x.title).trim(), r: Number(x.raw), t: Number(x.target), n: x.score === null ? null : Number(Number(x.score).toFixed(4)), a: `${x.answered}/${x.items}`, na: x.na });
+    const s = sheet(wb, r.official ? 'Secciones (oficial)' : 'Secciones (preliminar)', [{ header: 'Sección', key: 's', width: 60 }, { header: 'Obtenido', key: 'r', width: 12 }, { header: 'Objetivo', key: 't', width: 12 }, { header: r.version.scoring_method === 'ponderado' ? '%' : 'Nota', key: 'n', width: 12 }, { header: 'Respondidos', key: 'a', width: 14 }, { header: 'N/A', key: 'na', width: 8 }, ...(r.previous ? [{ header: `Anterior (${r.previous.audit.code ?? ''})`, key: 'pv', width: 18 }, { header: 'Variación', key: 'dv', width: 12 }] : [])]);
+    const cfg = isSituacionConfig(r.version.scoring_config) ? r.version.scoring_config : null;
+    for (const x of r.sectionsResult) {
+      const v = x.score === null ? null : Number(Number(x.score).toFixed(4));
+      const pv = r.previous ? r.prevOf(String(x.title)) : undefined;
+      const row = s.addRow({ s: String(x.title).trim(), r: Number(x.raw), t: Number(x.target), n: v, a: `${x.answered}/${x.items}`, na: x.na,
+        ...(r.previous ? { pv: pv ?? null, dv: pv === null || pv === undefined || v === null ? null : Math.round((v - pv) * 100) / 100 } : {}) });
+      if (r.previous) { row.getCell('pv').numFmt = '0.00'; row.getCell('dv').numFmt = '+0.00;-0.00;0.00'; }
+      row.getCell('n').numFmt = '0.00'; if (cfg) paintBand(row.getCell('n'), bandFor(v, cfg.bands));
+      row.eachCell(c => { c.border = THIN; });
+    }
+    const sit = r.version.scoring_method !== 'ponderado';
+    const finalVal = sit ? (r.official ? a.score : r.result.final) : (r.official ? a.compliance_pct : r.result.compliance_pct);
+    const fv = finalVal === null || finalVal === undefined ? null : Number(Number(finalVal).toFixed(4));
+    const tot = s.addRow({ s: sit ? 'Resultado final' : 'Total', r: r.sectionsResult.reduce((t, x) => t + Number(x.raw || 0), 0), t: r.sectionsResult.reduce((t, x) => t + Number(x.target || 0), 0), n: fv,
+      ...(r.previous ? { pv: r.previous.final, dv: r.previous.final === null || fv === null ? null : Math.round((fv - r.previous.final) * 100) / 100 } : {}) });
+    if (r.previous) { tot.getCell('pv').numFmt = '0.00'; tot.getCell('dv').numFmt = '+0.00;-0.00;0.00'; }
+    tot.eachCell(c => { c.font = { bold: true }; c.border = THIN; });
+    tot.getCell('s').fill = solid(SHEET.total); tot.getCell('s').font = { bold: true, color: { argb: argb(SHEET.totalInk) } };
+    tot.getCell('n').numFmt = '0.00'; paintBand(tot.getCell('n'), r.official ? a.result_band : r.result.band);
+    if (cfg) {
+      s.addRow({});
+      const h = s.addRow({ s: 'Criterio de evaluación' }); h.getCell('s').font = { bold: true };
+      for (const b of cfg.bands) {
+        const row = s.addRow({ s: bandRange(b), r: b.label });
+        s.mergeCells(`B${row.number}:C${row.number}`);
+        paintBand(row.getCell('r'), b.label); row.getCell('r').alignment = { horizontal: 'center' };
+        row.getCell('s').alignment = { horizontal: 'right' };
+      }
+    }
   }
   const ck = sheet(wb, 'Checklist', [
     { header: 'Sección', key: 'sec', width: 30 }, { header: 'N.º', key: 'num', width: 7 }, { header: 'Requisito', key: 'q', width: 70 }, { header: 'Proceso', key: 'p', width: 18 },
@@ -40,6 +80,12 @@ export async function buildAuditXlsx(r: AuditReport): Promise<Blob> {
     ck.addRow({ sec: s.title.trim(), num: i.original_number ?? i.code ?? '', q: i.question, p: r.names.process(i.process_id), ans: r.optionLabel(resp?.answer), c: resp?.comment ?? resp?.text_value ?? '', ph: resp ? photos.get(resp.id) ?? 0 : 0 });
   }
   wrap(ck); ck.autoFilter = { from: 'A1', to: 'G1' };
+  if (a.closing_meeting_at || a.closing_attendees || a.closing_agreements || r.signatures.length) {
+    const ac = sheet(wb, 'Acta y firmas', [{ header: 'Campo / firmante', key: 'k', width: 34 }, { header: 'Detalle', key: 'v', width: 70 }, { header: 'Conformidad', key: 'c', width: 18 }, { header: 'Fecha y hora', key: 'f', width: 20 }]);
+    ac.addRows([{ k: 'Fecha de la reunión', v: dt(a.closing_meeting_at) }, { k: 'Asistentes', v: a.closing_attendees ?? '' }, { k: 'Acuerdos y compromisos', v: a.closing_agreements ?? '' }]);
+    for (const sg of r.signatures) ac.addRow({ k: sg.signer_name, v: [LABELS.signerRole[sg.signer_role], sg.signer_position, sg.signer_company, sg.observations ? `Obs.: ${sg.observations}` : null].filter(Boolean).join(' · '), c: LABELS.agreement[sg.agreement], f: new Date(sg.signed_at) });
+    wrap(ac);
+  }
   addFindingSheets(wb, r.findings, r.actions, id => r.names.company(id), id => r.names.person(id), undefined, new Map(r.items.map(i => [i.id, `${i.original_number ?? i.code ?? ''} ${i.question}`.trim()])));
   if (r.history?.length) {
     const h = sheet(wb, 'Historial', [{ header: 'Fecha', key: 'd', width: 20 }, { header: 'Usuario', key: 'u', width: 26 }, { header: 'Registro', key: 'r', width: 28 }, { header: 'Tabla', key: 't', width: 20 }, { header: 'Operación', key: 'o', width: 13 }, { header: 'Campo', key: 'c', width: 22 }, { header: 'Antes', key: 'b', width: 40 }, { header: 'Después', key: 'a', width: 40 }]);
@@ -90,7 +136,7 @@ export async function buildOrgXlsx(orgId: string, orgName: string): Promise<Blob
     db.hse_template_versions.where('organization_id').equals(orgId).toArray(), db.hse_templates.where('organization_id').equals(orgId).toArray()]);
   const cn = new Map(companies.map(c => [c.id, c.name])), ln = new Map(locations.map(l => [l.id, l.name])), pn = new Map(profiles.map(p => [p.id, p.full_name || p.email]));
   const tn = new Map(templates.map(t => [t.id, t.name])); const vn = new Map(versions.map(v => [v.id, `${tn.get(v.template_id) ?? ''} v${v.version_number}`]));
-  const wb = new ExcelJS.Workbook(); wb.creator = 'HSE Audit Manager'; wb.title = `HSE ${orgName}`;
+  const wb = new ExcelJS.Workbook(); wb.creator = 'Auditorías HSE'; wb.title = `HSE ${orgName}`;
   const au = sheet(wb, 'Auditorías', [{ header: 'Código', key: 'c', width: 15 }, { header: 'Título', key: 't', width: 45 }, { header: 'Plantilla', key: 'p', width: 36 }, { header: 'Empresa', key: 'co', width: 24 }, { header: 'Ubicación', key: 'l', width: 22 }, { header: 'Fecha', key: 'd', width: 12 }, { header: 'Estado', key: 's', width: 13 }, { header: 'Resultado', key: 'r', width: 11 }, { header: 'Máximo', key: 'm', width: 10 }, { header: 'Cumplimiento %', key: 'pc', width: 14 }, { header: 'Calificación', key: 'b', width: 13 }, { header: 'Auditor', key: 'a', width: 24 }]);
   for (const a of live(audits as Audit[])) au.addRow({ c: a.code ?? '', t: a.title, p: vn.get(a.template_version_id), co: cn.get(a.company_id ?? '') ?? '', l: ln.get(a.location_id ?? '') ?? '', d: dt(a.scheduled_date), s: LABELS.auditStatus[a.status], r: a.score, m: a.max_score, pc: a.compliance_pct, b: a.result_band ?? '', a: pn.get(a.lead_auditor_id ?? '') ?? '' });
   au.autoFilter = { from: 'A1', to: 'L1' };

@@ -31,7 +31,7 @@ Plataforma web multiempresa para auditorías de **Seguridad e Higiene, Salud Ocu
 
 ```
 supabase/
-  migrations/                 23 migraciones versionadas (prefijo hse_)
+  migrations/                 25 migraciones versionadas (prefijo hse_; 0024 organización de ejemplo, 0025 acta y firmas)
   tests/                      pruebas SQL: autorización, ciclo de hallazgos, paridad de puntaje, importación, sincronización
   local/supabase_stubs.sql    mínimos de Supabase para probar las migraciones en PostgreSQL común
 src/
@@ -203,3 +203,32 @@ PGHOST=/tmp PGPORT=55432 PGUSER=postgres scripts/backup/test-backup-restore.sh
 ```
 
 Pruebas SQL: `supabase/tests/README.md`. Resultados: `docs/pruebas-produccion/`.
+
+## 10. Organización de ejemplo y colores de evaluación
+
+- **Organización de ejemplo** (migración 0024, `hse_load_demo`): botón *Crear organización de ejemplo* en el primer
+  ingreso, en el Dashboard vacío y en *Usuarios y organización*. Crea una organización aparte (el usuario queda como
+  propietario) con la plantilla H&P publicada por el camino normal, una inspección ponderada, 3 contratistas y 8
+  auditorías ficticias; una usa las respuestas de la planilla original y el servidor obtiene 6,27 – Bueno. No toca
+  datos reales. Las auditorías completadas quedan esperando la revisión de otra persona (regla de independencia).
+- **Colores de la planilla H&P** (`src/scoring/bands.ts`): Muy Bueno `#C5D9F1`, Bueno `#92D050`, Regular `#FFFF00`,
+  Crítico `#E26B0A`, encabezado `#FAC090`, resultado final `#D8E4BC`. Se usan en la planilla de resultado de cada
+  auditoría (`ResultSheet`), el listado, el dashboard, el PDF y el Excel. La banda la decide la metodología de la
+  versión; los colores sólo la representan.
+- Prueba visual: `python3 tests/e2e/visual_hp_e2e.py http://localhost:4177` (14 verificaciones, capturas en
+  `docs/pruebas-produccion/capturas/6..8-*.png`).
+
+## 11. Comparación, acta de cierre con firmas y fotos marcadas
+
+- **Comparación con la auditoría anterior** (`src/modules/audits/previousAudit.ts`): en la planilla de resultado, el PDF
+  y el Excel se agregan las columnas *Anterior* y *Variación* (▲ verde mejora, ▼ rojo empeora) por sección y en el
+  resultado final, contra la última auditoría completada de la **misma empresa y plantilla**. Usa sólo resultados
+  oficiales del servidor.
+- **Reunión de cierre y firmas** (migración 0025, `hse_audit_signatures`): fecha, asistentes y acuerdos del acta;
+  firma con el dedo del auditor y de los representantes (conforme / con observaciones), también sin conexión.
+  Una firma no se modifica (sólo se da de baja, con historial); con la auditoría cerrada no cambian ni el acta ni las
+  firmas. El PDF incluye el acta con las firmas; el Excel, la hoja *Acta y firmas*.
+- **Marcar sobre la foto** (`PhotoAnnotator`): al tomar una foto se puede señalar el desvío con flecha, círculo o
+  trazo antes de guardarla; funciona sin conexión.
+- Compatibilidad: si el servidor todavía no tiene la migración 0025, la app sigue sincronizando y muestra un aviso en
+  lugar de las firmas (`tests/e2e/missing_migration_e2e.py`).

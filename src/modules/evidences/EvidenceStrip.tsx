@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { Button, Modal, useToast } from '../../components/ui';
 import { addEvidence, evidenceUrl, type EvidenceTarget } from './evidenceService';
 import type { Evidence } from '../../types';
+import { PhotoAnnotator } from './PhotoAnnotator';
 
 function Thumb({ ev, pending, onOpen }: { ev: Evidence; pending: boolean; onOpen: (url: string | null) => void }) {
   const [url, setUrl] = useState<string | null>(null);
@@ -37,12 +38,19 @@ export function EvidenceStrip({ target, filter, readOnly, beforeAdd }: { target:
   }, [key, val]) ?? [];
   const pendingUploads = useLiveQuery(async () => new Set((await db.outbox.where('table').equals('hse_evidences').toArray()).filter(o => o.kind === 'upload').map(o => o.record_id)), []) ?? new Set();
 
-  const onFiles = async (files: FileList | null) => {
-    if (!files?.length) return;
+  const [annotate, setAnnotate] = useState<File | null>(null);
+  const save = async (files: File[]) => {
     setBusy(true);
-    try { if (beforeAdd) await beforeAdd(); for (const f of Array.from(files)) await addEvidence(target, f, undefined, userId); toast(files.length > 1 ? `${files.length} evidencias agregadas` : 'Evidencia agregada'); }
+    try { if (beforeAdd) await beforeAdd(); for (const f of files) await addEvidence(target, f, undefined, userId); toast(files.length > 1 ? `${files.length} evidencias agregadas` : 'Evidencia agregada'); }
     catch (e) { toast(e instanceof Error ? e.message : String(e), 'bad'); }
     finally { setBusy(false); if (input.current) input.current.value = ''; }
+  };
+  const onFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
+    const list = Array.from(files);
+    // una sola foto: se ofrece marcar el desvío antes de guardarla
+    if (list.length === 1 && list[0].type.startsWith('image/')) { setAnnotate(list[0]); return; }
+    await save(list);
   };
 
   return (
@@ -52,6 +60,8 @@ export function EvidenceStrip({ target, filter, readOnly, beforeAdd }: { target:
         <input ref={input} type="file" accept="image/*,application/pdf" capture="environment" multiple hidden onChange={e => void onFiles(e.target.files)} />
         <Button type="button" variant="secondary" className="btn-sm" busy={busy} onClick={() => input.current?.click()}>📷 Evidencia</Button>
       </> : null}
+      <PhotoAnnotator file={annotate} onCancel={() => { setAnnotate(null); if (input.current) input.current.value = ''; }}
+        onDone={f => { setAnnotate(null); void save([f]); }} />
       <Modal open={!!view} title={view?.ev.caption ?? view?.ev.file_name ?? 'Evidencia'} onClose={() => setView(null)} wide
         footer={!readOnly && view ? <Button variant="danger" onClick={async () => { await softDelete('hse_evidences', view.ev.id); setView(null); }}>Quitar evidencia</Button> : undefined}>
         {view?.url ? (view.ev.mime_type === 'application/pdf' ? <a href={view.url} target="_blank" rel="noreferrer">Abrir PDF</a> : <img src={view.url} alt="" style={{ maxWidth: '100%', borderRadius: 8 }} />) : <p className="muted">El archivo se verá cuando haya conexión.</p>}

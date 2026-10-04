@@ -65,8 +65,14 @@ export interface Audit extends SyncMeta {
   lead_auditor_id: string | null; audit_team: string | null; scope: string | null; summary: string | null;
   score: number | null; max_score: number | null; compliance_pct: number | null; critical_failures: number;
   section_results: unknown; result_band: string | null; scoring_snapshot: unknown;
+  closing_meeting_at?: string | null; closing_attendees?: string | null; closing_agreements?: string | null;
   latitude: number | null; longitude: number | null;
   reviewed_by: string | null; reviewed_at: string | null; review_notes: string | null; closed_by: string | null;
+}
+export type SignerRole = 'auditor_lider' | 'auditor' | 'representante_contratista' | 'representante_cliente' | 'otro';
+export interface AuditSignature extends SyncMeta {
+  id: string; audit_id: string; signer_role: SignerRole; signer_name: string; signer_position: string | null; signer_company: string | null;
+  agreement: 'conforme' | 'con_observaciones'; observations: string | null; signature_png: string; signed_at: string; created_by?: string | null;
 }
 export interface AuditParticipant extends SyncMeta {
   id: string; audit_id: string; user_id: string; participant_role: 'lider' | 'auditor' | 'observador';
@@ -114,6 +120,8 @@ export interface ProfileRow { id: string; email: string; full_name: string | nul
 export const LABELS = {
   role: { owner: 'Administrador (propietario)', admin: 'Administrador', supervisor: 'Coordinador HSE', auditor: 'Auditor', action_owner: 'Responsable de acciones correctivas', viewer: 'Usuario de consulta', contractor: 'Responsable de contratista' } as Record<Role, string>,
   participantRole: { lider: 'Auditor líder', auditor: 'Auditor', observador: 'Observador' },
+  signerRole: { auditor_lider: 'Auditor líder', auditor: 'Auditor', representante_contratista: 'Representante del contratista', representante_cliente: 'Representante del cliente', otro: 'Otro' } as Record<SignerRole, string>,
+  agreement: { conforme: 'Conforme', con_observaciones: 'Con observaciones' },
   rcaMethod: { cinco_porques: '5 porqués', ishikawa: 'Ishikawa (6M)', otro: 'Otro método' },
   ishikawa: { metodo: 'Método', mano_obra: 'Mano de obra', maquinaria: 'Maquinaria / equipos', materiales: 'Materiales', medio_ambiente: 'Medio ambiente / entorno', medicion: 'Medición / control' } as Record<IshikawaCat, string>,
   notificationKind: { accion_por_vencer: 'Acción por vencer', accion_vencida: 'Acción vencida', verificacion_pendiente: 'Verificación de eficacia pendiente', hallazgo_vencido: 'Hallazgo vencido' },

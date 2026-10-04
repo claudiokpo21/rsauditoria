@@ -4,6 +4,7 @@ import { useOrgRows, useNameMap, usePendingSet, useProfiles } from '../../db/hoo
 import { MANAGERS, auditAccess, useParticipants } from '../auth/access';
 import { newId, saveRecord } from '../../db/repo';
 import { useAuth, can } from '../auth/AuthProvider';
+import { bandStyle } from '../../scoring/bands';
 import { Badge, Button, Empty, Field, Input, Modal, PageHeader, Select, TextArea, fmtDate, fmtNum, today, useToast } from '../../components/ui';
 import { LABELS, type Audit, type AuditStatus, type Company, type Location, type MemberRow, type Template, type TemplateVersion } from '../../types';
 
@@ -62,7 +63,7 @@ export function AuditsPage() {
       </div>
       {list.length === 0 ? <Empty>{audits.length ? 'Sin resultados para el filtro.' : 'Todavía no hay auditorías.'}</Empty> : (
         <div className="table-wrap"><table className="t">
-          <thead><tr><th>Código</th><th>Auditoría</th><th>Empresa / ubicación</th><th>Líder</th><th>Fecha</th><th>Estado</th><th className="num">Resultado</th></tr></thead>
+          <thead><tr><th>Código</th><th>Auditoría</th><th>Empresa / ubicación</th><th>Líder</th><th>Fecha</th><th>Estado</th><th style={{ textAlign: "center" }}>Resultado</th></tr></thead>
           <tbody>{list.map(a => (
             <tr key={a.id} className="clickable" onClick={() => nav(`/auditorias/${a.id}`)}>
               <td className="mono">{a.code ?? <span className="muted">(al sincronizar)</span>}</td>
@@ -71,7 +72,10 @@ export function AuditsPage() {
               <td className="small">{a.lead_auditor_id ? people.get(a.lead_auditor_id) ?? '—' : '—'}</td>
               <td>{fmtDate(a.scheduled_date)}{a.status === 'planificada' && a.scheduled_date && a.scheduled_date < today() ? <div><Badge tone="warn">Atrasada</Badge></div> : null}</td>
               <td><Badge tone={statusTone(a.status)}>{LABELS.auditStatus[a.status]}</Badge> {pending.has(a.id) ? <Badge tone="warn">Pendiente</Badge> : null}</td>
-              <td className="num">{a.compliance_pct !== null ? `${fmtNum(a.score)} / ${fmtNum(a.max_score, 0)}` : '—'}{a.result_band ? <div><Badge tone="info">{a.result_band}</Badge></div> : null}</td>
+              {(() => { const st = bandStyle(a.result_band); return (
+                <td className="result-cell" style={st ? { background: st.bg, color: st.fg, fontWeight: 700 } : undefined}>
+                  {a.result_band ? <>{fmtNum(a.score)}<div className="small" style={{ fontWeight: 600 }}>{a.result_band}</div></> : a.compliance_pct !== null ? `${fmtNum(a.compliance_pct, 1)} %` : '—'}
+                </td>); })()}
             </tr>))}</tbody>
         </table></div>
       )}

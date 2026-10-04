@@ -159,3 +159,25 @@ npx vite build --mode development && npx vite preview --port 4177 &
 npm run test:e2e:offline && npm run test:e2e:informes
 PGHOST=/tmp PGPORT=55432 PGUSER=postgres scripts/backup/test-backup-restore.sh
 ```
+
+## 8. Actualización 2026-10-04: colores de la planilla y organización de ejemplo
+
+- `tests/e2e/visual_hp_e2e.py` (plantilla H&P con las respuestas de la planilla): **14/14**. La planilla de resultado
+  muestra 16/24, 63/90, 65/84, 4/12, 5/9, 22/30 y 175/249 = 6,27 Bueno con los colores del Excel (verde, naranja,
+  amarillo); el PDF y el Excel reproducen la tabla, el resultado final y el criterio de evaluación; sin desplazamiento
+  horizontal en celular emulado. Capturas `capturas/6..8-*.png`.
+- Regresión después de los cambios de interfaz: offline 26/26, hallazgos/informes/móvil 32/32, unitarias 13/13.
+- `supabase/tests/demo_organization.sql` (PostgreSQL local con las 24 migraciones): la organización de ejemplo se crea
+  por el camino normal (importación → validación → publicación → completar), el servidor calcula 6,27 Bueno, 8,62
+  Muy Bueno, 3,25 Crítico y 5,06 Regular, detecta 3 hallazgos recurrentes y genera avisos; un segundo intento se rechaza.
+  Las suites de autorización (231/231) y ciclo de hallazgos (62/62) siguen pasando con 0024.
+- **Pendiente:** aplicar la migración 0024 en el proyecto Supabase (no se aplicó desde esta sesión).
+
+## 9. Actualización 2026-10-04 (tanda 1): comparación, acta con firmas y fotos marcadas
+
+- `signatures.sql`: **24/24** en el proyecto real (0025 aplicada) y local. Autorización (231/231) y ciclo (62/62) siguen pasando.
+- `visual_hp_e2e.py`: **20/20** (comparación ▼ -0,98 en rojo contra la auditoría anterior; acta y dos firmas capturadas,
+  sincronizadas como PNG y presentes en PDF y Excel).
+- `offline_e2e.py`: **27/27** (nuevo 2.5: foto marcada con flecha sin conexión). `findings_reports_mobile_e2e.py`: 32/32.
+- `missing_migration_e2e.py`: **2/2** (la app sigue sincronizando contra un servidor sin 0025 y oculta las firmas).
+- Migración 0024 (organización de ejemplo): **sigue sin aplicar** en el proyecto.
