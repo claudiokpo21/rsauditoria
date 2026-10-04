@@ -87,7 +87,7 @@
   {
     "prueba": "3.4 Cierre con resumen enviado al servidor",
     "ok": true,
-    "detalle": "estado=cerrada en 2.0 s"
+    "detalle": "estado=cerrada en 0.5 s"
   },
   {
     "prueba": "4.1 PDF de auditoría: resultado oficial y por sección",
@@ -100,14 +100,14 @@
     "detalle": ""
   },
   {
-    "prueba": "4.3 PDF: historial de cambios",
+    "prueba": "4.3 PDF: carátula de RS Consultora e índice, sin historial de cambios",
     "ok": true,
-    "detalle": "4 páginas"
+    "detalle": "6 páginas"
   },
   {
-    "prueba": "4.4 Excel de auditoría: hojas Resumen, Secciones (oficial), Checklist, Hallazgos, Plan de acción, Historial",
+    "prueba": "4.4 Excel de auditoría: hojas Resumen, Secciones (oficial), Checklist, Hallazgos, Plan de acción (sin historial)",
     "ok": true,
-    "detalle": "Resumen, Secciones (oficial), Checklist, Hallazgos, Plan de acción, Historial"
+    "detalle": "Resumen, Secciones (oficial), Checklist, Hallazgos, Plan de acción"
   },
   {
     "prueba": "4.5 Excel: columnas de gestión del hallazgo completas",

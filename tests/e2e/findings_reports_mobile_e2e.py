@@ -192,11 +192,11 @@ with sync_playwright() as p:
     norm = ' '.join(txt.split())
     check('4.1 PDF de auditoría: resultado oficial y por sección', 'Resultados por sección oficiales' in norm and 'Resultado oficial' in norm and 'Locación' in norm and '66,7' in norm, os.path.basename(pdf_path))
     check('4.2 PDF: hallazgo con pregunta, requisito, clasificación, responsable, causa raíz y plan', all(s in norm for s in ['HAL-2026-0007', 'extintores están vigentes', 'Extintores vigentes y accesibles', 'RECURRENTE', 'Nadie controla los vencimientos', 'Criterio de eficacia']), '')
-    check('4.3 PDF: historial de cambios', 'Historial de cambios' in norm, f'{len(PdfReader(pdf_path).pages)} páginas')
+    check('4.3 PDF: carátula de RS Consultora e índice, sin historial de cambios', 'RS CONSULTORA' in norm and 'Índice' in norm and 'Historial de cambios' not in norm, f'{len(PdfReader(pdf_path).pages)} páginas')
     xlsx_path = download(A, lambda: A.get_by_role('button', name='Descargar Excel').first.click())
     wb = load_workbook(xlsx_path)
-    check('4.4 Excel de auditoría: hojas Resumen, Secciones (oficial), Checklist, Hallazgos, Plan de acción, Historial',
-          all(s in wb.sheetnames for s in ['Resumen', 'Secciones (oficial)', 'Checklist', 'Hallazgos', 'Plan de acción', 'Historial']), ', '.join(wb.sheetnames))
+    check('4.4 Excel de auditoría: hojas Resumen, Secciones (oficial), Checklist, Hallazgos, Plan de acción (sin historial)',
+          all(s in wb.sheetnames for s in ['Resumen', 'Secciones (oficial)', 'Checklist', 'Hallazgos', 'Plan de acción']) and 'Historial' not in wb.sheetnames, ', '.join(wb.sheetnames))
     hz = wb['Hallazgos']; heads = [c.value for c in hz[1]]
     row = {heads[i]: c.value for i, c in enumerate(hz[2])}
     check('4.5 Excel: columnas de gestión del hallazgo completas', row.get('Recurrente') == '2.ª vez' and 'causa raíz' in (row.get('Análisis de causa raíz') or '').lower() and row.get('Responsable') == 'Auditor B', json.dumps({k: row.get(k) for k in ('Código', 'Vencido', 'Recurrente', 'Categoría')}, ensure_ascii=False))

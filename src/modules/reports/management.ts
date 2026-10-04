@@ -12,6 +12,7 @@ import { LABELS, type Action, type Audit, type Finding, type TemplateCategory } 
 import type { SummaryResult } from './summary';
 import { SHEET } from '../../scoring/bands';
 import { bandCell, rgb } from './pdf';
+import { AUDIT_FIRM } from '../../config/brand';
 import { addFindingSheets, paintBand } from './excel';
 
 export interface MgmtFilters { from: string | null; to: string | null; company: string | null; companyName?: string }
@@ -52,6 +53,7 @@ export async function buildMgmtPdf(orgName: string, f: MgmtFilters, s: SummaryRe
   };
   doc.setFillColor(...brand); doc.rect(0, 0, W, 24, 'F'); doc.setTextColor(255);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.text('Informe de gestión HSE', 14, 11);
+  doc.setFontSize(9); doc.text(t(AUDIT_FIRM.name), W - 14, 11, { align: 'right' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(t(`${orgName} · ${filtersText(f)}`), 14, 18);
   doc.setTextColor(90); doc.setFontSize(7.5); doc.text(t(sourceText(s)), 14, 29);
 
@@ -127,7 +129,7 @@ export async function buildMgmtPdf(orgName: string, f: MgmtFilters, s: SummaryRe
       a.status === 'planificada' && a.scheduled_date && a.scheduled_date < today ? 'Atrasada' : a.status === 'completada' ? (a.reviewed_at ? 'Lista para cerrar' : 'Pendiente de revisión') : '']));
 
   const pages = doc.getNumberOfPages();
-  for (let p = 1; p <= pages; p++) { doc.setPage(p); doc.setFontSize(7); doc.setTextColor(120); doc.text(t(`${orgName} · Informe de gestión · generado ${new Date().toLocaleString('es-AR')}`), 14, 290); doc.text(`${p} / ${pages}`, W - 14, 290, { align: 'right' }); }
+  for (let p = 1; p <= pages; p++) { doc.setPage(p); doc.setFontSize(7); doc.setTextColor(120); doc.text(t(`${AUDIT_FIRM.name} · ${orgName} · Informe de gestión · generado ${new Date().toLocaleString('es-AR')}`), 14, 290); doc.text(`${p} / ${pages}`, W - 14, 290, { align: 'right' }); }
   return doc.output('blob');
 }
 

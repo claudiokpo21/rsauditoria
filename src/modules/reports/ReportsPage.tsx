@@ -22,7 +22,6 @@ export function ReportsPage() {
   const cName = useNameMap('hse_companies');
   const [sel, setSel] = useState(sp.get('audit') ?? '');
   const [photos, setPhotos] = useState(true);
-  const [history, setHistory] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [from, setFrom] = useState(iso(new Date(Date.now() - 365 * 864e5)));
   const [to, setTo] = useState(iso(new Date()));
@@ -42,8 +41,7 @@ export function ReportsPage() {
         else downloadBlob(await buildMgmtXlsx(orgName, f, s, det), `${base}.xlsx`);
         return;
       }
-      const r = await loadAuditReport(sel, orgName, { history });
-      if (history && !r.history) toast('El historial de cambios requiere conexión; el informe se generó sin él', 'info');
+      const r = await loadAuditReport(sel, orgName);
       const base = `Auditoria_${safe(r.audit.code ?? r.audit.title)}`;
       if (kind === 'pdf') downloadBlob(await buildAuditPdf(r, { includePhotos: photos }), `${base}.pdf`);
       else downloadBlob(await buildAuditXlsx(r), `${base}.xlsx`);
@@ -58,7 +56,6 @@ export function ReportsPage() {
           <Field label="Auditoría"><Select placeholder="Elegir…" value={sel} onChange={e => setSel(e.target.value)}
             options={audits.map(a => ({ value: a.id, label: `${a.code ?? '(sin código)'} · ${a.title} · ${cName.get(a.company_id ?? '') ?? ''} · ${LABELS.auditStatus[a.status]}` }))} /></Field>
           <label className="row gap small"><input type="checkbox" checked={photos} onChange={e => setPhotos(e.target.checked)} /> Incluir registro fotográfico en el PDF</label>
-          <label className="row gap small"><input type="checkbox" checked={history} onChange={e => setHistory(e.target.checked)} /> Incluir historial de cambios (requiere conexión)</label>
           <p className="muted small">Contenido: datos generales, resultado oficial y por sección, conclusiones, checklist, hallazgos con pregunta, requisito, clasificación, responsable, vencimiento, análisis de causa raíz, plan de acción con criterio y verificación de eficacia, fotografías e historial.</p>
           <div className="row gap wrap">
             <Button disabled={!sel} busy={busy === 'pdf'} onClick={() => void run('pdf')}>Descargar PDF</Button>

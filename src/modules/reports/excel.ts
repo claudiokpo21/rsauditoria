@@ -4,6 +4,7 @@ import { LABELS, type Action, type Audit, type Finding } from '../../types';
 import { rcaText, type AuditReport } from './reportData';
 import { SHEET, bandFor, bandRange, bandStyle } from '../../scoring/bands';
 import { isSituacionConfig } from '../../scoring/engine';
+import { AUDIT_FIRM } from '../../config/brand';
 
 const argb = (hex: string) => 'FF' + hex.slice(1).toUpperCase();
 const solid = (hex: string): ExcelJS.Fill => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: argb(hex) } });
@@ -25,11 +26,11 @@ const wrap = (ws: ExcelJS.Worksheet) => ws.eachRow((r, i) => { if (i > 1) r.alig
 const dt = (s?: string | null) => (s ? new Date(s.length === 10 ? s + 'T12:00:00' : s) : null);
 
 export async function buildAuditXlsx(r: AuditReport): Promise<Blob> {
-  const wb = new ExcelJS.Workbook(); wb.creator = 'Auditorías HSE'; wb.created = new Date();
+  const wb = new ExcelJS.Workbook(); wb.creator = AUDIT_FIRM.name; wb.created = new Date();
   const a = r.audit;
   const sum = sheet(wb, 'Resumen', [{ header: 'Campo', key: 'k', width: 28 }, { header: 'Valor', key: 'v', width: 80 }]);
   sum.addRows([
-    { k: 'Organización', v: r.orgName }, { k: 'Código', v: a.code ?? '' }, { k: 'Auditoría', v: a.title },
+    { k: 'Firma auditora', v: AUDIT_FIRM.name }, { k: 'Organización', v: r.orgName }, { k: 'Código', v: a.code ?? '' }, { k: 'Auditoría', v: a.title },
     { k: 'Plantilla', v: `${r.template?.name ?? ''} v${r.version.version_number}` }, { k: 'Tipo', v: LABELS.auditType[a.audit_type] },
     { k: 'Estado', v: LABELS.auditStatus[a.status] }, { k: 'Empresa', v: r.names.company(a.company_id) }, { k: 'Ubicación', v: r.names.location(a.location_id) },
     { k: 'Fecha', v: dt(a.scheduled_date) }, { k: 'Auditor líder', v: r.names.person(a.lead_auditor_id) }, { k: 'Alcance', v: a.scope ?? '' },
@@ -136,7 +137,7 @@ export async function buildOrgXlsx(orgId: string, orgName: string): Promise<Blob
     db.hse_template_versions.where('organization_id').equals(orgId).toArray(), db.hse_templates.where('organization_id').equals(orgId).toArray()]);
   const cn = new Map(companies.map(c => [c.id, c.name])), ln = new Map(locations.map(l => [l.id, l.name])), pn = new Map(profiles.map(p => [p.id, p.full_name || p.email]));
   const tn = new Map(templates.map(t => [t.id, t.name])); const vn = new Map(versions.map(v => [v.id, `${tn.get(v.template_id) ?? ''} v${v.version_number}`]));
-  const wb = new ExcelJS.Workbook(); wb.creator = 'Auditorías HSE'; wb.title = `HSE ${orgName}`;
+  const wb = new ExcelJS.Workbook(); wb.creator = AUDIT_FIRM.name; wb.title = `HSE ${orgName}`;
   const au = sheet(wb, 'Auditorías', [{ header: 'Código', key: 'c', width: 15 }, { header: 'Título', key: 't', width: 45 }, { header: 'Plantilla', key: 'p', width: 36 }, { header: 'Empresa', key: 'co', width: 24 }, { header: 'Ubicación', key: 'l', width: 22 }, { header: 'Fecha', key: 'd', width: 12 }, { header: 'Estado', key: 's', width: 13 }, { header: 'Resultado', key: 'r', width: 11 }, { header: 'Máximo', key: 'm', width: 10 }, { header: 'Cumplimiento %', key: 'pc', width: 14 }, { header: 'Calificación', key: 'b', width: 13 }, { header: 'Auditor', key: 'a', width: 24 }]);
   for (const a of live(audits as Audit[])) au.addRow({ c: a.code ?? '', t: a.title, p: vn.get(a.template_version_id), co: cn.get(a.company_id ?? '') ?? '', l: ln.get(a.location_id ?? '') ?? '', d: dt(a.scheduled_date), s: LABELS.auditStatus[a.status], r: a.score, m: a.max_score, pc: a.compliance_pct, b: a.result_band ?? '', a: pn.get(a.lead_auditor_id ?? '') ?? '' });
   au.autoFilter = { from: 'A1', to: 'L1' };

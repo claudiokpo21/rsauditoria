@@ -204,3 +204,12 @@ auditoría se compara. Lo mismo sale en el PDF y el Excel.
 Al sacar o elegir una foto como evidencia se abre *Marcar sobre la foto*: elija **Flecha**, **Círculo** o **Trazo** y el
 color, y arrastre sobre la imagen para señalar el desvío (*Deshacer* quita la última marca). **Guardar con marcas**
 guarda la foto marcada; **Guardar sin marcas** guarda la original.
+
+## 16. Informe de auditoría (PDF)
+
+*Informes › Informe de una auditoría › Descargar PDF* genera el informe de **RS Consultora**: carátula con la empresa
+auditada y el resultado coloreado, índice con números de página (se puede tocar para ir a cada sección), 1. Datos
+generales (objetivo, alcance y metodología), 2. Resumen ejecutivo, 3. Resultados por requisito con el criterio de
+evaluación (y la comparación con la auditoría anterior, si existe), 4. Hallazgos y plan de acción, 5. Lista de
+verificación con las respuestas en color, 6. Registro fotográfico (opcional) y 7. Acta de reunión de cierre con las
+firmas. El nombre de la firma auditora se cambia en `src/config/brand.ts`.

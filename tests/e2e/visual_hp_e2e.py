@@ -156,8 +156,9 @@ with sync_playwright() as pw:
 
     P.goto(f'{BASE}/informes?audit={a1}'); P.wait_for_selector('text=Informe de una auditoría')
     pdf = download(P, lambda: P.get_by_role('button', name='Descargar PDF').first.click())
-    txt = ' '.join(' '.join(pg.extract_text().split()) for pg in PdfReader(pdf).pages[:2])
+    txt = ' '.join(' '.join((pg.extract_text() or '').split()) for pg in PdfReader(pdf).pages)
     check('3.4 PDF: acta de reunión de cierre con firmas y conformidad', all(x in txt for x in ['Acta de reunión de cierre', 'Juan Pérez', 'Con observaciones', 'Presentar el plan de acción en 15 días']), '')
+    check('3.0 PDF: carátula de RS Consultora, índice y sin historial de cambios', all(s in txt for s in ['RS CONSULTORA', 'Informe de auditoría', 'Índice', '1. Datos generales', 'Resumen ejecutivo', 'Página 3 de']) and 'Historial de cambios' not in txt, '')
     check('3.1 PDF: tabla de requisitos, resultado final y criterio de evaluación', all(s in txt for s in ['Requisitos del sistema de gestión', 'Puntaje alcanzado', 'RESULTADO FINAL 175 249 6,27', 'Criterio de evaluación', '8,01 - 10 Muy Bueno']), os.path.basename(pdf))
     xlsx = download(P, lambda: P.get_by_role('button', name='Descargar Excel').first.click())
     wbx = load_workbook(xlsx)

@@ -65,6 +65,11 @@
     "detalle": ""
   },
   {
+    "prueba": "3.0 PDF: carátula de RS Consultora, índice y sin historial de cambios",
+    "ok": true,
+    "detalle": ""
+  },
+  {
     "prueba": "3.1 PDF: tabla de requisitos, resultado final y criterio de evaluación",
     "ok": true,
     "detalle": "Auditoria_AUD-2026-0010.pdf"
