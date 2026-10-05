@@ -284,7 +284,9 @@ Al importar una planilla ya completada, sus respuestas quedan como **caso de val
 comprobar que la app calcula igual que el Excel), no como auditoría. Para pasarlas a una auditoría:
 
 1. Publique la versión de la plantilla (Plantillas › la plantilla › **Publicar**).
-2. En la misma pantalla, en *Casos de validación*, toque **Crear auditoría con las respuestas de la planilla**.
+2. En **Auditorías › Nueva auditoría**, elija la plantilla: aparece marcada la opción **Cargar las respuestas de la
+   planilla importada** (también está el botón *Crear auditoría con las respuestas de la planilla* en la plantilla,
+   en la versión publicada, sección *Casos de validación*).
 3. Indique título, empresa, ubicación, fecha y tipo. Se crea la auditoría *En curso* con todas las respuestas cargadas.
 4. Revísela, agregue comentarios, fotos y hallazgos, y toque **Completar**: el servidor calcula el resultado oficial y
    aparece en el dashboard.

@@ -209,6 +209,17 @@ with sync_playwright() as pw:
     newa = [a for a in fake.tables['hse_audits'].values() if a.get('title') == 'CSMS a segundas partes – Contratista real']
     nresp = len([r for r in fake.tables['hse_audit_responses'].values() if newa and r.get('audit_id') == newa[0]['id']])
     check('8.2 Se sincroniza al servidor (auditoría en curso + 83 respuestas)', len(newa) == 1 and newa[0].get('status') == 'en_curso' and nresp == 83, f'{len(newa)} auditoría, {nresp} respuestas')
+    # lo mismo desde Auditorías › Nueva auditoría (opción marcada por defecto)
+    P.goto(f'{BASE}/auditorias'); P.wait_for_selector('text=Nueva auditoría', timeout=30000)
+    P.get_by_role('button', name='Nueva auditoría').click()
+    P.locator('.modal select').first.select_option(index=1)
+    P.wait_for_selector('.sheet-opt', timeout=10000)
+    P.get_by_label('Título').fill('CSMS desde Nueva auditoría')
+    P.screenshot(path=f'{OUT}/9-nueva-con-planilla.png')
+    P.locator('.modal').get_by_role('button', name='Crear', exact=True).click()
+    P.wait_for_selector('.audit-bar', timeout=60000); P.wait_for_timeout(800)
+    bar2 = P.locator('.audit-bar').inner_text().replace('\n', ' ')
+    check('8.3 Nueva auditoría: opción "Cargar las respuestas de la planilla importada" (83/83, 6,27)', '83/83' in bar2 and '6,27' in bar2, bar2)
     desk.close()
 
     mob = ctx_for(browser, pw.devices['Pixel 7'])

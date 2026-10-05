@@ -115,6 +115,11 @@
     "detalle": "1 auditoría, 83 respuestas"
   },
   {
+    "prueba": "8.3 Nueva auditoría: opción \"Cargar las respuestas de la planilla importada\" (83/83, 6,27)",
+    "ok": true,
+    "detalle": "100% 83/83 respondidas 6,27 parcial Bueno Siguiente  sin responder  ›"
+  },
+  {
     "prueba": "4.1 Celular: planilla sin desplazamiento horizontal de la página",
     "ok": true,
     "detalle": ""

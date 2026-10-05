@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrgRows, useNameMap, usePendingSet, useProfiles } from '../../db/hooks';
 import { MANAGERS, auditAccess, useParticipants } from '../auth/access';
-import { newId, saveRecord } from '../../db/repo';
+import { newId, responseId, saveRecord } from '../../db/repo';
+import { db } from '../../db/db';
 import { useAuth, can } from '../auth/AuthProvider';
 import { bandStyle } from '../../scoring/bands';
 import { Badge, Button, Empty, Field, Input, Modal, PageHeader, Select, TextArea, fmtDate, fmtNum, today, useToast } from '../../components/ui';
-import { LABELS, type Audit, type AuditStatus, type Company, type Location, type MemberRow, type Template, type TemplateVersion } from '../../types';
+import { LABELS, type Audit, type AuditStatus, type Company, type Location, type MemberRow, type Template, type TemplateVersion, type ValidationCaseRow, type AuditResponse } from '../../types';
 
 export const statusTone = (s: AuditStatus) => (s === 'completada' || s === 'cerrada' ? 'ok' : s === 'en_curso' ? 'info' : s === 'cancelada' ? 'bad' : 'neutral');
 
@@ -29,6 +30,10 @@ export function AuditsPage() {
   const pending = usePendingSet('hse_audits');
   const [q, setQ] = useState(''); const [st, setSt] = useState(''); const [co, setCo] = useState('');
   const [form, setForm] = useState<Partial<Audit> | null>(null);
+  // respuestas de la planilla importada (caso de validación de la versión) para precargar la auditoría
+  const cases = useOrgRows<ValidationCaseRow>('hse_template_validation_cases') ?? [];
+  const [useSheet, setUseSheet] = useState(true);
+  const sheetCase = form?.template_version_id ? cases.find(c => c.version_id === form.template_version_id && Object.keys(c.answers ?? {}).length) : undefined;
 
   const published = versions.filter(v => v.status === 'publicada');
   const tName = new Map(templates.map(t => [t.id, t.name]));
@@ -43,11 +48,23 @@ export function AuditsPage() {
 
   const create = async () => {
     if (!form?.template_version_id || !form.title || form.title.trim().length < 3) { toast('Elija la plantilla e indique un título', 'bad'); return; }
+    const withSheet = !!sheetCase && useSheet;
     const a = await saveRecord<Audit>('hse_audits', {
       id: newId(), organization_id: orgId, template_version_id: form.template_version_id, company_id: form.company_id || null,
-      location_id: form.location_id || null, title: form.title.trim(), audit_type: form.audit_type ?? 'interna', status: 'planificada',
+      location_id: form.location_id || null, title: form.title.trim(), audit_type: form.audit_type ?? 'interna', status: withSheet ? 'en_curso' : 'planificada',
       scheduled_date: form.scheduled_date || today(), lead_auditor_id: isManager ? (form.lead_auditor_id || userId) : userId, audit_team: form.audit_team || null, scope: form.scope || null,
     } as Audit);
+    if (withSheet && sheetCase) {
+      const valid = new Set((await db.hse_template_items.where('version_id').equals(form.template_version_id).toArray()).map(i => i.id));
+      let n = 0;
+      for (const [itemId, answer] of Object.entries(sheetCase.answers)) {
+        if (!valid.has(itemId) || !answer) continue;
+        await saveRecord<AuditResponse>('hse_audit_responses', { id: responseId(a.id, itemId), organization_id: orgId, audit_id: a.id, item_id: itemId, answer,
+          comment: null, rating: null, numeric_value: null, text_value: null } as AuditResponse);
+        n++;
+      }
+      toast(`Auditoría creada con ${n} respuestas de la planilla. Revísela y toque "Completar".`);
+    }
     setForm(null); nav(`/auditorias/${a.id}`);
   };
 
@@ -83,6 +100,11 @@ export function AuditsPage() {
         footer={<><Button variant="secondary" onClick={() => setForm(null)}>Cancelar</Button><Button onClick={create}>Crear</Button></>}>
         {form ? <>
           <Field label="Plantilla (versión publicada)" required><Select placeholder="Elegir…" value={form.template_version_id ?? ''} onChange={e => setForm({ ...form, template_version_id: e.target.value })} options={published.map(v => ({ value: v.id, label: vLabel.get(v.id)! }))} /></Field>
+          {sheetCase ? (
+            <label className="switch-row sheet-opt">
+              <input type="checkbox" checked={useSheet} onChange={e => setUseSheet(e.target.checked)} />
+              <span><strong>Cargar las respuestas de la planilla importada</strong><br /><span className="small muted">{Object.keys(sheetCase.answers).length} respuestas del Excel ({sheetCase.name.replace(/^Resultados de prueba del Excel ?/, '').replace(/[()]/g, '') || 'planilla'}). La auditoría queda en curso para revisarla y completarla.</span></span>
+            </label>) : null}
           <Field label="Título" required><Input value={form.title ?? ''} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Ej.: Auditoría CSMS segunda parte – Equipo de perforación" /></Field>
           <div className="grid grid-2">
             <Field label="Empresa / contratista"><Select placeholder="—" value={form.company_id ?? ''} onChange={e => setForm({ ...form, company_id: e.target.value })} options={companies.filter(c => c.active).map(c => ({ value: c.id, label: c.name }))} /></Field>

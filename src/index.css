@@ -456,3 +456,4 @@ table.perm-t td:first-child { text-align: left; font-weight: 600; }
 .cred-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .35rem 1rem; align-items: baseline; }
 .cred-user { overflow-wrap: anywhere; }
 .cred-pass { font-size: 1.35rem; letter-spacing: .02em; user-select: all; }
+.sheet-opt { border: 1.5px solid var(--ok); background: var(--ok-soft); border-radius: 12px; padding: .7rem .8rem; }
