@@ -219,3 +219,16 @@ PGHOST=/tmp PGPORT=55432 PGUSER=postgres scripts/backup/test-backup-restore.sh
   su texto desde el valor inicial del campo (un resultado repetido no se vuelve a escribir). Se detiene solo tras ~30 s de silencio.
 - `dictation_e2e.py`: **13/13** (nuevo 1.7: frase acumulada repetida como en Android → se escribe una sola vez; 1.8: tomas cortas).
   **Pendiente:** volver a probar en el celular.
+
+## 14. Actualización 2026-10-05: alta de usuarios con contraseña temporal
+
+- Edge Function **`hse-admin-users`** (publicada, verificación de JWT activa): crea usuarios con contraseña temporal y
+  genera contraseñas temporales nuevas. La clave de servicio sólo existe en el servidor de Supabase. El rol del llamador
+  se verifica con su propia sesión (`hse_has_role`) y la membresía se inserta con su sesión (RLS).
+- `supabase/functions/hse-admin-users/handler_test.ts` (Deno, contra un Supabase simulado): **17/17** — alta por
+  administrador, contraseñas distintas, sin sesión/token falso 401, coordinador y administrador de otra organización 403,
+  no crea propietarios, contratista sin empresa, correo existente sin tocar su contraseña, borrado de la cuenta si la base
+  rechaza la membresía, reinicio permitido/denegado (otra organización, propietario, uno mismo, ajeno, coordinador).
+- `admin_redesign_e2e.py`: **26/26** (nuevos: alta directa, correo existente, nueva contraseña desde la ficha, primer
+  ingreso obliga a elegir contraseña). Resto de las suites en verde.
+- **Pendiente:** primera prueba real de la función en el proyecto (desde el panel); este entorno no llega a Supabase por red.

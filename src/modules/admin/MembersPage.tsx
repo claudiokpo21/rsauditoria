@@ -10,6 +10,7 @@ import { useAuth, can } from '../auth/AuthProvider';
 import { Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, TextArea, fmtDate, useToast } from '../../components/ui';
 import { LABELS, type Audit, type AuditParticipant, type Company, type Role } from '../../types';
 import { AUDIT_FIRM } from '../../config/brand';
+import { AdminUsersError, adminUsers, credentialsMessage, type Credentials } from './adminUsers';
 
 interface AdminMember {
   membership_id: string; user_id: string; email: string | null; full_name: string | null; job_title: string | null; phone: string | null;
@@ -73,6 +74,21 @@ function ShareButtons({ text, email }: { text: string; email?: string }) {
   );
 }
 
+/** Usuario y contraseña temporal recién generados: se muestran una sola vez. */
+function CredCard({ c, org, name }: { c: Credentials; org: string; name?: string | null }) {
+  const msg = credentialsMessage(c, org, name);
+  return (
+    <div className="cred-card stack-sm">
+      <div className="cred-grid">
+        <span className="small muted">Usuario</span><strong className="cred-user">{c.email}</strong>
+        <span className="small muted">Contraseña temporal</span><strong className="cred-pass num-font" data-testid="temp-password">{c.password}</strong>
+      </div>
+      <p className="small muted" style={{ margin: 0 }}>Se muestra una sola vez. Al ingresar, la persona debe elegir su propia contraseña.</p>
+      <ShareButtons text={msg} email={c.email} />
+    </div>
+  );
+}
+
 function RolePicker({ value, onChange, allowOwner }: { value: Role; onChange: (r: Role) => void; allowOwner: boolean }) {
   return (
     <div className="role-picker" role="radiogroup" aria-label="Rol">
@@ -96,8 +112,9 @@ export function MembersPage() {
   const [invites, setInvites] = useState<Invitation[]>([]);
   const [q, setQ] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [inv, setInv] = useState<{ emails: string; role: Role; company_id: string } | null>(null);
+  const [inv, setInv] = useState<{ mode: 'crear' | 'invitar'; name: string; emails: string; role: Role; company_id: string } | null>(null);
   const [sent, setSent] = useState<{ email: string; ok: boolean; status: string }[] | null>(null);
+  const [created, setCreated] = useState<{ cred: Credentials | null; note: string; name: string } | null>(null);
   const [edit, setEdit] = useState<AdminMember | null>(null);
   const [org, setOrg] = useState<{ name: string; tax_id: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -144,12 +161,32 @@ export function MembersPage() {
     }
     setBusy(false); setSent(out); await load(); void runSync();
   };
-  const closeInvite = () => { setInv(null); setSent(null); };
+  const doCreate = async () => {
+    if (!inv) return;
+    const email = inv.emails.trim().toLowerCase();
+    if (inv.name.trim().length < 3) { toast('Escriba nombre y apellido', 'bad'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Correo inválido', 'bad'); return; }
+    if (inv.role === 'contractor' && !inv.company_id) { toast('Elija la empresa del contratista', 'bad'); return; }
+    setBusy(true);
+    try {
+      const cred = await adminUsers({ action: 'create', org: orgId, email, full_name: inv.name.trim(), role: inv.role, company_id: inv.company_id || null });
+      setCreated({ cred, note: 'Usuario creado.', name: inv.name.trim() });
+    } catch (e) {
+      if (e instanceof AdminUsersError && e.code === 'existe') {
+        const { data, error } = await supabase.rpc('hse_invite_member', { p_org: orgId, p_email: email, p_role: inv.role, p_company: inv.company_id || null });
+        if (error) toast(errorMessage(error), 'bad');
+        else setCreated({ cred: null, name: inv.name.trim(), note: (data as { status: string }).status === 'agregado'
+          ? `${email} ya tenía cuenta: quedó agregado a la organización como ${LABELS.role[inv.role]}. Entra con su contraseña de siempre.`
+          : `${email} ya tenía cuenta sin confirmar: quedó invitado; al confirmar su correo e ingresar, entra a la organización.` });
+      } else toast(e instanceof Error ? e.message : String(e), 'bad');
+    } finally { setBusy(false); await load(); void runSync(); }
+  };
+  const closeInvite = () => { setInv(null); setSent(null); setCreated(null); };
 
   return (
     <div className="stack-lg">
       <PageHeader title="Usuarios y permisos" subtitle={orgName}
-        actions={<Button disabled={!online} onClick={() => setInv({ emails: '', role: 'auditor', company_id: '' })}>Invitar usuarios</Button>} />
+        actions={<Button disabled={!online} onClick={() => setInv({ mode: 'crear', name: '', emails: '', role: 'auditor', company_id: '' })}>Agregar usuario</Button>} />
       {!online ? <div className="alert alert-warn">La gestión de usuarios requiere conexión.</div> : null}
       {loadErr ? <div className="alert alert-bad">{loadErr}</div> : null}
 
@@ -250,12 +287,26 @@ export function MembersPage() {
         </Card>
       </>) : null}
 
-      <Modal open={!!inv} wide title={sent ? 'Invitaciones enviadas' : 'Invitar usuarios'} onClose={closeInvite}
-        footer={sent ? <Button onClick={closeInvite}>Listo</Button> : <><Button variant="secondary" onClick={closeInvite}>Cancelar</Button><Button busy={busy} onClick={doInvite}>Invitar</Button></>}>
-        {inv && !sent ? <>
-          <Field label="Correos" required hint="Uno o varios, separados por coma o en renglones distintos."><TextArea dictation={false} rows={3} value={inv.emails} onChange={e => setInv({ ...inv, emails: e.target.value })} placeholder="nombre@empresa.com" /></Field>
+      <Modal open={!!inv} wide title={created ? 'Usuario listo' : sent ? 'Invitaciones enviadas' : 'Agregar usuario'} onClose={closeInvite}
+        footer={sent || created ? <Button onClick={closeInvite}>Listo</Button> : <><Button variant="secondary" onClick={closeInvite}>Cancelar</Button>
+          <Button busy={busy} onClick={inv?.mode === 'crear' ? doCreate : doInvite}>{inv?.mode === 'crear' ? 'Crear usuario' : 'Invitar'}</Button></>}>
+        {inv && !sent && !created ? <>
+          <div className="seg" role="radiogroup" aria-label="Forma de alta">
+            <label className={inv.mode === 'crear' ? 'sel' : ''}><input type="radio" name="modo" checked={inv.mode === 'crear'} onChange={() => setInv({ ...inv, mode: 'crear' })} />
+              <span><strong>Crear con contraseña temporal</strong><span className="small muted">Le pasa usuario y contraseña; entra enseguida y elige la suya.</span></span></label>
+            <label className={inv.mode === 'invitar' ? 'sel' : ''}><input type="radio" name="modo" checked={inv.mode === 'invitar'} onChange={() => setInv({ ...inv, mode: 'invitar' })} />
+              <span><strong>Enviar invitación</strong><span className="small muted">La persona crea su cuenta con un enlace y confirma su correo.</span></span></label>
+          </div>
+          {inv.mode === 'crear' ? <>
+            <Field label="Nombre y apellido" required><Input value={inv.name} onChange={e => setInv({ ...inv, name: e.target.value })} autoComplete="off" /></Field>
+            <Field label="Correo (será su usuario)" required><Input type="email" value={inv.emails} onChange={e => setInv({ ...inv, emails: e.target.value })} autoComplete="off" placeholder="nombre@empresa.com" /></Field>
+          </> : <Field label="Correos" required hint="Uno o varios, separados por coma o en renglones distintos."><TextArea dictation={false} rows={3} value={inv.emails} onChange={e => setInv({ ...inv, emails: e.target.value })} placeholder="nombre@empresa.com" /></Field>}
           <Field label="Rol"><RolePicker value={inv.role} onChange={r => setInv({ ...inv, role: r })} allowOwner={false} /></Field>
           {inv.role === 'contractor' ? <Field label="Empresa del contratista" required hint="Sólo verá auditorías, hallazgos y acciones de esta empresa y sus subcontratistas."><Select placeholder="Elegir…" value={inv.company_id} onChange={e => setInv({ ...inv, company_id: e.target.value })} options={companies.map(c => ({ value: c.id, label: c.name }))} /></Field> : null}
+        </> : null}
+        {inv && created ? <>
+          <div className="alert alert-ok">{created.note}</div>
+          {created.cred ? <CredCard c={created.cred} org={orgName} name={created.name} /> : null}
         </> : null}
         {inv && sent ? <>
           <ul className="plain">{sent.map(s => <li key={s.email} className="row gap"><Badge tone={s.ok ? 'ok' : 'bad'}>{s.ok ? 'OK' : 'Error'}</Badge><span><strong>{s.email}</strong> · {s.status}</span></li>)}</ul>
@@ -288,6 +339,15 @@ function MemberModal({ m, companies, allowOwner, onClose, onSaved, busy, setBusy
   const toast = useToast();
   const [f, setF] = useState({ role: m.role, company_id: m.company_id ?? '', active: m.active });
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [cred, setCred] = useState<Credentials | null>(null);
+  const orgName = useAuth().current?.organization_name ?? '';
+  const resetPw = async () => {
+    setBusy(true);
+    try { setCred(await adminUsers({ action: 'reset', org: orgId, user_id: m.user_id })); toast('Contraseña temporal generada'); }
+    catch (e) { toast(e instanceof Error ? e.message : String(e), 'bad'); }
+    finally { setBusy(false); setConfirmReset(false); }
+  };
   const [assign, setAssign] = useState<{ audit_id: string; participant_role: AuditParticipant['participant_role'] } | null>(null);
   const audits = useLiveQuery(async () => (await db.hse_audits.where('organization_id').equals(orgId).toArray())
     .filter(a => !a.deleted_at && ['planificada', 'en_curso'].includes(a.status)) as Audit[], [orgId]) ?? [];
@@ -356,6 +416,17 @@ function MemberModal({ m, companies, allowOwner, onClose, onSaved, busy, setBusy
               options={[{ value: 'auditor', label: 'Auditor' }, { value: 'observador', label: 'Observador' }]} /></Field>
             <Button onClick={addAssign} disabled={!assign.audit_id}>Asignar</Button>
           </div>) : null}
+      </div>
+
+      <div className="stack-sm">
+        <strong>Contraseña</strong>
+        {cred ? <CredCard c={cred} org={orgName} name={m.full_name} /> : !confirmReset ? (
+          <div className="row gap wrap"><Button variant="secondary" className="btn-sm" onClick={() => setConfirmReset(true)}>Generar contraseña temporal nueva</Button>
+            <span className="small muted">Para cuando la persona no puede entrar. Deberá cambiarla al ingresar.</span></div>
+        ) : (
+          <div className="row gap wrap"><span className="small">La contraseña actual deja de funcionar. ¿Confirma?</span>
+            <Button className="btn-sm" busy={busy} onClick={resetPw}>Sí, generar</Button><Button variant="ghost" className="btn-sm" onClick={() => setConfirmReset(false)}>No</Button></div>
+        )}
       </div>
 
       {m.role !== 'owner' ? (

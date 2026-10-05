@@ -53,7 +53,32 @@ with sync_playwright() as pw:
     A.screenshot(path=f'{OUT}/13-panel-usuarios.png')
 
     # invitar dos usuarios
-    A.get_by_role('button', name='Invitar usuarios').click()
+    # alta directa con contraseña temporal
+    A.get_by_role('button', name='Agregar usuario').click()
+    A.get_by_label('Nombre y apellido').fill('Laura Gómez')
+    A.get_by_label('Correo (será su usuario)').fill('Laura.Gomez@Contratista.com')
+    A.locator('.modal .role-card:has(strong:text-is("Auditor"))').click()
+    A.locator('.modal').get_by_role('button', name='Crear usuario').click()
+    A.wait_for_selector('[data-testid=temp-password]', timeout=20000)
+    pw = A.locator('[data-testid=temp-password]').inner_text()
+    call = (getattr(fake, 'admin_calls', None) or [{}])[-1]
+    check('2.0 Alta directa: el servidor crea el usuario y muestra la contraseña temporal una vez', pw == fake.passwords.get('laura.gomez@contratista.com') and call.get('role') == 'auditor' and call.get('full_name') == 'Laura Gómez', pw)
+    msg = A.locator('.cred-card').inner_text()
+    check('2.0b Mensaje con usuario y contraseña para WhatsApp/correo', A.locator('.cred-card a[href^="https://wa.me/"]').count() == 1, '')
+    A.screenshot(path=f'{OUT}/21-usuario-creado.png')
+    A.get_by_role('button', name='Listo').click()
+    A.wait_for_function("() => [...document.querySelectorAll('.users-t tbody tr')].some(r => r.innerText.includes('laura.gomez@contratista.com'))", timeout=20000)
+    # correo existente: se agrega sin cambiar la contraseña
+    A.get_by_role('button', name='Agregar usuario').click()
+    A.get_by_label('Nombre y apellido').fill('Auditor B')
+    A.get_by_label('Correo (será su usuario)').fill('b@test.local')
+    A.locator('.modal').get_by_role('button', name='Crear usuario').click()
+    A.wait_for_selector('.modal .alert-ok', timeout=20000)
+    check('2.0c Correo con cuenta existente: se agrega sin generar contraseña', 'ya tenía cuenta' in A.locator('.modal .alert-ok').inner_text() and A.locator('[data-testid=temp-password]').count() == 0, A.locator('.modal .alert-ok').inner_text()[:90])
+    A.get_by_role('button', name='Listo').click()
+
+    A.get_by_role('button', name='Agregar usuario').click()
+    A.locator('.seg label', has_text='Enviar invitación').click()
     A.locator('.modal textarea').fill('ana.perez@contratista.com, juan.gomez@contratista.com')
     A.locator('.role-card', has_text='Coordinador HSE').click()
     A.screenshot(path=f'{OUT}/14-invitar.png')
@@ -64,10 +89,10 @@ with sync_playwright() as pw:
     check('2.2 Mensaje listo para WhatsApp/correo con enlace de invitación', len(msgs) == 2 and '/?invitacion=ana.perez%40contratista.com' in msgs[0] and 'Coordinador HSE' in msgs[0]
           and A.locator('a[href^="https://wa.me/?text="]').count() == 2, msgs[0][:160] if msgs else '')
     A.get_by_role('button', name='Listo').click()
-    A.get_by_role('tab', name='Invitaciones (2)').click()
+    A.get_by_role('tab', name='Invitaciones (3)').click()
     A.locator('.inv-list li', has_text='juan.gomez').get_by_role('button', name='Revocar').click()
-    ok = wait_until(A, lambda: A.get_by_role('tab', name='Invitaciones (1)').count() == 1)
-    check('2.3 Revocar invitación', ok and len(fake.tables['hse_invitations']) == 1, '')
+    ok = wait_until(A, lambda: A.get_by_role('tab', name='Invitaciones (2)').count() == 1)
+    check('2.3 Revocar invitación', ok and len(fake.tables['hse_invitations']) == 2, '')
 
     # editar al usuario B
     A.get_by_role('tab', name='Usuarios').click()
@@ -76,6 +101,10 @@ with sync_playwright() as pw:
     check('3.1 Ficha del usuario: auditorías asignadas', wait_until(A, lambda: 'AUD-2026-0001' in A.locator('.modal').inner_text(), 15), '')
     A.locator('.modal .role-card', has_text='Coordinador HSE').click()
     A.screenshot(path=f'{OUT}/15-ficha-usuario.png')
+    A.get_by_role('button', name='Generar contraseña temporal nueva').click()
+    A.locator('.modal').get_by_role('button', name='Sí, generar').click()
+    A.wait_for_selector('.modal [data-testid=temp-password]', timeout=20000)
+    check('3.1b Nueva contraseña temporal desde la ficha', A.locator('.modal [data-testid=temp-password]').inner_text() == fake.passwords.get('b@test.local'), '')
     A.get_by_role('button', name='Guardar cambios').click()
     ok = wait_until(A, lambda: any(m['user_id'] == fake.users['B'] and m['role'] == 'supervisor' for m in fake.tables['hse_memberships'].values()))
     check('3.2 Cambio de rol guardado en el servidor', ok, '')
@@ -123,6 +152,24 @@ with sync_playwright() as pw:
     check('7.1 Enlace de invitación: crear cuenta con el correo cargado', em == 'ana.perez@contratista.com' and G.locator('text=Lo invitaron').count() == 1, em)
     G.screenshot(path=f'{OUT}/20-invitado.png')
     G.context.close()
+
+    # primer ingreso con contraseña temporal: debe elegir la suya
+    sess = fake.session('B'); sess['user']['user_metadata'] = {'must_change_password': True}
+    Cx = browser.new_context(viewport={'width': 390, 'height': 844}, service_workers='allow')
+    Cx.add_init_script(f"if (!localStorage.getItem('{STORAGE_KEY}')) localStorage.setItem('{STORAGE_KEY}', {json.dumps(json.dumps(sess))});")
+    Cx.route(f'{SB}/**', fake.handle)
+    C = Cx.new_page(); C.goto(f'{BASE}/'); C.wait_for_selector('text=Elija su contraseña', timeout=30000)
+    check('7.2 Primer ingreso con contraseña temporal: pide elegir una propia antes de entrar', C.locator('.side').count() == 0, '')
+    C.get_by_label('Nueva contraseña').fill('corta'); C.get_by_label('Repetir contraseña').fill('corta')
+    C.get_by_role('button', name='Guardar y entrar').click(); C.wait_for_timeout(300)
+    check('7.3 Exige al menos 10 caracteres', 'al menos 10' in C.inner_text('body'), '')
+    C.get_by_label('Nueva contraseña').fill('MiClaveNueva2026'); C.get_by_label('Repetir contraseña').fill('MiClaveNueva2026')
+    C.screenshot(path=f'{OUT}/22-cambiar-contrasena.png')
+    C.get_by_role('button', name='Guardar y entrar').click()
+    ok = wait_until(C, lambda: C.locator('.side').count() == 1, 30)
+    upd = (getattr(fake, 'user_updates', None) or [{}])[-1]
+    check('7.4 Guarda la nueva contraseña, quita la marca y entra a la aplicación', ok and upd.get('password') == 'MiClaveNueva2026' and upd.get('data', {}).get('must_change_password') is False, json.dumps(upd))
+    Cx.close()
 
     # un auditor no ve el panel
     Bp = ctx_for(browser, 'B', {'width': 1280, 'height': 800}).new_page()

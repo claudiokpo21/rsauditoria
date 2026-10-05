@@ -251,7 +251,14 @@ causa raíz, avance de acciones, acta de cierre…) tienen un botón de **micró
   cambiar el **rol** (cada opción explica qué permite), elegir la empresa si es contratista, **habilitar o quitar el
   acceso** (se conserva su historial y sus firmas), **asignarle auditorías** planificadas o en curso, o **quitarlo de la
   organización**.
-- **Invitar usuarios:** uno o varios correos a la vez con el rol elegido. Como todavía no hay envío automático de
+- **Agregar usuario › Crear con contraseña temporal** (recomendado): nombre, correo y rol. El servidor crea la
+  cuenta (ya confirmada, sin esperar mails) y muestra **una sola vez** el usuario y una **contraseña temporal** para
+  mandarle por WhatsApp o correo. Al primer ingreso la app le pide **elegir su propia contraseña** (mínimo 10
+  caracteres) antes de entrar. Si el correo ya tenía cuenta, sólo se agrega a la organización y su contraseña no cambia.
+- **Nueva contraseña temporal** (ficha del usuario): para quien no puede entrar; la anterior deja de funcionar y
+  deberá elegir una propia al ingresar. No se puede para uno mismo, para un propietario (salvo otro propietario) ni
+  para quien también pertenece a otra organización (ése usa "Olvidé mi contraseña").
+- **Agregar usuario › Enviar invitación:** uno o varios correos a la vez con el rol elegido. Como todavía no hay envío automático de
   correos, la aplicación arma el **mensaje para el invitado** con el enlace: se copia o se manda por **WhatsApp** o
   **correo** con un toque. El enlace abre *Crear cuenta* con el correo ya cargado; al confirmar el correo e ingresar,
   queda en la organización. Si la persona ya tenía cuenta, queda agregada en el momento.

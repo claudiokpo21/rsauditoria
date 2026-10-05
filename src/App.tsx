@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './modules/auth/AuthProvider';
 import { LoginPage } from './modules/auth/LoginPage';
+import { ChangePasswordPage } from './modules/auth/ChangePasswordPage';
 import { ProfilePage } from './modules/auth/ProfilePage';
 import { CreateOrgPage } from './modules/organizations/CreateOrgPage';
 import { MastersPage } from './modules/organizations/MastersPage';
@@ -31,6 +32,7 @@ function Gate() {
   const { loading, session, memberships, current, access, refresh } = useAuth();
   if (loading) return <div className="auth-wrap"><div className="card">Cargando…</div></div>;
   if (!session) return <LoginPage />;
+  if (session.user?.user_metadata?.must_change_password === true) return <ChangePasswordPage email={session.user.email ?? ''} />;
   if (access !== 'ok') return <AccessLock state={access} onRetry={refresh} />;
   if (!memberships.length || !current) return <CreateOrgPage />;
   return (

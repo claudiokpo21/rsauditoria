@@ -273,6 +273,32 @@ class FakeSupabase:
                     u['offset'] += len(req.post_data_buffer or b'')
                     self.finish_tus(m.group(1))
                     return route.fulfill(status=204, headers={**CORS, 'Tus-Resumable': '1.0.0', 'Upload-Offset': str(u['offset'])}, body='')
+            if path == '/functions/v1/hse-admin-users' and req.method == 'POST':
+                body = json.loads(req.post_data or '{}')
+                if uid != self.users['A']:
+                    return self.json({'error': 'permiso', 'message': 'Sólo propietarios y administradores gestionan usuarios'}, 403)
+                self.admin_calls = getattr(self, 'admin_calls', []) + [body]
+                pw = 'Tmp' + uuid.uuid4().hex[:4] + '-' + uuid.uuid4().hex[:4] + '-' + uuid.uuid4().hex[:4] + '-42'
+                if body.get('action') == 'create':
+                    em = body['email'].strip().lower()
+                    if any(p.get('email') == em for p in self.tables['hse_profiles'].values()):
+                        return self.json({'error': 'existe', 'message': 'Ese correo ya tiene cuenta'}, 409)
+                    nid = str(uuid.uuid4())
+                    self.tables['hse_profiles'][nid] = {'id': nid, 'email': em, 'full_name': body['full_name'], 'job_title': None, 'updated_at': now_iso()}
+                    self.put('hse_memberships', {'id': str(uuid.uuid4()), 'user_id': nid, 'role': body['role'], 'company_id': body.get('company_id'), 'active': True})
+                    self.passwords = {**getattr(self, 'passwords', {}), em: pw}
+                    return self.json({'status': 'creado', 'user_id': nid, 'email': em, 'password': pw})
+                if body.get('action') == 'reset':
+                    pr = self.tables['hse_profiles'].get(body['user_id'])
+                    if not pr: return self.json({'error': 'miembro', 'message': 'no'}, 404)
+                    self.passwords = {**getattr(self, 'passwords', {}), pr['email']: pw}
+                    return self.json({'status': 'reiniciado', 'user_id': body['user_id'], 'email': pr['email'], 'password': pw})
+                return self.json({'error': 'accion', 'message': 'Acción desconocida'}, 400)
+            if path == '/auth/v1/user' and req.method == 'PUT':
+                body = json.loads(req.post_data or '{}')
+                self.user_updates = getattr(self, 'user_updates', []) + [body]
+                return self.json({'id': uid, 'aud': 'authenticated', 'role': 'authenticated', 'email': 'nuevo@test.local', 'email_confirmed_at': now_iso(),
+                                  'app_metadata': {}, 'user_metadata': body.get('data') or {}, 'created_at': now_iso()})
             if path.startswith('/auth/v1/'):
                 return self.json({})
             return self.json({'message': 'no simulado ' + path}, 404)

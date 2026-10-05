@@ -15,6 +15,21 @@
   "detalle": ""
  },
  {
+  "prueba": "2.0 Alta directa: el servidor crea el usuario y muestra la contraseña temporal una vez",
+  "ok": true,
+  "detalle": "Tmpd4d0-3b8e-b35e-42"
+ },
+ {
+  "prueba": "2.0b Mensaje con usuario y contraseña para WhatsApp/correo",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "2.0c Correo con cuenta existente: se agrega sin generar contraseña",
+  "ok": true,
+  "detalle": "b@test.local ya tenía cuenta sin confirmar: quedó invitado; al confirmar su correo e ingre"
+ },
+ {
   "prueba": "2.1 Invitación múltiple con rol elegido",
   "ok": true,
   "detalle": ""
@@ -31,6 +46,11 @@
  },
  {
   "prueba": "3.1 Ficha del usuario: auditorías asignadas",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "3.1b Nueva contraseña temporal desde la ficha",
   "ok": true,
   "detalle": ""
  },
@@ -88,6 +108,21 @@
   "prueba": "7.1 Enlace de invitación: crear cuenta con el correo cargado",
   "ok": true,
   "detalle": "ana.perez@contratista.com"
+ },
+ {
+  "prueba": "7.2 Primer ingreso con contraseña temporal: pide elegir una propia antes de entrar",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "7.3 Exige al menos 10 caracteres",
+  "ok": true,
+  "detalle": ""
+ },
+ {
+  "prueba": "7.4 Guarda la nueva contraseña, quita la marca y entra a la aplicación",
+  "ok": true,
+  "detalle": "{\"password\": \"MiClaveNueva2026\", \"data\": {\"must_change_password\": false}, \"code_challenge\": null, \"code_challenge_method\": null}"
  },
  {
   "prueba": "8.1 Un auditor no accede al panel ni lo ve en el menú",

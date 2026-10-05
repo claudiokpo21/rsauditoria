@@ -446,3 +446,13 @@ table.perm-t td:first-child { text-align: left; font-weight: 600; }
 @media (max-width: 600px) { .audit-bar { flex-wrap: nowrap; } .audit-bar .grow { min-width: 0; } .audit-bar .band-chip { display: none; } }
 .dash-top > *, .dash-row > *, .kpis > * { min-width: 0; }
 .person-list > li, .date-list > li, ul.plain > li { min-width: 0; }
+/* alta con contraseña temporal */
+.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: .5rem; }
+.seg label { display: flex; gap: .6rem; align-items: flex-start; border: 1.5px solid var(--line-2); border-radius: 12px; padding: .65rem .75rem; cursor: pointer; }
+.seg label > span { display: flex; flex-direction: column; gap: .1rem; }
+.seg label.sel { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 6%, var(--surface)); }
+.seg input { margin-top: .25rem; accent-color: var(--primary); }
+.cred-card { border: 1.5px dashed var(--line-2); border-radius: 12px; padding: .9rem 1rem; background: var(--surface-2); }
+.cred-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .35rem 1rem; align-items: baseline; }
+.cred-user { overflow-wrap: anywhere; }
+.cred-pass { font-size: 1.35rem; letter-spacing: .02em; user-select: all; }
