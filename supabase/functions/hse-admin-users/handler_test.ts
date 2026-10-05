@@ -140,4 +140,11 @@ Deno.test('coordinador no reinicia contraseñas', async () => {
   reset(); const r = await call('tok-coord', { action: 'reset', org: ORG1, user_id: U.aud });
   assert(r.status === 403 && users.get(U.aud)!.password === 'orig', JSON.stringify(r));
 });
+Deno.test('preflight del navegador acepta los encabezados de la app', async () => {
+  const r = await handle(new Request('http://f/hse-admin-users', { method: 'OPTIONS', headers: { 'Access-Control-Request-Headers': 'authorization, x-application-name, x-client-info, apikey, content-type' } }), env);
+  const h = r.headers.get('Access-Control-Allow-Headers') ?? '';
+  assert(r.status === 200 && h.includes('x-application-name') && r.headers.get('Access-Control-Allow-Origin') === '*', h);
+  const r2 = await handle(new Request('http://f/hse-admin-users', { method: 'OPTIONS' }), env);
+  assert((r2.headers.get('Access-Control-Allow-Headers') ?? '').includes('x-application-name'), 'lista fija');
+});
 Deno.test({ name: 'cierre del servidor simulado', sanitizeResources: false, sanitizeOps: false, fn: async () => { await server.shutdown(); } });

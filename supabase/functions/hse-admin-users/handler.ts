@@ -19,7 +19,7 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name, x-region',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const ROLES = ['admin', 'supervisor', 'auditor', 'action_owner', 'viewer', 'contractor'];
@@ -49,7 +49,11 @@ async function isOrgOwner(user: SupabaseClient, org: string): Promise<boolean> {
 }
 
 export async function handle(req: Request, env: (k: string) => string | undefined): Promise<Response> {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  // preflight: se aceptan los encabezados que pida el navegador (la app agrega x-application-name, etc.)
+  if (req.method === 'OPTIONS') {
+    const asked = req.headers.get('Access-Control-Request-Headers');
+    return new Response('ok', { headers: { ...CORS, ...(asked ? { 'Access-Control-Allow-Headers': asked } : {}), 'Access-Control-Max-Age': '600' } });
+  }
   if (req.method !== 'POST') return fail(405, 'metodo', 'Método no permitido');
   const url = env('SUPABASE_URL'), anon = env('SUPABASE_ANON_KEY'), service = env('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !anon || !service) return fail(500, 'config', 'Función sin configurar');
