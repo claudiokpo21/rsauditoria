@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOrgRows } from '../../db/hooks';
-import { patchRecord } from '../../db/repo';
+import { newId, patchRecord, responseId, saveRecord } from '../../db/repo';
 import { useAuth, can } from '../auth/AuthProvider';
 import { evaluate } from '../../scoring/engine';
-import { Badge, Button, Card, Field, Modal, Select, TextArea, fmtDateTime, fmtNum, useToast } from '../../components/ui';
-import { LABELS, type ImportIssue, type TemplateItem, type TemplateSection, type TemplateVersion, type ValidationCaseRow } from '../../types';
+import { Badge, Button, Card, Field, Input, Modal, Select, TextArea, fmtDateTime, fmtNum, today, useToast } from '../../components/ui';
+import { LABELS, type Audit, type AuditResponse, type Company, type Location, type ImportIssue, type TemplateItem, type TemplateSection, type TemplateVersion, type ValidationCaseRow } from '../../types';
 
 const sevTone = { bloqueante: 'bad', advertencia: 'warn', info: 'info' } as const;
 
@@ -12,8 +13,40 @@ export function ValidationPanel({ version, sections, items, onRpc, busy }: {
   version: TemplateVersion; sections: TemplateSection[]; items: TemplateItem[]; busy: boolean;
   onRpc: (fn: string, args: Record<string, unknown>, ok: string) => Promise<unknown>;
 }) {
-  const { role } = useAuth();
+  const { role, orgId, userId } = useAuth();
   const toast = useToast();
+  const nav = useNavigate();
+  const companies = useOrgRows<Company>('hse_companies') ?? [];
+  const locations = useOrgRows<Location>('hse_locations') ?? [];
+  // auditoría a partir de las respuestas cargadas en la planilla importada
+  const [fromCase, setFromCase] = useState<{ c: ValidationCaseRow; title: string; company_id: string; location_id: string; date: string; audit_type: Audit['audit_type'] } | null>(null);
+  const [creating, setCreating] = useState(false);
+  const createFromCase = async () => {
+    if (!fromCase) return;
+    if (fromCase.title.trim().length < 3) { toast('Indique un título', 'bad'); return; }
+    setCreating(true);
+    try {
+      const id = newId();
+      await saveRecord<Audit>('hse_audits', {
+        id, organization_id: orgId, template_version_id: version.id, company_id: fromCase.company_id || null, location_id: fromCase.location_id || null,
+        title: fromCase.title.trim(), audit_type: fromCase.audit_type, status: 'en_curso', scheduled_date: fromCase.date || today(), lead_auditor_id: userId,
+        audit_team: null, scope: null,
+      } as unknown as Audit);
+      const valid = new Set(items.map(i => i.id));
+      let n = 0;
+      for (const [itemId, answer] of Object.entries(fromCase.c.answers)) {
+        if (!valid.has(itemId) || !answer) continue;
+        await saveRecord<AuditResponse>('hse_audit_responses', {
+          id: responseId(id, itemId), organization_id: orgId, audit_id: id, item_id: itemId, answer,
+          comment: null, rating: null, numeric_value: null, text_value: null,
+        } as AuditResponse);
+        n++;
+      }
+      toast(`Auditoría creada con ${n} respuestas de la planilla. Revísela y tóquele "Completar".`);
+      setFromCase(null); nav(`/auditorias/${id}`);
+    } catch (e) { toast(e instanceof Error ? e.message : String(e), 'bad'); }
+    finally { setCreating(false); }
+  };
   const issues = (useOrgRows<ImportIssue>('hse_template_import_issues', [version.id]) ?? []).filter(i => i.version_id === version.id);
   const cases = (useOrgRows<ValidationCaseRow>('hse_template_validation_cases', [version.id]) ?? []).filter(c => c.version_id === version.id);
   const [filter, setFilter] = useState<'abiertas' | 'todas'>('abiertas');
@@ -85,7 +118,12 @@ export function ValidationPanel({ version, sections, items, onRpc, busy }: {
                       <td className="num">{fmtNum(local.final, 4)} {local.band ? <Badge>{local.band}</Badge> : null}</td></tr>
                   </tbody>
                 </table></div>
-                <p className="muted small">El caso contiene sólo códigos de situación por ítem; no se usa como valor por defecto de auditorías.</p>
+                {version.status === 'publicada' && can(role, 'audit') ? (
+                  <div className="row gap wrap">
+                    <Button onClick={() => setFromCase({ c, title: '', company_id: '', location_id: '', date: today(), audit_type: 'csms' })}>Crear auditoría con las respuestas de la planilla</Button>
+                    <span className="muted small">Carga las {Object.keys(c.answers).length} respuestas del Excel en una auditoría nueva; después agrega empresa, comentarios y fotos y la completa.</span>
+                  </div>
+                ) : version.status === 'borrador' ? <p className="muted small">Al publicar esta versión podrá crear una auditoría con las respuestas de la planilla.</p> : null}
               </div>
             );
           })}
@@ -102,6 +140,21 @@ export function ValidationPanel({ version, sections, items, onRpc, busy }: {
           </div>
         ) : version.validation_status === 'validada' ? <div className="alert alert-ok">Validada {fmtDateTime(version.validated_at)}: {version.validation_notes}</div> : null}
       </div>
+
+      <Modal open={!!fromCase} title="Auditoría con las respuestas de la planilla" onClose={() => setFromCase(null)}
+        footer={<><Button variant="secondary" onClick={() => setFromCase(null)}>Cancelar</Button><Button busy={creating} onClick={createFromCase}>Crear auditoría</Button></>}>
+        {fromCase ? <>
+          <Field label="Título" required><Input value={fromCase.title} onChange={e => setFromCase({ ...fromCase, title: e.target.value })} placeholder="Ej.: CSMS a segundas partes – Nombre del contratista" /></Field>
+          <Field label="Empresa auditada"><Select placeholder="Elegir…" value={fromCase.company_id} onChange={e => setFromCase({ ...fromCase, company_id: e.target.value })} options={companies.map(c => ({ value: c.id, label: c.name }))} /></Field>
+          <Field label="Ubicación"><Select placeholder="(opcional)" value={fromCase.location_id} onChange={e => setFromCase({ ...fromCase, location_id: e.target.value })} options={locations.filter(l => !fromCase.company_id || !l.company_id || l.company_id === fromCase.company_id).map(l => ({ value: l.id, label: l.name }))} /></Field>
+          <div className="row gap wrap">
+            <Field label="Fecha de la auditoría"><Input type="date" value={fromCase.date} onChange={e => setFromCase({ ...fromCase, date: e.target.value })} /></Field>
+            <Field label="Tipo"><Select value={fromCase.audit_type} onChange={e => setFromCase({ ...fromCase, audit_type: e.target.value as Audit['audit_type'] })} options={Object.entries(LABELS.auditType).map(([value, label]) => ({ value, label }))} /></Field>
+          </div>
+          {!companies.length ? <div className="alert alert-warn small">No hay empresas cargadas: puede crearla igual y asignar la empresa después desde "Datos", o cargarla antes en Empresas y ubicaciones.</div> : null}
+          <p className="small muted" style={{ margin: 0 }}>La auditoría queda "En curso" con las respuestas cargadas. Al tocar <strong>Completar</strong>, el servidor calcula el resultado oficial con la metodología de la plantilla.</p>
+        </> : null}
+      </Modal>
 
       <Modal open={!!resolving} title="Resolver incidencia" onClose={() => setResolving(null)}
         footer={<><Button variant="secondary" onClick={() => setResolving(null)}>Cancelar</Button><Button onClick={resolve}>Guardar</Button></>}>

@@ -105,6 +105,16 @@
     "detalle": "FFFAC090"
   },
   {
+    "prueba": "8.1 Auditoría creada con las 83 respuestas de la planilla y resultado parcial 6,27",
+    "ok": true,
+    "detalle": "100% 83/83 respondidas 6,27 parcial Bueno Siguiente  sin responder  ›"
+  },
+  {
+    "prueba": "8.2 Se sincroniza al servidor (auditoría en curso + 83 respuestas)",
+    "ok": true,
+    "detalle": "1 auditoría, 83 respuestas"
+  },
+  {
     "prueba": "4.1 Celular: planilla sin desplazamiento horizontal de la página",
     "ok": true,
     "detalle": ""

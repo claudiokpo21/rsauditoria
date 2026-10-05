@@ -277,3 +277,14 @@ causa raíz, avance de acciones, acta de cierre…) tienen un botón de **micró
   requisitos en pestañas con su avance; botones de respuesta grandes.
 - **Al completar:** franja del color de la calificación con el resultado oficial, la variación contra la auditoría
   anterior y accesos a *Reunión de cierre y firmas* y *Descargar informe*.
+
+## 20. Cargar una auditoría desde la planilla Excel
+
+Al importar una planilla ya completada, sus respuestas quedan como **caso de validación** de la plantilla (sirven para
+comprobar que la app calcula igual que el Excel), no como auditoría. Para pasarlas a una auditoría:
+
+1. Publique la versión de la plantilla (Plantillas › la plantilla › **Publicar**).
+2. En la misma pantalla, en *Casos de validación*, toque **Crear auditoría con las respuestas de la planilla**.
+3. Indique título, empresa, ubicación, fecha y tipo. Se crea la auditoría *En curso* con todas las respuestas cargadas.
+4. Revísela, agregue comentarios, fotos y hallazgos, y toque **Completar**: el servidor calcula el resultado oficial y
+   aparece en el dashboard.

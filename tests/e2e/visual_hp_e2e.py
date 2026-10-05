@@ -54,6 +54,10 @@ class Fake(FakeSupabase):
                 keymap[it['key']] = row['id']; ids.append((it['key'], row['id']))
             self.hp_sections.append((sec['id'], s['title'], ids))
         excel = PAYLOAD['validation_cases'][0]['answers']
+        # caso de validación importado con el Excel (respuestas por ítem), como queda al importar la planilla
+        self.hp_template = t['id']
+        self.put('hse_template_validation_cases', {'id': str(uuid.uuid4()), 'version_id': v['id'], 'name': 'Resultados de prueba del Excel (planilla H&P)', 'source_ref': None,
+            'answers': {keymap[k]: a for k, a in excel.items()}, 'expected': {'sections': {}, 'final': 6.2711}, 'computed': None, 'matches': True, 'max_abs_diff': 0, 'last_run_at': now_iso()})
         rn = {k: n + 1 for n, k in enumerate(k for _, _, ids in self.hp_sections for k, _ in ids)}
         companies = [self.company] + [self.put('hse_companies', {'id': str(uuid.uuid4()), 'name': n, 'company_type': 'contratista', 'csms_status': 'aprobada', 'active': True, 'tax_id': None, 'parent_company_id': None})['id']
                                       for n in ('Transportes Cuenca Neuquina S.R.L.', 'Montajes Industriales del Sur')]
@@ -193,6 +197,18 @@ with sync_playwright() as pw:
     fills = [ws.cell(r, 4).fill.fgColor.rgb for r in range(2, 9)]
     check('3.2 Excel: evaluación coloreada por banda y fila de resultado final', fills == ['FF92D050', 'FF92D050', 'FF92D050', 'FFE26B0A', 'FFFFFF00', 'FF92D050', 'FF92D050'] and ws.cell(8, 1).value == 'Resultado final' and ws.cell(8, 1).fill.fgColor.rgb == 'FFD8E4BC', json.dumps(fills))
     check('3.3 Excel: encabezado con el color de la planilla', ws.cell(1, 1).fill.fgColor.rgb == 'FFFAC090', ws.cell(1, 1).fill.fgColor.rgb)
+    # auditoría creada con las respuestas de la planilla importada
+    P.goto(f'{BASE}/plantillas/{fake.hp_template}'); P.wait_for_selector('text=Crear auditoría con las respuestas de la planilla', timeout=60000)
+    P.get_by_role('button', name='Crear auditoría con las respuestas de la planilla').click()
+    P.get_by_label('Título').fill('CSMS a segundas partes – Contratista real')
+    P.locator('.modal').get_by_role('button', name='Crear auditoría').click()
+    P.wait_for_selector('.audit-bar', timeout=60000); P.wait_for_timeout(800)
+    bar = P.locator('.audit-bar').inner_text().replace('\n', ' ')
+    check('8.1 Auditoría creada con las 83 respuestas de la planilla y resultado parcial 6,27', '83/83' in bar and '6,27' in bar, bar)
+    P.wait_for_timeout(3000)
+    newa = [a for a in fake.tables['hse_audits'].values() if a.get('title') == 'CSMS a segundas partes – Contratista real']
+    nresp = len([r for r in fake.tables['hse_audit_responses'].values() if newa and r.get('audit_id') == newa[0]['id']])
+    check('8.2 Se sincroniza al servidor (auditoría en curso + 83 respuestas)', len(newa) == 1 and newa[0].get('status') == 'en_curso' and nresp == 83, f'{len(newa)} auditoría, {nresp} respuestas')
     desk.close()
 
     mob = ctx_for(browser, pw.devices['Pixel 7'])
