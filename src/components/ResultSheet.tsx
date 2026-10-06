@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { bandFor, bandRange, bandStyle } from '../scoring/bands';
+import { bandFor, bandRange, uiBandStyle } from '../scoring/bands';
 import { isSituacionConfig, type SectionResult } from '../scoring/engine';
 import { normTitle, type PreviousResult } from '../modules/audits/previousAudit';
 import { displayText, fmtNum } from './ui';
@@ -14,14 +14,14 @@ export interface SheetData {
 }
 
 export function BandChip({ label }: { label?: string | null }) {
-  const st = bandStyle(label);
+  const st = uiBandStyle(label);
   if (!label) return <span className="muted">—</span>;
   return <span className="band-chip" style={st ? { background: st.bg, color: st.fg, borderColor: st.border } : undefined}>{label}</span>;
 }
 
 /** Celda de evaluación coloreada según la banda (como la columna "Evaluación" de la planilla). */
 function EvalCell({ value, band, digits = 2, suffix = '' }: { value: number | null; band: string | null; digits?: number; suffix?: string }) {
-  const st = bandStyle(band);
+  const st = uiBandStyle(band);
   return <td className="eval" style={st ? { background: st.bg, color: st.fg } : undefined} title={band ?? undefined}>{fmtNum(value, digits)}{value !== null ? suffix : ''}</td>;
 }
 
@@ -42,7 +42,7 @@ export function Criteria({ config }: { config: unknown }) {
       <div className="small muted">Criterio de evaluación</div>
       <div className="criteria" role="table" aria-label="Criterio de evaluación">
         {config.bands.map(b => {
-          const st = bandStyle(b.label);
+          const st = uiBandStyle(b.label);
           return [<span key={b.label + 'r'} className="rng">{bandRange(b)}</span>,
                   <span key={b.label + 'l'} className="lbl" style={st ? { background: st.bg, color: st.fg } : undefined}>{b.label}</span>];
         })}
@@ -59,7 +59,7 @@ export function Criteria({ config }: { config: unknown }) {
 export function ResultSheet({ data, config, title, meta, extra, previous }: { data: SheetData; config: unknown; title?: string; meta?: ReactNode; extra?: ReactNode; previous?: PreviousResult | null }) {
   const situ = data.method === 'situacion_promedio_secciones';
   const bands = isSituacionConfig(config) ? config.bands : undefined;
-  const st = bandStyle(data.band);
+  const st = uiBandStyle(data.band);
   const raw = data.sections.reduce((s, x) => s + Number(x.raw || 0), 0);
   const target = data.sections.reduce((s, x) => s + Number(x.target || 0), 0);
   return (
@@ -96,8 +96,8 @@ export function ResultSheet({ data, config, title, meta, extra, previous }: { da
                     <td>{fmtNum(Number(s.raw), situ ? 0 : 2)}</td>
                     <td>{fmtNum(Number(s.target), situ ? 0 : 2)}</td>
                     {situ ? <EvalCell value={v} band={bandFor(v, bands)} /> : <td className="eval">{v === null ? '—' : `${fmtNum(v, 1)} %`}</td>}
-                    {previous ? (() => { const pv = previous.sections.get(normTitle(String(s.title))); const pst = situ ? bandStyle(bandFor(pv ?? null, bands)) : null;
-                      return <><td className="hide-xs prev" style={pst ? { boxShadow: `inset 4px 0 0 ${pst.bg}` } : undefined}>{pv === undefined || pv === null ? '—' : situ ? fmtNum(pv) : `${fmtNum(pv, 1)} %`}</td>
+                    {previous ? (() => { const pv = previous.sections.get(normTitle(String(s.title))); const pst = situ ? uiBandStyle(bandFor(pv ?? null, bands)) : null;
+                      return <><td className="hide-xs prev" style={pst ? { boxShadow: `inset 4px 0 0 ${pst.solid}` } : undefined}>{pv === undefined || pv === null ? '—' : situ ? fmtNum(pv) : `${fmtNum(pv, 1)} %`}</td>
                         <td><Delta now={v} before={pv} situ={situ} /></td></>; })() : null}
                     <td className="hide-xs muted">{s.answered}/{s.items}</td>
                   </tr>

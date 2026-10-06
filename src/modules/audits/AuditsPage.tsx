@@ -5,7 +5,7 @@ import { MANAGERS, auditAccess, useParticipants } from '../auth/access';
 import { newId, responseId, saveRecord } from '../../db/repo';
 import { db } from '../../db/db';
 import { useAuth, can } from '../auth/AuthProvider';
-import { bandStyle } from '../../scoring/bands';
+import { uiBandStyle } from '../../scoring/bands';
 import { Badge, Button, Empty, Field, Input, Modal, PageHeader, Select, TextArea, fmtDate, fmtNum, today, useToast } from '../../components/ui';
 import { LABELS, type Audit, type AuditStatus, type Company, type Location, type MemberRow, type Template, type TemplateVersion, type ValidationCaseRow, type AuditResponse } from '../../types';
 
@@ -89,7 +89,7 @@ export function AuditsPage() {
               <td className="small">{a.lead_auditor_id ? people.get(a.lead_auditor_id) ?? '—' : '—'}</td>
               <td>{fmtDate(a.scheduled_date)}{a.status === 'planificada' && a.scheduled_date && a.scheduled_date < today() ? <div><Badge tone="warn">Atrasada</Badge></div> : null}</td>
               <td><Badge tone={statusTone(a.status)}>{LABELS.auditStatus[a.status]}</Badge> {pending.has(a.id) ? <Badge tone="warn">Pendiente</Badge> : null}</td>
-              {(() => { const st = bandStyle(a.result_band); return (
+              {(() => { const st = uiBandStyle(a.result_band); return (
                 <td className="result-cell" style={st ? { background: st.bg, color: st.fg, fontWeight: 700 } : undefined}>
                   {a.result_band ? <>{fmtNum(a.score)}<div className="small" style={{ fontWeight: 600 }}>{a.result_band}</div></> : a.compliance_pct !== null ? `${fmtNum(a.compliance_pct, 1)} %` : '—'}
                 </td>); })()}

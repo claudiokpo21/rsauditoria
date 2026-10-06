@@ -1,6 +1,6 @@
 /**
  * Colores de las bandas de evaluación, tomados de la planilla H&P (formato condicional
- * de la celda de resultado). Se usan iguales en pantalla, PDF y Excel.
+ * de la celda de resultado). Se usan en PDF y Excel; la pantalla usa UI_BAND_STYLES.
  * La banda (texto) la decide la metodología de la plantilla; aquí sólo se le da color.
  */
 export interface BandStyle { bg: string; fg: string; border: string }
@@ -20,11 +20,30 @@ export const SHEET = {
   totalInk: '#2B3A12',
 };
 
+/**
+ * Colores de pantalla (paleta "grafito y cobalto"): tonos semánticos sobrios.
+ * bg/fg = fondo suave y texto oscuro (contraste AA) para celdas y etiquetas;
+ * solid = color pleno para anillos, barras y escalas. PDF y Excel usan BAND_STYLES.
+ */
+export interface UiBandStyle extends BandStyle { solid: string }
+export const UI_BAND_STYLES: Record<string, UiBandStyle> = {
+  'muy bueno': { bg: '#E0EAFF', fg: '#2B3FA0', border: '#A4BCFD', solid: '#3E63DD' },
+  bueno:       { bg: '#DCFAE6', fg: '#05603A', border: '#75E0A7', solid: '#079455' },
+  regular:     { bg: '#FEF0C7', fg: '#93370D', border: '#FEC84B', solid: '#DC6803' },
+  'crítico':   { bg: '#FEE4E2', fg: '#B42318', border: '#FDA29B', solid: '#D92D20' },
+};
+
 const norm = (s: string) => s.trim().toLowerCase().replace('critico', 'crítico');
 
 export function bandStyle(label?: string | null): BandStyle | null {
   if (!label) return null;
   return BAND_STYLES[norm(label)] ?? null;
+}
+
+/** Colores de la banda para pantalla (no para informes). */
+export function uiBandStyle(label?: string | null): UiBandStyle | null {
+  if (!label) return null;
+  return UI_BAND_STYLES[norm(label)] ?? null;
 }
 
 /** Banda por valor según las bandas de la metodología (mismo criterio que classifyBand). */

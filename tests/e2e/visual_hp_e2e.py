@@ -127,11 +127,12 @@ with sync_playwright() as pw:
     check('1.2 Requisitos con puntaje alcanzado, objetivo y evaluación iguales a la planilla', [tuple(r[1:4]) for r in rows[:6]] == exp, json.dumps(rows[:6], ensure_ascii=False)[:300])
     check('1.3 Fila de resultado final 175 / 249 / 6,27', rows[6][:4] == ['Resultado final', '175', '249', '6,27'], json.dumps(rows[6], ensure_ascii=False))
     colors = P.eval_on_selector_all('.sheet-table tbody td.eval', 'cs => cs.map(c => getComputedStyle(c).backgroundColor)')
-    want = ['rgb(146, 208, 80)', 'rgb(146, 208, 80)', 'rgb(146, 208, 80)', 'rgb(226, 107, 10)', 'rgb(255, 255, 0)', 'rgb(146, 208, 80)', 'rgb(146, 208, 80)']
-    check('1.4 Colores de evaluación por sección como la planilla (verde, naranja, amarillo)', colors == want, json.dumps(colors))
+    G, C, R = 'rgb(220, 250, 230)', 'rgb(254, 228, 226)', 'rgb(254, 240, 199)'  # tonos de pantalla (Bueno, Crítico, Regular)
+    want = [G, G, G, C, R, G, G]
+    check('1.4 Colores de evaluación por sección según la banda (Bueno, Crítico, Regular)', colors == want, json.dumps(colors))
     crit = P.inner_text('.criteria')
     check('1.5 Cuadro "Criterio de evaluación" con rangos y bandas', all(s in crit for s in ['8,01 - 10', 'Muy Bueno', '6,01 - 8', 'Bueno', '4,01 - 6', 'Regular', '0 - 4', 'Crítico']), crit.replace('\n', ' '))
-    check('1.6 Recuadro del resultado con el color de la banda', bg(P, '.verdict') == 'rgb(146, 208, 80)', bg(P, '.verdict'))
+    check('1.6 Recuadro del resultado con el color de la banda', bg(P, '.verdict') == 'rgb(220, 250, 230)', bg(P, '.verdict'))
     P.screenshot(path=f'{OUT}/1-planilla-escritorio.png', full_page=False)
 
     P.goto(f'{BASE}/'); P.wait_for_selector('text=Últimos resultados', timeout=60000); P.wait_for_timeout(800)
@@ -149,7 +150,7 @@ with sync_playwright() as pw:
     tot = P.eval_on_selector_all('.sheet-table tr.total td', 'cs => cs.map(c => c.innerText.trim())')
     foot = P.inner_text('.sheet')
     check('6.1 Seguimiento: columnas Anterior y Variación con la auditoría previa de la misma empresa', 'Anterior' in heads and 'Variación' in heads and 'AUD-2026-0010' in foot, json.dumps(heads, ensure_ascii=False))
-    check('6.2 Variación del resultado final (5,29 vs 6,27 → ▼ -0,98, en rojo)', tot[4] == '6,27' and '▼' in tot[5] and '-0,98' in tot[5] and P.eval_on_selector('.sheet-table tr.total .delta', 'e => getComputedStyle(e).color') == 'rgb(180, 35, 24)', json.dumps(tot, ensure_ascii=False))
+    check('6.2 Variación del resultado final (5,29 vs 6,27 → ▼ -0,98, en rojo)', tot[4] == '6,27' and '▼' in tot[5] and '-0,98' in tot[5] and P.eval_on_selector('.sheet-table tr.total .delta', 'e => getComputedStyle(e).color') == 'rgb(217, 45, 32)', json.dumps(tot, ensure_ascii=False))
     P.screenshot(path=f'{OUT}/7-comparacion.png', full_page=False)
 
     # ---- acta de reunión de cierre y firma en campo

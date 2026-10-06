@@ -565,3 +565,52 @@ h1 { font-weight: 700; }
 }
 .hero-info .band-chip { align-self: flex-start; }
 .kpis-v2 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+/* =====================================================================
+   Paleta "grafito y cobalto" (2026-10-05): neutros fríos, un único color
+   de acción (cobalto) y rojo sólo para lo urgente. Las calificaciones usan
+   tonos semánticos en pantalla; PDF y Excel conservan los de la planilla.
+   ===================================================================== */
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --surface-2: #f9fafb; --line: #e4e7ec; --line-2: #d0d5dd;
+  --ink: #101828; --ink-2: #344054; --muted: #5d6879;
+  --primary: #2f5bea; --primary-ink: #ffffff; --brand: #2f5bea; --brand-soft: #e0eaff; --info: #2f5bea; --info-soft: #e0eaff;
+  --accent: #2f5bea; --accent-soft: #e0eaff;
+  --ok: #067647; --ok-soft: #dcfae6; --warn: #b54708; --warn-soft: #fef0c7; --bad: #d92d20; --bad-soft: #fee4e2;
+  --band-mb: #3e63dd; --band-b: #079455; --band-r: #dc6803; --band-c: #d92d20;
+  --graphite: #101828; --graphite-2: #1d2939; --graphite-muted: #98a2b3;
+  --sheet-head: #f2f4f7; --sheet-head-ink: #344054; --sheet-total: #eaecf0; --sheet-total-ink: #101828;
+  --side-bg: #ffffff; --side-ink: #475467; --side-hover: #f2f4f7; --side-on: #101828; --side-on-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0c111d; --surface: #161b26; --surface-2: #1f242f; --line: #283040; --line-2: #333d4f;
+    --ink: #f5f6f8; --ink-2: #cecfd2; --muted: #94969c;
+    --primary: #6e8ef5; --primary-ink: #0c111d; --brand: #84a1ff; --brand-soft: #1a2551; --info: #84a1ff; --info-soft: #1a2551;
+    --accent: #6e8ef5; --accent-soft: #1a2551;
+    --ok: #47cd89; --ok-soft: #053321; --warn: #fdb022; --warn-soft: #4e1d09; --bad: #f97066; --bad-soft: #55160c;
+    --graphite: #1f242f; --graphite-2: #283040;
+    --sheet-head: #1f242f; --sheet-head-ink: #cecfd2; --sheet-total: #283040; --sheet-total-ink: #f5f6f8;
+    --side-bg: #161b26; --side-ink: #94969c; --side-hover: #1f242f; --side-on: #f5f6f8; --side-on-ink: #0c111d;
+  }
+}
+.btn-primary:hover:not(:disabled) { filter: none; background: #1f44c4; }
+.btn-accent { background: var(--primary); color: var(--primary-ink); }
+.btn-accent:hover:not(:disabled) { background: #1f44c4; }
+.nav-count { background: var(--line); color: var(--ink); }
+.nav a.active .nav-count { background: rgba(255,255,255,.18); color: #fff; }
+.tab-dot { background: var(--bad); }
+.tile-dark { background: var(--graphite); }
+.tile-kicker, .tile-muted, .hero-info > span:last-child { color: var(--graphite-muted); }
+.ring-sub { fill: var(--graphite-muted); }
+.pill-nc { background: #fee4e2; color: #b42318; } .pill-obs { background: #fef0c7; color: #93370d; } .pill-opm { background: #e0eaff; color: #2b3fa0; }
+.steps li.now::before { background: var(--primary); color: #fff; }
+.feed-cta, .feed-item:hover strong { color: var(--brand); }
+.opt.sel-nc, .opt.sel-no_cumple, .opt.sel-no { background: #d92d20; border-color: #d92d20; }
+.opt.sel-obs { background: #b54708; border-color: #b54708; }
+.opt.sel-opm { background: #2f5bea; border-color: #2f5bea; }
+.opt.sel-ok, .opt.sel-cumple, .opt.sel-si { background: #067647; border-color: #067647; }
+.result-hero { border-color: transparent; box-shadow: var(--elev); }
+.verdict { border-width: 1px; }
+.role-contractor { color: #93370d; }
+.continue-progress > span:first-child > span { background: var(--primary); }

@@ -10,7 +10,7 @@ import { useProfiles } from '../../db/hooks';
 import { loadSummary, type SummaryResult } from '../reports/summary';
 import { LABELS, type Action, type Audit, type Company, type Finding, type TemplateCategory, type TemplateVersion } from '../../types';
 import { BandChip } from '../../components/ResultSheet';
-import { bandFor, bandStyle } from '../../scoring/bands';
+import { bandFor, uiBandStyle } from '../../scoring/bands';
 import { evaluate, isSituacionConfig } from '../../scoring/engine';
 import { can } from '../auth/AuthProvider';
 import { DemoButton } from '../demo/DemoButton';
@@ -43,7 +43,7 @@ function Ring({ value, max, color, text, sub }: { value: number; max: number; co
   );
 }
 
-/** Distribución de calificaciones como barra apilada con los colores de la planilla. */
+/** Distribución de calificaciones como barra apilada con los colores de las calificaciones. */
 function BandStrip({ bands, compact }: { bands: Record<string, number>; compact?: boolean }) {
   const rows = Object.entries(bands).sort((a, b) => (BAND_ORDER.indexOf(a[0]) + 99 * +(BAND_ORDER.indexOf(a[0]) < 0)) - (BAND_ORDER.indexOf(b[0]) + 99 * +(BAND_ORDER.indexOf(b[0]) < 0)));
   const total = rows.reduce((t, [, v]) => t + v, 0);
@@ -51,7 +51,7 @@ function BandStrip({ bands, compact }: { bands: Record<string, number>; compact?
   return (
     <div className="stack">
       <div className="row" style={{ height: compact ? 10 : 28, borderRadius: compact ? 99 : 6, overflow: 'hidden', border: compact ? 0 : '1px solid var(--line-2)' }} role="img" aria-label={rows.map(([k, v]) => `${k}: ${v}`).join(', ')}>
-        {rows.map(([k, v]) => { const st = bandStyle(k); return <span key={k} title={`${k}: ${v}`} style={{ width: `${(100 * v) / total}%`, height: '100%', background: st?.bg ?? 'var(--line-2)' }} />; })}
+        {rows.map(([k, v]) => { const st = uiBandStyle(k); return <span key={k} title={`${k}: ${v}`} style={{ width: `${(100 * v) / total}%`, height: '100%', background: st?.solid ?? 'var(--line-2)' }} />; })}
       </div>
       <div className={`row gap wrap ${compact ? 'band-legend' : ''}`}>{rows.map(([k, v]) => <span key={k} className="row gap small"><BandChip label={k} /> <strong>{v}</strong></span>)}</div>
     </div>
@@ -188,26 +188,26 @@ export function DashboardPage() {
               {subj?.audit.code ? <span className="pill pill-glass">{subj.audit.code}</span> : null}</div>
             {subj ? (<>
               <div className="hero-body">
-                <Ring value={subj.value} max={subj.max} color={bandStyle(subj.band)?.bg ?? '#92D050'} text={subj.situ ? fmtNum(subj.value) : `${fmtNum(subj.value, 0)}%`} sub={subj.situ ? `de ${fmtNum(subj.max, 0)}` : 'cumplimiento'} />
+                <Ring value={subj.value} max={subj.max} color={uiBandStyle(subj.band)?.solid ?? '#2F5BEA'} text={subj.situ ? fmtNum(subj.value) : `${fmtNum(subj.value, 0)}%`} sub={subj.situ ? `de ${fmtNum(subj.max, 0)}` : 'cumplimiento'} />
                 <div className="hero-info">
                   {subj.band ? <BandChip label={subj.band} /> : null}
                   <strong>{subj.audit.company_id ? cName.get(subj.audit.company_id) : subj.audit.title}</strong>
                   <span>{subj.audit.title}<br />{fmtDate(subj.audit.scheduled_date ?? subj.audit.completed_at)}</span>
                 </div>
               </div>
-              {subj.bands ? <div className="band-scale" aria-hidden>{[...subj.bands].sort((x, y) => (x.min ?? 0) - (y.min ?? 0)).map(b => <span key={b.label} style={{ flex: ((b.max ?? subj.max) - (b.min ?? 0)) || 1, background: bandStyle(b.label)?.bg }} />)}</div> : null}
+              {subj.bands ? <div className="band-scale" aria-hidden>{[...subj.bands].sort((x, y) => (x.min ?? 0) - (y.min ?? 0)).map(b => <span key={b.label} style={{ flex: ((b.max ?? subj.max) - (b.min ?? 0)) || 1, background: uiBandStyle(b.label)?.solid }} />)}</div> : null}
               {subj.partial ? <Link className="btn btn-accent" to={`/auditorias/${subj.audit.id}`}>{inProgress && inProgress.answered >= inProgress.total ? 'Revisar y completar' : 'Continuar auditoría'}</Link>
                 : <Link className="btn btn-glass" to={`/auditorias/${subj.audit.id}`}>Ver auditoría</Link>}
             </>) : <p className="tile-muted">Todavía no hay auditorías completadas en el período.</p>}
           </div>
           <div className="tile req-tile">
-            <div className="row between wrap gap"><h2 className="tile-title">Por requisito</h2><span className="small muted">{subj ? `${subj.audit.code ?? ''} · colores de la planilla` : ''}</span></div>
+            <div className="row between wrap gap"><h2 className="tile-title">Por requisito</h2><span className="small muted">{subj ? `${subj.audit.code ?? ''}` : ''}</span></div>
             {subjSections.length ? subjSections.map(x => {
-              const b = subj!.situ ? bandFor(x.score, subj!.bands) : null; const st = bandStyle(b);
+              const b = subj!.situ ? bandFor(x.score, subj!.bands) : null; const st = uiBandStyle(b);
               return (
                 <div key={x.title} className="req-bar" title={b ?? undefined}>
                   <span className="req-name">{x.title}</span>
-                  <span className="req-track"><span style={{ width: `${Math.max(2, (100 * Number(x.score)) / (subj!.max || 100))}%`, background: st?.bg ?? 'var(--primary)' }} /></span>
+                  <span className="req-track"><span style={{ width: `${Math.max(2, (100 * Number(x.score)) / (subj!.max || 100))}%`, background: st?.solid ?? 'var(--brand)' }} /></span>
                   <span className="num-font req-val">{subj!.situ ? fmtNum(x.score) : `${fmtNum(x.score, 0)}%`}</span>
                 </div>);
             }) : <p className="muted small">Aparece cuando hay una auditoría con resultados por requisito.</p>}
@@ -266,8 +266,8 @@ export function DashboardPage() {
                 <thead><tr><th>Empresa</th>{heat.cols.map(c => <th key={c} title={c}>{c}</th>)}<th>Final</th></tr></thead>
                 <tbody>{heat.rows.map(r => (
                   <tr key={r.audit.id}><td><Link to={`/auditorias/${r.audit.id}`}>{cName.get(r.audit.company_id ?? '') ?? r.audit.title}</Link><span className="small muted"> · {fmtDate(r.audit.scheduled_date ?? r.audit.completed_at)}</span></td>
-                    {r.cells.map((c, i) => { const st = bandStyle(c.band); return <td key={i} className="num-font" style={st ? { background: st.bg, color: st.fg } : undefined} title={c.band ?? undefined}>{c.value === null ? '—' : fmtNum(c.value)}</td>; })}
-                    {(() => { const st = bandStyle(r.audit.result_band); return <td className="num-font heat-final" style={st ? { background: st.bg, color: st.fg } : undefined}>{fmtNum(r.audit.score)}</td>; })()}</tr>))}
+                    {r.cells.map((c, i) => { const st = uiBandStyle(c.band); return <td key={i} className="num-font" style={st ? { background: st.bg, color: st.fg } : undefined} title={c.band ?? undefined}>{c.value === null ? '—' : fmtNum(c.value)}</td>; })}
+                    {(() => { const st = uiBandStyle(r.audit.result_band); return <td className="num-font heat-final" style={st ? { background: st.bg, color: st.fg } : undefined}>{fmtNum(r.audit.score)}</td>; })()}</tr>))}
                 </tbody>
               </table></div>
               {heat.weakest ? <p className="small muted" style={{ margin: '.6rem 0 0' }}>Requisito más débil: <strong>{heat.weakest.title}</strong> (promedio {fmtNum(heat.weakest.avg)}){heat.weakest.count > 1 ? `, bajo en ${heat.weakest.count} empresas` : ''}.</p> : null}
@@ -310,7 +310,7 @@ export function DashboardPage() {
                     <tbody>{latest.map(a => {
                       const v = vById.get(a.template_version_id);
                       const situ = v?.scoring_method === 'situacion_promedio_secciones';
-                      const st = bandStyle(a.result_band);
+                      const st = uiBandStyle(a.result_band);
                       return (
                         <tr key={a.id}>
                           <td><Link to={`/auditorias/${a.id}`}>{a.code ?? a.title}</Link><div className="small muted" style={{ fontWeight: 400 }}>{a.title}</div></td>
@@ -341,7 +341,7 @@ export function DashboardPage() {
           <Card title="Resultado promedio por sección" className="span-all">
             {S.by_section.length === 0 ? <p className="muted small">Sin auditorías completadas en el período.</p> : (
               <div style={{ overflowX: 'auto' }}><table className="sheet-table"><thead><tr><th>Requisito / sección</th><th>Auditorías</th><th>Alcanzado (suma)</th><th>Objetivo (suma)</th><th>Evaluación promedio</th></tr></thead>
-                <tbody>{S.by_section.slice(0, 30).map(x => <tr key={`${x.template_id}-${x.title}`}><td>{x.title.trim()}{new Set(S.by_section.map(z => z.template_id)).size > 1 ? <div className="small muted" style={{ fontWeight: 400 }}>{x.template_name}</div> : null}</td><td>{x.audits}</td><td>{fmtNum(x.raw, 0)}</td><td>{fmtNum(x.target, 0)}</td>{(() => { const b = x.scoring_method === 'ponderado' ? null : bandFor(x.avg_score, bandsOfTemplate(x.template_id)); const st = bandStyle(b);
+                <tbody>{S.by_section.slice(0, 30).map(x => <tr key={`${x.template_id}-${x.title}`}><td>{x.title.trim()}{new Set(S.by_section.map(z => z.template_id)).size > 1 ? <div className="small muted" style={{ fontWeight: 400 }}>{x.template_name}</div> : null}</td><td>{x.audits}</td><td>{fmtNum(x.raw, 0)}</td><td>{fmtNum(x.target, 0)}</td>{(() => { const b = x.scoring_method === 'ponderado' ? null : bandFor(x.avg_score, bandsOfTemplate(x.template_id)); const st = uiBandStyle(b);
                     return <td className="eval" style={st ? { background: st.bg, color: st.fg } : undefined} title={b ?? undefined}>{fmtNum(x.avg_score, 2)}{x.scoring_method === 'ponderado' ? ' %' : ''}</td>; })()}</tr>)}</tbody></table></div>
             )}
           </Card>

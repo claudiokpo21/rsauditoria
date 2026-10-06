@@ -12,7 +12,7 @@ import { auditAccess, canWrite, useParticipants } from '../auth/access';
 import { ParticipantsCard, ReadinessCard, useAuditLifecycle, useLocalReadiness } from './AuditLifecycle';
 import { RecordHistory } from '../../components/RecordHistory';
 import { BandChip, ResultSheet, type SheetData } from '../../components/ResultSheet';
-import { bandStyle } from '../../scoring/bands';
+import { uiBandStyle } from '../../scoring/bands';
 import { usePreviousAudit } from './previousAudit';
 import { ClosingMeetingCard } from './ClosingMeeting';
 import { answerOptions, deviationFindingType, evaluate } from '../../scoring/engine';
@@ -116,7 +116,7 @@ export function AuditExecutePage() {
         if (!done) return null;
         const situ = version.scoring_method === 'situacion_promedio_secciones';
         const val = situ ? Number(audit.score) : Number(audit.compliance_pct);
-        const st = bandStyle(audit.result_band);
+        const st = uiBandStyle(audit.result_band);
         const d = previous && previous.final !== null ? Math.round((val - previous.final) * 100) / 100 : null;
         return (
           <section className="result-hero" style={st ? { background: st.bg, color: st.fg } : undefined}>
