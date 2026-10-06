@@ -12,7 +12,7 @@ import { loadSummary, type SummaryResult } from '../reports/summary';
 import { LABELS, type Action, type Audit, type Company, type Finding, type TemplateCategory, type TemplateVersion } from '../../types';
 import { BandChip } from '../../components/ResultSheet';
 import { bandFor, bandStyle } from '../../scoring/bands';
-import { isSituacionConfig } from '../../scoring/engine';
+import { evaluate, isSituacionConfig } from '../../scoring/engine';
 import { can } from '../auth/AuthProvider';
 import { DemoButton } from '../demo/DemoButton';
 
@@ -90,7 +90,19 @@ export function DashboardPage() {
     if (!a) return null;
     const total = await db.hse_template_items.where('version_id').equals(a.template_version_id).count();
     const answered = (await db.hse_audit_responses.where('audit_id').equals(a.id).toArray()).filter(r => !r.deleted_at && (r.answer || r.text_value || r.numeric_value !== null || r.rating !== null)).length;
-    return { audit: a, total, answered: Math.min(answered, total) };
+    // resultado parcial con las reglas de la versión (el oficial lo calcula el servidor al completar)
+    const version = await db.hse_template_versions.get(a.template_version_id);
+    let partial: { value: number | null; band: string | null; situ: boolean; cfg: unknown } | null = null;
+    if (version) {
+      const secs = await db.hse_template_sections.where('version_id').equals(a.template_version_id).toArray();
+      const its = await db.hse_template_items.where('version_id').equals(a.template_version_id).toArray();
+      const resp = (await db.hse_audit_responses.where('audit_id').equals(a.id).toArray()).filter(r => !r.deleted_at);
+      const answers = Object.fromEntries(resp.filter(r => r.answer).map(r => [r.item_id, r.answer as string]));
+      const situ = version.scoring_method === 'situacion_promedio_secciones';
+      const res = evaluate(version, secs.filter(x => !x.deleted_at), its.filter(x => !x.deleted_at), answers);
+      partial = { value: situ ? res.final ?? null : res.compliance_pct ?? null, band: situ ? res.band ?? null : null, situ, cfg: version.scoring_config };
+    }
+    return { audit: a, total, answered: Math.min(answered, total), partial };
   }, [orgId, userId]);
   const cName = new Map(companies.map(c => [c.id, c.name]));
   const vById = new Map(versions.map(v => [v.id, v]));
@@ -109,10 +121,12 @@ export function DashboardPage() {
   const hello = hour < 13 ? 'Buen día' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
   // indicador: promedio de los resultados oficiales con bandas (escala de la metodología) o cumplimiento %
   const situ = latest.filter(a => vById.get(a.template_version_id)?.scoring_method === 'situacion_promedio_secciones' && a.score !== null);
-  const cfg0 = situ.length ? vById.get(situ[0].template_version_id)?.scoring_config : null;
+  // sin auditorías completadas: el indicador muestra el resultado parcial de la auditoría en curso
+  const usePartial = !situ.length && S?.results.avg_compliance == null && !!inProgress?.partial && inProgress.partial.value !== null;
+  const cfg0 = situ.length ? vById.get(situ[0].template_version_id)?.scoring_config : usePartial && inProgress!.partial!.situ ? inProgress!.partial!.cfg : null;
   const cfg = cfg0 && isSituacionConfig(cfg0) ? cfg0 : null;
   const gaugeMax = cfg ? cfg.scale_max : 100;
-  const gaugeVal = cfg ? (situ.length ? situ.reduce((t, a) => t + Number(a.score), 0) / situ.length : null) : (S?.results.avg_compliance ?? null);
+  const gaugeVal = usePartial ? inProgress!.partial!.value : cfg ? (situ.length ? situ.reduce((t, a) => t + Number(a.score), 0) / situ.length : null) : (S?.results.avg_compliance ?? null);
   const gaugeBand = cfg ? bandFor(gaugeVal, cfg.bands) : null;
   // sin bandas (lista ponderada): los mismos umbrales de color que el indicador de cumplimiento (60 % / 80 %)
   const segments = cfg ? [...cfg.bands].sort((a, b) => (a.min ?? 0) - (b.min ?? 0)).map(b => ({ from: b.min ?? 0, to: b.max ?? cfg.scale_max, color: bandStyle(b.label)?.bg ?? '#7d8b92' }))
@@ -149,7 +163,10 @@ export function DashboardPage() {
           <strong>{inProgress.audit.code ? `${inProgress.audit.code} · ` : ''}{inProgress.audit.title}</strong>
           <span className="small">{inProgress.audit.company_id ? cName.get(inProgress.audit.company_id) : ''}</span>
           <span className="continue-progress"><span><span style={{ width: `${inProgress.total ? (100 * inProgress.answered) / inProgress.total : 0}%` }} /></span><span className="num-font">{inProgress.answered}/{inProgress.total}</span></span>
-          <span className="btn btn-accent">Continuar auditoría</span>
+          {inProgress.partial && inProgress.partial.value !== null ? (
+            <span className="continue-partial">Resultado parcial <strong className="num-font">{inProgress.partial.situ ? fmtNum(inProgress.partial.value) : `${fmtNum(inProgress.partial.value, 1)} %`}</strong>{inProgress.partial.band ? <BandChip label={inProgress.partial.band} /> : null}
+              {inProgress.answered >= inProgress.total ? <span className="small">· todo respondido: falta tocar "Completar"</span> : null}</span>) : null}
+          <span className="btn btn-accent">{inProgress.answered >= inProgress.total ? 'Revisar y completar' : 'Continuar auditoría'}</span>
         </Link>
       ) : null}
       {anyAudit === false ? <Empty>
@@ -161,10 +178,10 @@ export function DashboardPage() {
         </Empty> : !S ? null : <>
         <section className="dash-top">
           <div className="gauge-card">
-            <span className="small">{cfg ? 'Resultado promedio' : 'Cumplimiento promedio'}</span>
+            <span className="small">{usePartial ? `Resultado parcial · ${inProgress!.audit.code ?? 'en curso'}` : cfg ? 'Resultado promedio' : 'Cumplimiento promedio'}</span>
             <Gauge value={gaugeVal} max={gaugeMax} segments={segments} label={`Indicador: ${gaugeVal === null ? 'sin datos' : fmtNum(gaugeVal)}${gaugeBand ? `, ${gaugeBand}` : ''}`} />
             <div className="gauge-value"><span className="num-font">{gaugeVal === null ? '—' : cfg ? fmtNum(gaugeVal) : `${fmtNum(gaugeVal, 1)} %`}</span>{gaugeBand ? <BandChip label={gaugeBand} /> : null}</div>
-            <span className="small gauge-note">{gaugeVal === null ? 'Todavía no hay auditorías completadas en el período' : cfg ? `Últimas ${situ.length} auditorías con calificación · escala 0 a ${fmtNum(cfg.scale_max, 0)}` : 'Resultados oficiales del período'}</span>
+            <span className="small gauge-note">{usePartial ? 'Auditoría en curso: el resultado oficial se calcula al tocar "Completar"' : gaugeVal === null ? 'Todavía no hay auditorías completadas en el período' : cfg ? `Últimas ${situ.length} auditorías con calificación · escala 0 a ${fmtNum(cfg.scale_max, 0)}` : 'Resultados oficiales del período'}</span>
             <BandStrip bands={S.results.bands} compact />
           </div>
           <div className="kpis">

@@ -457,3 +457,4 @@ table.perm-t td:first-child { text-align: left; font-weight: 600; }
 .cred-user { overflow-wrap: anywhere; }
 .cred-pass { font-size: 1.35rem; letter-spacing: .02em; user-select: all; }
 .sheet-opt { border: 1.5px solid var(--ok); background: var(--ok-soft); border-radius: 12px; padding: .7rem .8rem; }
+.continue-partial { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: #c9d6dd; } .continue-partial strong { color: #fff; font-size: 1.25rem; }
