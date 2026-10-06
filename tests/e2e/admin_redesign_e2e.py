@@ -120,15 +120,15 @@ with sync_playwright() as pw:
     A.screenshot(path=f'{OUT}/16-permisos.png')
 
     # rediseño: escritorio
-    A.goto(f'{BASE}/'); A.wait_for_selector('.gauge-card', timeout=60000); A.wait_for_timeout(600)
-    check('5.1 Dashboard nuevo: indicador, tarjeta "Continuar auditoría" y menú con íconos', A.locator('.continue-card').count() == 1 and A.locator('.nav a svg').count() >= 8, '')
+    A.goto(f'{BASE}/'); A.wait_for_selector('.hero-tile', timeout=60000); A.wait_for_timeout(600)
+    check('5.1 Dashboard nuevo: tarjeta de resultado, "Siguiente paso" y menú con íconos', A.locator('.steps-tile').count() == 1 and A.locator('.nav a svg').count() >= 8, '')
     A.screenshot(path=f'{OUT}/17-dashboard-escritorio.png')
     A.context.close()
 
     # rediseño: celular (auditor B, ya reactivado no importa: el simulador no corta el acceso)
     for m in fake.tables['hse_memberships'].values(): m['active'] = True
     M = ctx_for(browser, 'A', {'width': 390, 'height': 844}, mobile=True).new_page()
-    M.goto(f'{BASE}/'); M.wait_for_selector('.gauge-card', timeout=60000); M.wait_for_timeout(600)
+    M.goto(f'{BASE}/'); M.wait_for_selector('.hero-tile', timeout=60000); M.wait_for_timeout(600)
     check('6.1 Celular: barra inferior de accesos', M.locator('.tabbar .tabbar-item').count() == 5 and M.locator('.tabbar').is_visible(), '')
     check('6.2 Celular: dashboard sin desplazamiento horizontal', no_hscroll(M), '')
     M.screenshot(path=f'{OUT}/18-inicio-celular.png')

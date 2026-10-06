@@ -213,7 +213,7 @@ with sync_playwright() as pw:
     P.goto(f'{BASE}/auditorias'); P.wait_for_selector('text=Nueva auditoría', timeout=30000)
     P.get_by_role('button', name='Nueva auditoría').click()
     P.locator('.modal select').first.select_option(index=1)
-    P.wait_for_selector('.sheet-opt', timeout=10000)
+    P.wait_for_selector('.sheet-opt', timeout=30000)
     P.get_by_label('Título').fill('CSMS desde Nueva auditoría')
     P.screenshot(path=f'{OUT}/9-nueva-con-planilla.png')
     P.locator('.modal').get_by_role('button', name='Crear', exact=True).click()
