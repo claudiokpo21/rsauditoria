@@ -14,6 +14,7 @@ import { RecordHistory } from '../../components/RecordHistory';
 import { BandChip, ResultSheet, type SheetData } from '../../components/ResultSheet';
 import { uiBandStyle } from '../../scoring/bands';
 import { usePreviousAudit } from './previousAudit';
+import { planAccepted } from '../reports/finalReport';
 import { ClosingMeetingCard } from './ClosingMeeting';
 import { answerOptions, deviationFindingType, evaluate } from '../../scoring/engine';
 import { Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, TextArea, displayText, fmtDate, fmtNum, useToast } from '../../components/ui';
@@ -70,7 +71,8 @@ export function AuditExecutePage() {
   if (!version) return <Empty>La versión de plantilla de esta auditoría todavía no se descargó. Sincronice con conexión.</Empty>;
 
   const writer = canWrite(access);
-  const locked = ['completada', 'cerrada', 'cancelada'].includes(audit.status) || !writer;
+  const waitingPlan = audit.status === 'planificada' && !planAccepted(audit);
+  const locked = ['completada', 'cerrada', 'cancelada'].includes(audit.status) || !writer || waitingPlan;
   const scorable = items.filter(i => ['cumplimiento', 'si_no', 'situacion'].includes(i.response_type));
   const answered = scorable.filter(i => respByItem.get(i.id)?.answer).length;
 
@@ -98,7 +100,8 @@ export function AuditExecutePage() {
         subtitle={<>{audit.code ?? 'Código al sincronizar'} · {audit.company_id ? cName.get(audit.company_id) : 'Sin empresa'} · {audit.location_id ? lName.get(audit.location_id) : 'Sin ubicación'} · {fmtDate(audit.scheduled_date)}{audit.lead_auditor_id ? ` · Auditor: ${people.get(audit.lead_auditor_id) ?? ''}` : ''}</>}
         actions={<>
           <Badge tone={statusTone(audit.status)}>{LABELS.auditStatus[audit.status]}</Badge>
-          <Link className="btn btn-secondary" to={`/informes?audit=${audit.id}`}>Informe</Link>
+          <Link className="btn btn-secondary" to={`/auditorias/${audit.id}/plan`}>Plan</Link>
+          <Link className="btn btn-secondary" to={`/auditorias/${audit.id}/informe`}>Informe final</Link>
           {pinnedAt !== null && pinnedAt !== undefined
             ? <Button variant="ghost" title={`Descargada ${new Date(pinnedAt || Date.now()).toLocaleString('es-AR')}`} onClick={() => void setPinned(orgId, audit.id, false)}>✓ Disponible sin conexión</Button>
             : <Button variant="secondary" busy={downloading} disabled={!navigator.onLine} onClick={async () => {
@@ -109,6 +112,15 @@ export function AuditExecutePage() {
           {writer && !['cerrada', 'cancelada'].includes(audit.status) ? <Button variant="secondary" onClick={() => setEdit(audit)}>Datos</Button> : null}
           {life.buttons}
         </>} />
+
+      {waitingPlan ? (
+        <section className="plan-gate" aria-label="Plan de auditoría pendiente">
+          <div className="grow">
+            <strong>Primero, el plan de auditoría</strong>
+            <span>{(audit.report_data?.plan_approval?.status ?? 'borrador') === 'enviado' ? 'El plan está enviado al cliente. Cuando lo acepte, registrá la aceptación y se habilita la lista de verificación.' : 'Armá el plan (datos generales, objetivo, criterios y cronograma), envialo al cliente y registrá su aceptación. Recién entonces se habilita la lista de verificación.'}</span>
+          </div>
+          <Link className="btn btn-primary" to={`/auditorias/${audit.id}/plan`}>Ir al plan</Link>
+        </section>) : null}
 
       {(() => {
         // resultado al terminar: franja del color de la calificación, comparación y próximos pasos
@@ -127,7 +139,7 @@ export function AuditExecutePage() {
             </div>
             <div className="result-hero-actions">
               <a className="btn btn-primary" href="#acta" onClick={e => { e.preventDefault(); document.getElementById('acta')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>Reunión de cierre y firmas</a>
-              <Link className="btn btn-secondary" to={`/informes?audit=${audit.id}`}>Descargar informe</Link>
+              <Link className="btn btn-secondary" to={`/auditorias/${audit.id}/informe`}>Informe final</Link>
             </div>
           </section>
         );

@@ -15,11 +15,11 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 WRITABLE = {
-    'hse_audits': ['template_version_id','company_id','location_id','title','audit_type','status','scheduled_date','started_at','completed_at','lead_auditor_id','audit_team','scope','summary','latitude','longitude','closing_meeting_at','closing_attendees','closing_agreements','deleted_at','client_updated_at'],
+    'hse_audits': ['template_version_id','company_id','location_id','title','audit_type','status','scheduled_date','started_at','completed_at','lead_auditor_id','audit_team','scope','summary','latitude','longitude','closing_meeting_at','closing_attendees','closing_agreements','report_data','deleted_at','client_updated_at'],
     'hse_audit_signatures': ['audit_id','signer_role','signer_name','signer_position','signer_company','agreement','observations','signature_png','signed_at','deleted_at','client_updated_at'],
     'hse_audit_responses': ['audit_id','item_id','answer','rating','numeric_value','text_value','comment','deleted_at','client_updated_at'],
     'hse_evidences': ['audit_id','response_id','finding_id','action_id','storage_path','file_name','mime_type','size_bytes','caption','taken_at','latitude','longitude','uploaded_by','deleted_at','client_updated_at'],
-    'hse_findings': ['audit_id','response_id','item_id','company_id','location_id','title','description','requirement','finding_type','severity','category','process_id','responsible_user_id','status','root_cause','rca_method','rca_data','immediate_action','legal_reference','detected_at','due_date','verification_notes','effectiveness','deleted_at','client_updated_at'],
+    'hse_findings': ['audit_id','response_id','item_id','company_id','location_id','title','description','requirement','rationale','finding_type','severity','category','process_id','responsible_user_id','status','root_cause','rca_method','rca_data','immediate_action','legal_reference','detected_at','due_date','verification_notes','effectiveness','deleted_at','client_updated_at'],
     'hse_actions': ['finding_id','description','action_type','responsible_user_id','responsible_name','responsible_company_id','due_date','status','progress_notes','effectiveness_criteria','verification_notes','effectiveness','deleted_at','client_updated_at'],
     'hse_audit_participants': ['audit_id','user_id','participant_role','deleted_at','client_updated_at'],
     'hse_companies': ['name','tax_id','company_type','parent_company_id','contact_name','contact_email','contact_phone','csms_status','csms_valid_until','active','deleted_at','client_updated_at'],

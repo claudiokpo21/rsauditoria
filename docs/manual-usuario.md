@@ -290,3 +290,33 @@ comprobar que la app calcula igual que el Excel), no como auditoría. Para pasar
 3. Indique título, empresa, ubicación, fecha y tipo. Se crea la auditoría *En curso* con todas las respuestas cargadas.
 4. Revísela, agregue comentarios, fotos y hallazgos, y toque **Completar**: el servidor calcula el resultado oficial y
    aparece en el dashboard.
+
+## 21. Plan de auditoría (aceptación del cliente) e informe final
+
+Cada auditoría tiene dos documentos con el formato de RS Consultora: el **plan de auditoría** y el **informe final**.
+Se abren desde la auditoría con los botones **Plan** e **Informe final**. Comparten los datos generales, el objetivo,
+los criterios y el cronograma: se cargan una sola vez.
+
+**Antes de empezar: el plan**
+
+1. En la auditoría planificada aparece el aviso *Primero, el plan de auditoría* → **Ir al plan**.
+2. Complete compañía solicitante, empresa contratista, contrato, auditor responsable, fechas y lugares; revise el
+   objetivo y los criterios (vienen sugeridos) y arme el **cronograma** con **Agregar fila** (fecha, hora, proceso,
+   auditados y temas). Marque **Resaltar** en traslados, fin del día o reunión de cierre: salen en verde.
+3. **Guardar** y **Descargar plan (PDF)**. Envíelo al cliente y toque **Marcar como enviado**.
+4. Cuando el cliente lo acepta, **Registrar aceptación del cliente**: quién aceptó, fecha y el medio (por ejemplo,
+   el correo). Recién entonces aparece **Iniciar** y se habilita la lista de verificación. El servidor también lo exige.
+5. Si después cambia el plan, la app avisa que difiere de lo aceptado; si el cambio es importante, vuelva a enviarlo
+   y registre la nueva aceptación.
+
+**Al terminar: el informe final**
+
+- Redacte **Desarrollo**, **Conclusiones** y, por requisito, los procedimientos en los que verificó la conformidad
+  (salen con ✓).
+- **Fortalecimiento:** cargue las fortalezas del contratista (área y descripción); salen numeradas en *Fortalezas*.
+- Las **oportunidades de mejora** (con su *Fundamento*), **observaciones** y **no conformidades** (con su
+  *Referencia / requisito*) salen solas de los hallazgos, agrupadas por requisito. El *Fundamento* y la *Referencia*
+  se cargan en el formulario de cada hallazgo.
+- Siguen la evaluación con los colores de la planilla, el anexo (acta y firmas de la reunión de cierre), el registro
+  fotográfico por hallazgo y la declaración del auditor con la firma del auditor líder.
+- En los textos: una línea que empieza con «- » es una viñeta y `**así**` queda en negrita.

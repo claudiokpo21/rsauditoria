@@ -66,6 +66,8 @@ export interface Audit extends SyncMeta {
   score: number | null; max_score: number | null; compliance_pct: number | null; critical_failures: number;
   section_results: unknown; result_band: string | null; scoring_snapshot: unknown;
   closing_meeting_at?: string | null; closing_attendees?: string | null; closing_agreements?: string | null;
+  /** Contenido redactado del informe final (ver modules/reports/finalReport.ts). */
+  report_data?: import('./modules/reports/finalReport').ReportData | null;
   latitude: number | null; longitude: number | null;
   reviewed_by: string | null; reviewed_at: string | null; review_notes: string | null; closed_by: string | null;
 }
@@ -92,7 +94,7 @@ export interface Finding extends SyncMeta {
   code: string | null; title: string; description: string | null; finding_type: FindingType; severity: 'baja' | 'media' | 'alta' | 'critica';
   status: 'abierto' | 'en_tratamiento' | 'cerrado' | 'verificado'; root_cause: string | null; immediate_action: string | null;
   legal_reference: string | null; detected_at: string; due_date: string | null; closed_at: string | null; closed_by: string | null;
-  requirement: string | null; category: TemplateCategory | null; process_id: string | null; responsible_user_id: string | null;
+  requirement: string | null; rationale?: string | null; category: TemplateCategory | null; process_id: string | null; responsible_user_id: string | null;
   rca_method: 'cinco_porques' | 'ishikawa' | 'otro' | null; rca_data: RcaData | null;
   recurrence_key: string | null; recurrence_of: string | null; recurrence_count: number;
   verification_notes: string | null; effectiveness: 'eficaz' | 'no_eficaz' | null; verified_by: string | null; verified_at: string | null;

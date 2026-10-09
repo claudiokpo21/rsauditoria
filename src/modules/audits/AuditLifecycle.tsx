@@ -7,6 +7,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { planAccepted } from '../reports/finalReport';
 import { db } from '../../db/db';
 import { newId, patchRecord, saveRecord } from '../../db/repo';
 import { useProfiles } from '../../db/hooks';
@@ -143,7 +144,8 @@ export function useAuditLifecycle(audit: Audit, access: AuditAccess, local: Retu
   };
 
   const buttons = <>
-    {access && ['gestion', 'escritura'].includes(access) && audit.status === 'planificada' ? <Button onClick={() => void setStatus('en_curso')}>Iniciar</Button> : null}
+    {access && ['gestion', 'escritura'].includes(access) && audit.status === 'planificada'
+      && planAccepted(audit) ? <Button onClick={() => void setStatus('en_curso')}>Iniciar</Button> : null}
     {access && ['gestion', 'escritura'].includes(access) && audit.status === 'en_curso' ? <Button onClick={() => open('completar')}>Completar</Button> : null}
     {isManager && audit.status === 'completada' && !audit.reviewed_at && audit.lead_auditor_id !== userId ? <Button variant="secondary" onClick={() => open('revisar')}>Revisar</Button> : null}
     {isManager && audit.status === 'completada' ? <Button variant="secondary" onClick={() => void setStatus('en_curso', {}, 'Auditoría devuelta a ejecución (la revisión se descarta)')}>Devolver a ejecución</Button> : null}

@@ -26,6 +26,7 @@ import { AccessLock } from './components/AccessLock';
 
 // Módulos pesados (ExcelJS, jsPDF) sólo se cargan al usarlos
 const ImportPage = lazy(() => import('./modules/templates/import/ImportPage').then(m => ({ default: m.ImportPage })));
+const AuditDocsPage = lazy(() => import('./modules/reports/AuditDocsPage').then(m => ({ default: m.AuditDocsPage })));
 const ReportsPage = lazy(() => import('./modules/reports/ReportsPage').then(m => ({ default: m.ReportsPage })));
 
 function Gate() {
@@ -42,6 +43,8 @@ function Gate() {
           <Route index element={<DashboardPage />} />
           <Route path="auditorias" element={<AuditsPage />} />
           <Route path="auditorias/:id" element={<AuditExecutePage />} />
+          <Route path="auditorias/:id/plan" element={<AuditDocsPage tab="plan" />} />
+          <Route path="auditorias/:id/informe" element={<AuditDocsPage tab="informe" />} />
           <Route path="hallazgos" element={<FindingsPage />} />
           <Route path="hallazgos/:id" element={<FindingDetailPage />} />
           <Route path="acciones" element={<ActionsPage />} />

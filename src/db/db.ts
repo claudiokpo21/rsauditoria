@@ -63,7 +63,7 @@ export const WRITABLE_TABLES: SyncTable[] = [
 export const AUDIT_SCOPED_TABLES: SyncTable[] = ['hse_audits', 'hse_audit_participants', 'hse_audit_responses', 'hse_findings', 'hse_actions', 'hse_evidences', 'hse_audit_signatures'];
 
 /** Columnas que el cliente puede enviar por tabla (todo lo demás lo fija el servidor). */
-/** Columnas que el cliente puede enviar por tabla (todo lo demás lo fija el servidor). Espejo de hse_sync_writable_columns (0020). */
+/** Columnas que el cliente puede enviar por tabla (todo lo demás lo fija el servidor). Espejo de hse_sync_writable_columns (0027). */
 export const WRITABLE_COLUMNS: Record<string, string[]> = {
   hse_companies: ['id', 'organization_id', 'name', 'tax_id', 'company_type', 'parent_company_id', 'contact_name', 'contact_email', 'contact_phone', 'csms_status', 'csms_valid_until', 'active', 'deleted_at', 'client_updated_at'],
   hse_locations: ['id', 'organization_id', 'company_id', 'parent_location_id', 'name', 'location_type', 'address', 'latitude', 'longitude', 'active', 'deleted_at', 'client_updated_at'],
@@ -73,10 +73,10 @@ export const WRITABLE_COLUMNS: Record<string, string[]> = {
   hse_template_sections: ['id', 'organization_id', 'version_id', 'title', 'description', 'sort_order', 'code', 'deleted_at', 'client_updated_at'],
   hse_template_items: ['id', 'organization_id', 'version_id', 'section_id', 'code', 'question', 'guidance', 'response_type', 'weight', 'is_critical', 'evidence_required_on_fail', 'is_required', 'legal_reference', 'sort_order', 'process_id', 'deleted_at', 'client_updated_at'],
   hse_template_import_issues: ['id', 'organization_id', 'status', 'resolution_note', 'client_updated_at'],
-  hse_audits: ['id', 'organization_id', 'template_version_id', 'company_id', 'location_id', 'title', 'audit_type', 'status', 'scheduled_date', 'lead_auditor_id', 'audit_team', 'scope', 'summary', 'latitude', 'longitude', 'closing_meeting_at', 'closing_attendees', 'closing_agreements', 'deleted_at', 'client_updated_at'],
+  hse_audits: ['id', 'organization_id', 'template_version_id', 'company_id', 'location_id', 'title', 'audit_type', 'status', 'scheduled_date', 'lead_auditor_id', 'audit_team', 'scope', 'summary', 'latitude', 'longitude', 'closing_meeting_at', 'closing_attendees', 'closing_agreements', 'report_data', 'deleted_at', 'client_updated_at'],
   hse_audit_participants: ['id', 'organization_id', 'audit_id', 'user_id', 'participant_role', 'deleted_at', 'client_updated_at'],
   hse_audit_responses: ['id', 'organization_id', 'audit_id', 'item_id', 'answer', 'rating', 'numeric_value', 'text_value', 'comment', 'deleted_at', 'client_updated_at'],
-  hse_findings: ['id', 'organization_id', 'audit_id', 'response_id', 'item_id', 'company_id', 'location_id', 'title', 'description', 'requirement', 'finding_type', 'severity', 'category', 'process_id', 'responsible_user_id', 'status', 'root_cause', 'rca_method', 'rca_data', 'immediate_action', 'legal_reference', 'detected_at', 'due_date', 'verification_notes', 'effectiveness', 'deleted_at', 'client_updated_at'],
+  hse_findings: ['id', 'organization_id', 'audit_id', 'response_id', 'item_id', 'company_id', 'location_id', 'title', 'description', 'requirement', 'rationale', 'finding_type', 'severity', 'category', 'process_id', 'responsible_user_id', 'status', 'root_cause', 'rca_method', 'rca_data', 'immediate_action', 'legal_reference', 'detected_at', 'due_date', 'verification_notes', 'effectiveness', 'deleted_at', 'client_updated_at'],
   hse_actions: ['id', 'organization_id', 'finding_id', 'description', 'action_type', 'responsible_user_id', 'responsible_name', 'responsible_company_id', 'due_date', 'status', 'progress_notes', 'effectiveness_criteria', 'verification_notes', 'effectiveness', 'deleted_at', 'client_updated_at'],
   hse_evidences: ['id', 'organization_id', 'audit_id', 'response_id', 'finding_id', 'action_id', 'storage_path', 'file_name', 'mime_type', 'size_bytes', 'caption', 'taken_at', 'latitude', 'longitude', 'deleted_at', 'client_updated_at'],
   hse_audit_signatures: ['id', 'organization_id', 'audit_id', 'signer_role', 'signer_name', 'signer_position', 'signer_company', 'agreement', 'observations', 'signature_png', 'signed_at', 'deleted_at', 'client_updated_at'],

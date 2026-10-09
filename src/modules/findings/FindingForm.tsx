@@ -40,7 +40,7 @@ export function FindingForm({ initial, onClose, navigateOnCreate = true }: { ini
       ...(f as Finding),
       id: f.id ?? newId(), organization_id: orgId, audit_id: f.audit_id!, response_id: f.response_id ?? null, item_id: f.item_id ?? null,
       company_id: f.company_id || null, location_id: f.location_id || null, process_id: f.process_id || null,
-      title: f.title!.trim(), description: f.description!.trim(), requirement: f.requirement?.trim() || null,
+      title: f.title!.trim(), description: f.description!.trim(), requirement: f.requirement?.trim() || null, rationale: f.rationale?.trim() || null,
       finding_type: f.finding_type!, severity: f.severity!, category: f.category ?? null, status: f.status ?? 'abierto',
       responsible_user_id: f.responsible_user_id || null, root_cause: f.root_cause || null, rca_method: f.rca_method ?? null, rca_data: f.rca_data ?? null,
       immediate_action: f.immediate_action || null, legal_reference: f.legal_reference || null,
@@ -59,7 +59,8 @@ export function FindingForm({ initial, onClose, navigateOnCreate = true }: { ini
       {f.item_id ? <p className="small muted">Vinculado a la pregunta del checklist.</p> : <p className="small muted">Hallazgo general (no vinculado a una pregunta).</p>}
       <Field label="Título" required error={err.title}><Input value={f.title ?? ''} onChange={e => setF({ ...f, title: e.target.value })} /></Field>
       <Field label="Descripción objetiva" required error={err.description} hint="Qué se observó, dónde, cuándo y con qué evidencia. Sin opiniones ni nombres de personas."><TextArea rows={5} value={f.description ?? ''} onChange={e => setF({ ...f, description: e.target.value })} /></Field>
-      <Field label="Requisito incumplido" hint="Cláusula, procedimiento o norma de referencia"><Input value={f.requirement ?? ''} onChange={e => setF({ ...f, requirement: e.target.value })} /></Field>
+      <Field label="Referencia / requisito" hint="Cláusula o requisito: «ISO 45001 5.4 Participación y consulta», «Anexo C CSMS». Sale en el informe final."><Input value={f.requirement ?? ''} onChange={e => setF({ ...f, requirement: e.target.value })} /></Field>
+      {f.finding_type === 'oportunidad_mejora' ? <Field label="Fundamento" hint="Por qué conviene la mejora. Sale en la columna «Fundamento» del informe final."><TextArea rows={3} value={f.rationale ?? ''} onChange={e => setF({ ...f, rationale: e.target.value })} /></Field> : null}
       <div className="grid grid-2">
         <Field label="Clasificación"><Select value={f.finding_type} onChange={e => setF({ ...f, finding_type: e.target.value as Finding['finding_type'] })} options={opt(LABELS.findingType)} /></Field>
         <Field label="Severidad"><Select value={f.severity} onChange={e => setF({ ...f, severity: e.target.value as Finding['severity'] })} options={opt(LABELS.severity)} /></Field>

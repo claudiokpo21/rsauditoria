@@ -232,3 +232,17 @@ PGHOST=/tmp PGPORT=55432 PGUSER=postgres scripts/backup/test-backup-restore.sh
 - `admin_redesign_e2e.py`: **26/26** (nuevos: alta directa, correo existente, nueva contraseña desde la ficha, primer
   ingreso obliga a elegir contraseña). Resto de las suites en verde.
 - **Pendiente:** primera prueba real de la función en el proyecto (desde el panel); este entorno no llega a Supabase por red.
+
+## 15. Actualización 2026-10-09: plan de auditoría e informe final (modelo RS Consultora)
+
+- Migración **0027** (`report_data` en auditorías, `rationale` en hallazgos, columnas de sincronización): una auditoría
+  *planificada* sólo pasa a *en curso* con el plan aceptado por el cliente (`report_data.plan_approval.status = 'aprobado'`).
+- `authorization_matrix.sql`: **233/233** local (2 casos nuevos: iniciar sin plan aceptado → denegado; registrar la
+  aceptación → permitido). `findings_lifecycle.sql` 62/62, `signatures.sql` 24/24, `sync_push_protocol.sql` y
+  `sync_semantics.sql` sin fallas.
+- `plan_informe_e2e.py`: **32/32** — bloqueo de la lista sin plan, plan en PDF (datos, objetivo, criterios, cronograma
+  con fila resaltada), enviado, aceptación que llega al servidor, aviso si el plan cambia después de aceptado, iniciar,
+  informe final con las 14 secciones del modelo en orden, fortalezas, oportunidades de mejora con fundamento,
+  observaciones y no conformidades por requisito, evaluación 6,27, registro fotográfico por hallazgo, firma, celular sin
+  desplazamiento horizontal. Resto de las suites en verde (visual 27/27, admin 26/26, hallazgos 32/32, sin conexión 27/27,
+  dictado 13/13). Unitarias 19/19.

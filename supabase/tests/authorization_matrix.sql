@@ -196,6 +196,9 @@ begin
   r := r || pg_temp.e('Auditor (líder X)', 'cambia la empresa auditada', 'denegado', pg_temp.x(format('update hse_audits set company_id = %L where id = %L', cy, ax)));
   r := r || pg_temp.e('Auditor (líder X)', 'se reasigna el líder', 'denegado', pg_temp.x(format('update hse_audits set lead_auditor_id = %L where id = %L', aud2, ax)));
   r := r || pg_temp.e('Auditor (líder X)', 'mueve la auditoría a otra organización', 'denegado', pg_temp.x(format('update hse_audits set organization_id = %L where id = %L', org_b, ax)));
+  -- 0027: sin el plan aceptado por el cliente no se inicia
+  r := r || pg_temp.e('Auditor (líder X)', 'inicia sin plan aceptado (0027)', 'denegado', pg_temp.x(format('update hse_audits set status = ''en_curso'' where id = %L', ax)));
+  r := r || pg_temp.e('Auditor (líder X)', 'registra la aceptación del plan por el cliente (0027)', 'permitido', pg_temp.x(format('update hse_audits set report_data = ''{"plan_approval":{"status":"aprobado","approved_by":"Cliente","approved_at":"2026-05-20"}}'' where id = %L', ax)));
   perform pg_temp.x(format('update hse_audits set status = ''en_curso'', started_at = ''2000-01-01'' where id = %L', ax));
   r := r || pg_temp.v('Auditor (líder X)', 'started_at falsificado lo fija el servidor', 'false',
     ((select started_at from hse_audits where id = ax) < '2001-01-01')::text);

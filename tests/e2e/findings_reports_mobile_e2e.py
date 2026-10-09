@@ -187,7 +187,7 @@ with sync_playwright() as p:
 
     # =================================================================== 4. informes
     A.goto(f'{BASE}/informes?audit={fake.audit2}'); A.wait_for_selector('text=Informe de una auditoría')
-    pdf_path = download(A, lambda: A.get_by_role('button', name='Descargar PDF').first.click())
+    pdf_path = download(A, lambda: A.get_by_role('button', name='Informe detallado (PDF)').click())
     txt = '\n'.join(pg.extract_text() or '' for pg in PdfReader(pdf_path).pages)
     norm = ' '.join(txt.split())
     check('4.1 PDF de auditoría: resultado oficial y por sección', 'Resultados por sección oficiales' in norm and 'Resultado oficial' in norm and 'Locación' in norm and '66,7' in norm, os.path.basename(pdf_path))

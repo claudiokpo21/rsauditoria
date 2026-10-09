@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { Button, Card, Field, Input, PageHeader, Select, useToast } from '../../components/ui';
 import { loadAuditReport } from './reportData';
 import { buildAuditPdf } from './pdf';
+import { buildFinalReportPdf } from './finalPdf';
 import { buildAuditXlsx, buildOrgXlsx, downloadBlob } from './excel';
 import { loadSummary } from './summary';
 import { buildMgmtPdf, buildMgmtXlsx, loadMgmtDetail } from './management';
@@ -28,7 +29,7 @@ export function ReportsPage() {
   const [company, setCompany] = useState('');
   const orgName = current?.organization_name ?? '';
 
-  const run = async (kind: 'pdf' | 'xlsx' | 'org' | 'mpdf' | 'mxlsx') => {
+  const run = async (kind: 'final' | 'pdf' | 'xlsx' | 'org' | 'mpdf' | 'mxlsx') => {
     setBusy(kind);
     try {
       if (kind === 'org') { downloadBlob(await buildOrgXlsx(orgId, orgName), `HSE_${safe(orgName)}_${iso(new Date())}.xlsx`); return; }
@@ -43,7 +44,8 @@ export function ReportsPage() {
       }
       const r = await loadAuditReport(sel, orgName);
       const base = `Auditoria_${safe(r.audit.code ?? r.audit.title)}`;
-      if (kind === 'pdf') downloadBlob(await buildAuditPdf(r, { includePhotos: photos }), `${base}.pdf`);
+      if (kind === 'final') downloadBlob(await buildFinalReportPdf(r, 'final', { includePhotos: photos }), `Informe_final_${safe(r.audit.code ?? r.audit.title)}.pdf`);
+      else if (kind === 'pdf') downloadBlob(await buildAuditPdf(r, { includePhotos: photos }), `${base}.pdf`);
       else downloadBlob(await buildAuditXlsx(r), `${base}.xlsx`);
     } catch (e) { toast(e instanceof Error ? e.message : String(e), 'bad'); } finally { setBusy(null); }
   };
@@ -56,9 +58,10 @@ export function ReportsPage() {
           <Field label="Auditoría"><Select placeholder="Elegir…" value={sel} onChange={e => setSel(e.target.value)}
             options={audits.map(a => ({ value: a.id, label: `${a.code ?? '(sin código)'} · ${a.title} · ${cName.get(a.company_id ?? '') ?? ''} · ${LABELS.auditStatus[a.status]}` }))} /></Field>
           <label className="row gap small"><input type="checkbox" checked={photos} onChange={e => setPhotos(e.target.checked)} /> Incluir registro fotográfico en el PDF</label>
-          <p className="muted small">Contenido: datos generales, resultado oficial y por sección, conclusiones, checklist, hallazgos con pregunta, requisito, clasificación, responsable, vencimiento, análisis de causa raíz, plan de acción con criterio y verificación de eficacia, fotografías e historial.</p>
+          <p className="muted small">Informe final: formato RS Consultora (datos generales, plan, desarrollo, conclusiones, fortalezas, oportunidades de mejora, observaciones y no conformidades por requisito, evaluación, registro fotográfico y declaración); se redacta en «Informe final» de cada auditoría. Informe detallado: datos generales, resultado oficial y por sección, conclusiones, checklist, hallazgos con pregunta, requisito, clasificación, responsable, vencimiento, análisis de causa raíz, plan de acción con criterio y verificación de eficacia, fotografías e historial.</p>
           <div className="row gap wrap">
-            <Button disabled={!sel} busy={busy === 'pdf'} onClick={() => void run('pdf')}>Descargar PDF</Button>
+            <Button disabled={!sel} busy={busy === 'final'} onClick={() => void run('final')}>Informe final (PDF)</Button>
+            <Button variant="secondary" disabled={!sel} busy={busy === 'pdf'} onClick={() => void run('pdf')}>Informe detallado (PDF)</Button>
             <Button variant="secondary" disabled={!sel} busy={busy === 'xlsx'} onClick={() => void run('xlsx')}>Descargar Excel</Button>
           </div>
         </div>

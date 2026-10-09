@@ -614,3 +614,25 @@ h1 { font-weight: 700; }
 .verdict { border-width: 1px; }
 .role-contractor { color: #93370d; }
 .continue-progress > span:first-child > span { background: var(--primary); }
+
+/* plan de auditoría e informe final */
+.seg-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--surface); box-shadow: var(--elev); align-self: flex-start; flex-wrap: wrap; }
+.seg-tabs a { padding: .5rem .95rem; border-radius: 10px; font-weight: 600; font-size: .92rem; color: var(--ink-2); text-decoration: none; }
+.seg-tabs a.on { background: var(--graphite, #101828); color: #fff; }
+.plan-rows { display: flex; flex-direction: column; gap: .6rem; }
+.plan-row { display: grid; grid-template-columns: 96px 80px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: .5rem; align-items: start; padding: .6rem; border-radius: 14px; background: var(--surface-2); }
+.plan-row.hl { background: #e8f6e2; }
+.plan-row textarea { min-height: 44px; }
+.plan-hl-note { grid-column: span 2; align-self: center; }
+.plan-row-tools { display: flex; align-items: center; gap: .15rem; flex-wrap: wrap; }
+.strength-row { display: flex; gap: .75rem; align-items: flex-start; padding: .6rem 0; border-top: 1px solid var(--line); }
+.strength-n { font-family: var(--num); font-weight: 600; min-width: 2rem; padding-top: .55rem; color: var(--muted); }
+.savebar { position: sticky; bottom: 12px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .7rem .8rem .7rem 1.1rem; border-radius: 16px; background: var(--graphite, #101828); color: #fff; box-shadow: 0 14px 34px rgba(16,24,40,.25); }
+.plan-gate { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1.1rem 1.3rem; border-radius: var(--radius-lg); background: var(--brand-soft); border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent); }
+.plan-gate .grow { display: flex; flex-direction: column; gap: .2rem; flex: 1 1 280px; min-width: 0; }
+.plan-gate strong { font-size: 1.05rem; }
+@media (max-width: 900px) {
+  .plan-row { grid-template-columns: 1fr 1fr; }
+  .plan-row > textarea, .plan-row-tools, .plan-hl-note { grid-column: 1 / -1; }
+  .savebar { bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
