@@ -127,8 +127,8 @@ with sync_playwright() as pw:
     plan_pdf = download(P, lambda: P.get_by_role('button', name='Descargar plan (PDF)').click())
     t = pdf_text(plan_pdf)
     check('2.3 PDF del plan: título «PLAN DE AUDITORIA DE SEGUNDA PARTE»', 'PLAN DE AUDITORIA DE SEGUNDA PARTE' in t)
-    check('2.4 PDF del plan: datos generales', 'COMPAÑÍA SOLICITANTE: Pampa Energía E&P – Gerencia CSMS' in t and 'CONTRATO: C5641 Ultima milla de arena' in t, t[:400])
-    check('2.5 PDF del plan: objetivo y criterios por defecto', 'OBJETIVO DE LA AUDITORIA' in t and 'ISO 45001:2018 Gestión de SST' in t)
+    check('2.4 PDF del plan: datos generales', 'COMPAÑÍA SOLICITANTE Pampa Energía E&P – Gerencia CSMS' in t and 'CONTRATO C5641 Ultima milla de arena' in t, t[:400])
+    check('2.5 PDF del plan: objetivo y criterios por defecto', 'OBJETIVO DE LA AUDITORÍA' in t and 'ISO 45001:2018 Gestión de SST' in t)
     check('2.6 PDF del plan: cronograma con filas y fila resaltada', 'Traslado a Añelo' in t and 'Retorno a Neuquén – Fin primer día' in t and 'Planificación y Organización.' in t)
     check('2.7 PDF del plan: sin secciones del informe final', 'CONCLUSIONES' not in t and 'DECLARACION' not in t)
     subprocess.run(['pdftoppm', '-png', '-r', '60', plan_pdf, f'{OUT}/plan-pag'], check=False)
@@ -171,19 +171,19 @@ with sync_playwright() as pw:
     P.screenshot(path=f'{OUT}/3-informe-escritorio.png', full_page=True)
     fin = download(P, lambda: P.get_by_role('button', name='Descargar informe final (PDF)').click())
     t = pdf_text(fin)
-    order = ['DATOS GENERALES – AUDITORIA DE SEGUNDA PARTE', 'OBJETIVO DE LA AUDITORIA', 'CRITERIOS DE AUDITORIA', 'PLAN DE AUDITORIA', 'DESARROLLO DE LA AUDITORIA',
-             'CONCLUSIONES DE LA AUDITORIA', 'FORTALEZAS', 'OPORTUNIDADES DE MEJORAS', 'REGISTRO DE OBSERVACIONES', 'REGISTRO DE NO CONFORMIDADES',
-             'EVALUACION DE CONTRATISTA POR LA CONSULTORA', 'ANEXO', 'REGISTRO FOTOGRAFICO', 'DECLARACION DEL AUDITOR']
+    order = ['01 DATOS GENERALES', 'OBJETIVO DE LA AUDITORÍA', 'CRITERIOS DE AUDITORÍA', 'PLAN DE AUDITORÍA', 'DESARROLLO DE LA AUDITORÍA',
+             'CONCLUSIONES DE LA AUDITORÍA', 'FORTALEZAS', 'OPORTUNIDADES DE MEJORA', 'REGISTRO DE OBSERVACIONES', 'REGISTRO DE NO CONFORMIDADES',
+             'EVALUACIÓN DEL CONTRATISTA POR LA CONSULTORA', 'ANEXO', 'REGISTRO FOTOGRÁFICO', 'DECLARACIÓN DEL AUDITOR']
     pos = [t.find(s) for s in order]
     check('4.1 Informe final: secciones del modelo en orden', all(p >= 0 for p in pos) and pos == sorted(pos), list(zip(order, pos)))
-    check('4.2 Encabezado «INFORME FINAL AUDITORIA DE SEGUNDA PARTE» en cada página',
-          all('INFORME FINAL AUDITORIA DE SEGUNDA PARTE' in (pg.extract_text() or '') for pg in PdfReader(fin).pages), len(PdfReader(fin).pages))
+    check('4.2 Portada y encabezado «INFORME FINAL AUDITORIA DE SEGUNDA PARTE» en cada página',
+          all('INFORME FINAL AUDITORIA DE SEGUNDA PARTE' in (pg.extract_text() or '') for pg in PdfReader(fin).pages[1:]) and 'Informe final' in (PdfReader(fin).pages[0].extract_text() or ''), len(PdfReader(fin).pages))
     check('4.3 Fortaleza numerada con su área', 'OPERACIONES: El buen conocimiento técnico' in t)
     check('4.4 Oportunidad de mejora con su fundamento', 'Dirección: Se identificó' in t and 'Una mayor participación del personal' in t)
     check('4.5 Observación con referencia / requisito', 'ISO 45001 8.2 Preparación y respuesta' in t and 'mochilas lavaojos' in t)
     check('4.6 No conformidad registrada', 'Falta registro de capacitación' in t)
-    check('4.7 Hallazgos agrupados por requisito (fila gris con el requisito)', t.count('LIDERAZGO, COMPROMISO') >= 2)
-    check('4.8 Evaluación: resultado 6,27 con criterio de evaluación', 'RESULTADO FINAL AUDITORIA A PROVEEDOR:' in t and '6,27' in t and 'CRITERIO DE EVALUACION' in t)
+    check('4.7 Hallazgos agrupados por requisito (fila gris con el requisito)', t.count('LIDERAZGO, COMPROMISO') >= 2 and 'REFERENCIA / REQUISITO' in t)
+    check('4.8 Evaluación: resultado 6,27 con criterio de evaluación', 'RESULTADO FINAL AUDITORÍA A PROVEEDOR' in t and '6,27' in t and 'CRITERIO DE EVALUACIÓN' in t)
     check('4.9 Conformidades por requisito', 'Políticas de CSMS, Políticas de Alcohol y Drogas.' in t and 'CSMS: Cantidad de asistentes' in t)
     check('4.10 Registro fotográfico por hallazgo («No Conformidad N° 1»)', 'No Conformidad N° 1' in t)
     check('4.11 Declaración y firma del auditor', 'no constituyen una garantía absoluta' in t and 'Roberto Seguin' in t)
