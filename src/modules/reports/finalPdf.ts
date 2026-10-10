@@ -242,10 +242,9 @@ export async function buildFinalReportPdf(r: AuditReport, kind: 'plan' | 'final'
     coverPages.add(1);
     // franja superior
     doc.setFillColor(...BRAND_DARK); doc.rect(0, 0, PW, 6, 'F');
-    const lw = 36, lh = lw / RS_LOGO_RATIO;
-    doc.addImage(RS_LOGO_PNG, 'PNG', ML - 1, 16, lw, lh);
-    setText(8.5, MUTED); doc.text(pdfText(AUDIT_FIRM.name.toUpperCase()), PW - MR, 24, { align: 'right', charSpace: 0.4 });
-    doc.text(pdfText(new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })), PW - MR, 29, { align: 'right' });
+    const lw = 74, lh = lw / RS_LOGO_RATIO;
+    doc.addImage(RS_LOGO_PNG, 'PNG', ML - 1.5, 15, lw, lh);
+    setText(8.5, MUTED); doc.text(pdfText(new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })), PW - MR, 26, { align: 'right' });
 
     let cy = 72;
     setText(10, BRAND, FSEMI); doc.text(pdfText(subtitle.toUpperCase()), ML, cy, { charSpace: 0.5 });
@@ -623,8 +622,8 @@ export async function buildFinalReportPdf(r: AuditReport, kind: 'plan' | 'final'
   for (let p = 1; p <= pages; p++) {
     if (coverPages.has(p)) continue;
     doc.setPage(p);
-    const lw = 21, lh = lw / RS_LOGO_RATIO;
-    doc.addImage(RS_LOGO_PNG, 'PNG', ML - 0.5, 8.5, lw, lh);
+    const lw = 40, lh = lw / RS_LOGO_RATIO;
+    doc.addImage(RS_LOGO_PNG, 'PNG', ML - 0.8, 8.2, lw, lh);
     setText(9, BRAND_DARK, FSEMI); doc.text(pdfText(title), PW - MR, 13.2, { align: 'right', charSpace: 0.2 });
     setText(8, MUTED); doc.text(metaLine, PW - MR, 18, { align: 'right' });
     doc.setDrawColor(...BRAND); doc.setLineWidth(0.5); doc.line(ML, 23, PW - MR, 23);
