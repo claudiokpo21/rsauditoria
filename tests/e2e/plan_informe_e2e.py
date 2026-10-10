@@ -192,7 +192,24 @@ with sync_playwright() as pw:
     subprocess.run(['pdftoppm', '-png', '-r', '60', fin, f'{OUT}/informe-pag'], check=False)
 
     # ---------------------------------------------------------------- 5. fundamento en el formulario de hallazgo
-    P.goto(f'{BASE}/hallazgos'); P.wait_for_timeout(800)
+    # ---------------------------------------------------------------- 5. menú «Planes de auditoría» y plan nuevo
+    P.goto(f'{BASE}/'); P.wait_for_timeout(800)
+    P.locator('.side').get_by_role('link', name='Planes de auditoría').click()
+    P.wait_for_selector('text=Nuevo plan de auditoría', timeout=30000); P.wait_for_timeout(500)
+    check('5.1 Menú «Planes de auditoría» con los tres pasos', P.locator('.plan-steps li').count() == 3)
+    P.get_by_role('tab', name='Aceptados (1)').click(); P.wait_for_timeout(300)
+    check('5.2 El plan aceptado figura en «Aceptados»', P.locator('.plan-item', has_text='TSB').count() == 1)
+    P.screenshot(path=f'{OUT}/6-planes.png', full_page=True)
+    P.get_by_role('button', name='Nuevo plan de auditoría').click()
+    P.locator('.modal').get_by_label('Empresa contratista').select_option(index=1)
+    check('5.3a La plantilla publicada más reciente viene elegida', P.locator('.modal').get_by_label('Lista de verificación (plantilla)').input_value() != '')
+    P.locator('.modal').get_by_role('button', name='Crear y completar el plan').click()
+    ok = seen(P, 'text=Aceptación del cliente', 20000)
+    if not ok: P.screenshot(path=f'{OUT}/debug-nuevo-plan.png'); print('TOASTS', P.locator('.toast').all_inner_texts())
+    check('5.3 «Nuevo plan» lleva directo al documento del plan', ok and '/plan' in P.url, P.url)
+    check('5.4 El plan nuevo trae la empresa y los textos sugeridos', P.get_by_role('textbox', name='Empresa contratista').input_value() != '' and 'ISO 45001' in P.get_by_role('textbox', name='Criterios de auditoría').input_value())
+    P.goto(f'{BASE}/planes'); P.wait_for_selector('.plan-item', timeout=20000); P.wait_for_timeout(300)
+    check('5.5 El plan nuevo aparece en «Pendientes de aceptación»', P.get_by_role('tab', name='Pendientes de aceptación (1)').count() == 1)
     desk.close()
 
     # ---------------------------------------------------------------- 6. celular

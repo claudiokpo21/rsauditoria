@@ -31,7 +31,8 @@ export function AuditDocsPage({ tab }: { tab: 'plan' | 'informe' }) {
   const toast = useToast();
   const participants = useParticipants(orgId);
   const audit = useRecord<Audit>('hse_audits', id);
-  const sections = useLiveQuery(async () => audit ? (await db.hse_template_sections.where('version_id').equals(audit.template_version_id).toArray()).filter(s => !s.deleted_at).sort((a, b) => a.sort_order - b.sort_order) : [], [audit?.template_version_id]) ?? [];
+  const sectionsQ = useLiveQuery(async () => audit ? (await db.hse_template_sections.where('version_id').equals(audit.template_version_id).toArray()).filter(s => !s.deleted_at).sort((a, b) => a.sort_order - b.sort_order) : undefined, [audit?.template_version_id]);
+  const sections = useMemo(() => sectionsQ ?? [], [sectionsQ]);
   const findingCount = useLiveQuery(async () => id ? (await db.hse_findings.where('audit_id').equals(id).toArray()).filter(f => !f.deleted_at).length : 0, [id]) ?? 0;
   const cName = useNameMap('hse_companies'); const lName = useNameMap('hse_locations');
   const people = useProfiles();
@@ -51,12 +52,12 @@ export function AuditDocsPage({ tab }: { tab: 'plan' | 'informe' }) {
   // el borrador se arma una vez con lo guardado + valores sugeridos; si llega una versión nueva y no hay cambios locales, se refresca
   const serverJson = JSON.stringify(audit?.report_data ?? null);
   useEffect(() => {
-    if (!audit || !ctx || !sections.length) return;
+    if (!audit || !ctx || sectionsQ === undefined) return;   // la plantilla puede no tener secciones en el dispositivo: igual se arma el plan
     if (draft && JSON.stringify(draft) !== savedJson) return;
     const d = resolveReport(audit, ctx);
     setDraft(d); setSavedJson(JSON.stringify(d));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serverJson, ctx?.company, ctx?.location, ctx?.leadAuditor, sections.length]);
+  }, [serverJson, ctx?.company, ctx?.location, ctx?.leadAuditor, sections.length, sectionsQ === undefined]);
 
   if (audit === undefined) return null;
   if (audit === null) return <Empty>Auditoría no encontrada en este dispositivo.</Empty>;

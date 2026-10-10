@@ -1,6 +1,7 @@
 /** Iconos de trazo (24×24) usados en el menú y la barra inferior del celular. */
 const P: Record<string, string> = {
   panel: 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z',
+  plan: 'M4 5h16v16H4zM4 10h16M8 3v4M16 3v4M8 14h4M8 17h7',
   audits: 'M9 4h6v3H9zM7 5H5v16h14V5h-2M9 13l2 2 4-4',
   findings: 'M12 3 2 20h20L12 3zM12 10v4M12 17h.01',
   actions: 'M4 6h16M4 12h10M4 18h7M16 17l2 2 4-4',

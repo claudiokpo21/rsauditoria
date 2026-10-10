@@ -10,6 +10,7 @@ import { Layout } from './components/Layout';
 import { ToastProvider } from './components/ui';
 import { DashboardPage } from './modules/dashboard/DashboardPage';
 import { AuditsPage } from './modules/audits/AuditsPage';
+import { PlansPage } from './modules/audits/PlansPage';
 import { AuditExecutePage } from './modules/audits/AuditExecutePage';
 import { FindingsPage } from './modules/findings/FindingsPage';
 import { FindingDetailPage } from './modules/findings/FindingDetailPage';
@@ -41,6 +42,7 @@ function Gate() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<DashboardPage />} />
+          <Route path="planes" element={<PlansPage />} />
           <Route path="auditorias" element={<AuditsPage />} />
           <Route path="auditorias/:id" element={<AuditExecutePage />} />
           <Route path="auditorias/:id/plan" element={<AuditDocsPage tab="plan" />} />

@@ -299,7 +299,8 @@ los criterios y el cronograma: se cargan una sola vez.
 
 **Antes de empezar: el plan**
 
-1. En la auditoría planificada aparece el aviso *Primero, el plan de auditoría* → **Ir al plan**.
+1. Menú **Planes de auditoría › Nuevo plan de auditoría**: elija la empresa contratista y la lista de verificación y toque
+   *Crear y completar el plan*. (También: en una auditoría planificada, aviso *Primero, el plan de auditoría* → **Ir al plan**.)
 2. Complete compañía solicitante, empresa contratista, contrato, auditor responsable, fechas y lugares; revise el
    objetivo y los criterios (vienen sugeridos) y arme el **cronograma** con **Agregar fila** (fecha, hora, proceso,
    auditados y temas). Marque **Resaltar** en traslados, fin del día o reunión de cierre: salen en verde.

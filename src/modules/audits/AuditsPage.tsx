@@ -65,7 +65,7 @@ export function AuditsPage() {
       }
       toast(`Auditoría creada con ${n} respuestas de la planilla. Revísela y toque "Completar".`);
     }
-    setForm(null); nav(`/auditorias/${a.id}`);
+    setForm(null); nav(withSheet ? `/auditorias/${a.id}` : `/auditorias/${a.id}/plan`);
   };
 
   return (

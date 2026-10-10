@@ -58,6 +58,7 @@ export function Layout() {
           <span className="brand-text"><span className="brand-firm">{AUDIT_FIRM.name.toUpperCase()}</span><span className="brand-app">Auditorías HSE</span></span></div>
         <nav className="nav" aria-label="Menú principal">
           {L('/', 'Dashboard', 'panel')}
+          {L('/planes', 'Planes de auditoría', 'plan')}
           {L('/auditorias', 'Auditorías', 'audits')}
           {L('/hallazgos', 'Hallazgos', 'findings', openFindings ? <span className="nav-count">{openFindings}</span> : null)}
           {L('/acciones', 'Planes de acción', 'actions')}
